@@ -1,4 +1,4 @@
-const CACHE = 'quiet-paper-shell-v1';
+const CACHE = 'glossa-shell-v1';
 self.addEventListener('install', event => { event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(['/','/icon.svg','/manifest.webmanifest']))); self.skipWaiting(); });
 self.addEventListener('activate', event => { event.waitUntil(self.clients.claim()); });
 self.addEventListener('fetch', event => {

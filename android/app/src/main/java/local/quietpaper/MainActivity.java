@@ -107,7 +107,7 @@ public final class MainActivity extends Activity {
                 if (current) cancelFileChooser();
                 if (view.getParent() instanceof ViewGroup) ((ViewGroup) view.getParent()).removeView(view);
                 view.destroy();
-                Log.w("QuietPaperNative", "WebView renderer stopped; crash=" + detail.didCrash() + "; local stores retained; waiting for user reopen");
+                Log.w("GlossaNative", "WebView renderer stopped; crash=" + detail.didCrash() + "; local stores retained; waiting for user reopen");
                 if (current && !isFinishing() && !isDestroyed()) showRendererRecovery();
                 return true;
             }
@@ -162,7 +162,7 @@ public final class MainActivity extends Activity {
         ValueCallback<Uri[]> previous = fileCallback; fileCallback = null;
         if (previous != null) {
             try { previous.onReceiveValue(null); }
-            catch (RuntimeException unavailableView) { Log.w("QuietPaperNative", "Discarded file chooser callback for unavailable WebView"); }
+            catch (RuntimeException unavailableView) { Log.w("GlossaNative", "Discarded file chooser callback for unavailable WebView"); }
         }
     }
 
@@ -536,7 +536,7 @@ public final class MainActivity extends Activity {
             WebView target = web;
             if (target == null || isFinishing() || isDestroyed() || target.getParent() == null) return;
             try { target.evaluateJavascript("window.dispatchEvent(new CustomEvent('quietpaper-native',{detail:" + json + "}))", null); }
-            catch (IllegalStateException destroyedView) { Log.w("QuietPaperNative", "Discarded callback for unavailable WebView"); }
+            catch (IllegalStateException destroyedView) { Log.w("GlossaNative", "Discarded callback for unavailable WebView"); }
         });
     }
 

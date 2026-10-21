@@ -1,0 +1,3 @@
+PASS 笺注 / Glossa: title, desktop/mobile identity, install manifest, service identity and GLOSSA_* configuration.
+PASS legacy .quietpaper import, .glossa export round trip, renamed reading snapshot and offline reopen with retained local notes.
+Existing domain/sync/review/format/browser/instrumentation suites were not rerun.

@@ -1,4 +1,4 @@
-# 纸间 0.1 交付报告
+# 笺注 0.1 交付报告
 
 日期：2026-10-21。原工作区没有项目代码、需求旧稿或 Quiet Editorial 资源；当前项目位于 `/workspace/quiet-paper`。这是持续迭代的工程验证版，不是全部最终需求已完成的声明。
 
@@ -34,19 +34,19 @@
 
 入口与命令见 [README](../README.md)。开发工作台用 `npm run dev`，生产资源用 `npm run build`，Mac 服务用配置好令牌后的 `npm run server`。生产浏览器只读 A、轻改已有 B；Android 容器才提供完整创建能力。
 
-交付目录为 `releases/`；安装包为调试验收包，不等同正式发布签名。`examples/变化与积累.quietpaper` 是保留可编辑对象的完整示例工程，另附独立 HTML 阅读快照。示例中的文字与图形是预先编写的对象，不作为 OCR 或仿手写生成证据。
+交付目录为 `releases/`；安装包为调试验收包，不等同正式发布签名。`examples/变化与积累.glossa` 是保留可编辑对象的完整示例工程，另附独立 HTML 阅读快照。示例中的文字与图形是预先编写的对象，不作为 OCR 或仿手写生成证据。
 
-| 产物                                    | 用途                                                                                 |
-| --------------------------------------- | ------------------------------------------------------------------------------------ |
-| `releases/quiet-paper-0.1.0-debug.apk`  | Android 调试安装包，内置生产 Web 资源                                                |
-| `releases/quiet-paper-0.1.0-source.zip` | 源码、锁文件、测试、文档、示例和可直接预览的生产资源；不含 SDK、依赖缓存或用户数据库 |
-| `releases/SHA256SUMS`                   | 交付文件完整性校验                                                                   |
+| 产物                               | 用途                                                                                 |
+| ---------------------------------- | ------------------------------------------------------------------------------------ |
+| `releases/glossa-0.1.0-debug.apk`  | Android 调试安装包，内置生产 Web 资源                                                |
+| `releases/glossa-0.1.0-source.zip` | 源码、锁文件、测试、文档、示例和可直接预览的生产资源；不含 SDK、依赖缓存或用户数据库 |
+| `releases/SHA256SUMS`              | 交付文件完整性校验                                                                   |
 
 实际界面截图：[原稿](workspace-desktop.png)、[A/B 对照](workspace-split.png)、[手机已有 B](workspace-mobile.png)。手机截图使用 390×844 视口，没有新建纸张和书写工具。
 
 ## 验证记录
 
-`npm run check` 最终通过：**141 项自动测试、零失败、零跳过**，随后 TypeScript 检查与 Vite 生产构建通过。`npm run format:check` 通过。原始输出见 [统一检查](verification/check.log) 和 [格式检查](verification/format.log)。
+更名前完整验收中，`npm run check` 通过：**141 项自动测试、零失败、零跳过**，随后 TypeScript 检查与 Vite 生产构建通过。`npm run format:check` 通过。原始输出见 [统一检查](verification/check.log) 和 [格式检查](verification/format.log)。
 
 浏览器统一验收 `npm run test:browser` 的 8 个脚本全部通过：真实 IndexedDB 持久化与双窗口 9 项、真实字符选区 4 组、工作区恢复 5 组、模拟原生桥的源文件协调 7 项、知识块管理 7 组、千笔渲染测量、应用端到端 8 组，以及独立 HTML 阅读/安全/跳转 3 项。没有未捕获页面错误。模拟桥明确不替代 Android 原生验收；模拟 IME 不替代各系统输入法真机验收。
 
@@ -56,13 +56,21 @@
 
 独立 JVM 测试中，持久分块导出 7 项通过，写入、重启并重读校验 21,045,248 字节；源文件/待写版本双校验策略 9 项通过。主测试中的 JS 分块导出另验证代理对边界与异常清理。
 
-Android `assembleDebug` / `assembleDebugAndroidTest` 通过，APK v2 签名校验通过，7 份打包 Web 资源共 488,477 字节与最终 `dist` 逐字节一致，版本校验及分块导出桥已包含。**原生文件往返 instrumentation 未通过**：软件模拟器实际启动并安装两份 APK，首轮在 WebView 初始化超时，第二轮报告 `Process crashed`；两轮都未取得 Markdown/LaTeX 往返成功证据。不能把 JVM 与模拟桥通过数替代这一结论。实际日志见 [首轮](verification/android-instrumentation-first.log)、[文件往返重试](verification/android-instrumentation-final.log)。
+更名前 Android `assembleDebug` / `assembleDebugAndroidTest` 通过，前次 APK v2 签名校验通过，7 份打包 Web 资源共 488,477 字节与最终 `dist` 逐字节一致，版本校验及分块导出桥已包含。**原生文件往返 instrumentation 未通过**：软件模拟器实际启动并安装两份 APK，首轮在 WebView 初始化超时，第二轮报告 `Process crashed`；两轮都未取得 Markdown/LaTeX 往返成功证据。不能把 JVM 与模拟桥通过数替代这一结论。实际日志见 [首轮](verification/android-instrumentation-first.log)、[文件往返重试](verification/android-instrumentation-final.log)。
 
 崩溃日志确认 WebView 渲染进程先发生原生 SIGTRAP，容器随后因未处理渲染器退出而终止。已补 `onRenderProcessGone`：移除死窗口、显示原生“重新打开”按钮，用户主动重建窗口；不自动循环重启、不清理数据库或文件日志。原生 I/O 改为进程内统一串行，旧窗口回调和文件选择器回调有生命周期保护。修复后重新编译的 APK 已通过独立 Android 恢复专项 **6 项断言**：窗口存活、恢复入口、用户重开、安装身份及原生私有文件/导出暂存保留。日志见 [恢复专项](verification/android-renderer-recovery.log) 和 [原崩溃定位](verification/android-crash-summary.log)。渲染器 SIGTRAP 的底层原因、真实 A/IndexedDB 在各种设备故障下的恢复仍须继续验收。
 
 收到“已通过的测试不要重复做”后，沿用已有通过证据，仅修复并执行此前尚未成功运行的恢复专项。因测试入口登记失败而修正的测试包只做了必要增量构建；没有重跑 141 项自动测试、浏览器脚本、离线用例或 JVM 测试。交付 APK 的校验针对新增恢复补丁后的新文件。
 
 开发中实际发现并修复了并发删除吞编辑、假冲突、草稿重复、过期校对、同身份恢复串入旧响应，以及首次离线导出缓存失配等问题；对应反例保留在测试中。证据范围和复现命令见 [验证记录说明](verification/README.md)。
+
+## 本次代号更新
+
+中文代号改为“笺注”，英文代号改为“Glossa”。界面、加载与窗口标题、Android 安装名称、PWA 名称、导出/恢复文件名、服务标识、示例与发布包名已更新；新工程后缀为 `.glossa`，旧 `.quietpaper` 仍可导入。
+
+本次生产构建通过，针对更名的两组浏览器检查通过，覆盖新名称、旧工程导入、新导出与阅读快照标题、移动布局及离线重开。Android 主 APK 构建通过，安装标签为“笺注”，7 份 Web 资源共 488,486 字节与新构建逐字节一致，v2 签名通过。没有重跑此前已通过的完整测试或 Android 仪器测试。
+
+当前证据：[更名专项](verification/branding.log)、[生产构建](verification/branding-build.log)、[Android 构建](verification/branding-android-build.log)、[APK 资源](verification/branding-apk-assets.json)、[安装名称](verification/branding-apk-metadata.txt)、[签名](verification/branding-apk-signature.txt)。已有存储、协议、加密及升级身份的兼容决策见 [命名变更](BRANDING.md)。上述完整验收日志保留原始内容，不冒充本次重跑结果。
 
 ## 交付限制与下一阶段
 

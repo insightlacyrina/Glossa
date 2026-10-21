@@ -205,10 +205,10 @@ export function RecoveryManager({ workspace: w, onClose, onRestored }: Props) {
                       className="button"
                       onClick={() => {
                         try {
-                          downloadText('纸间-恢复副本.quietpaper', projectPackage(item));
+                          downloadText('笺注-恢复副本.glossa', projectPackage(item));
                         } catch {
                           downloadText(
-                            '纸间-原始恢复资料.json',
+                            '笺注-原始恢复资料.json',
                             JSON.stringify(item.recovery, null, 2),
                           );
                         }

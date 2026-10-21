@@ -33,5 +33,5 @@ jobs:
       - run: python3 android/tools/verify-apk.py
       - uses: actions/upload-artifact@v4
         with:
-          name: quiet-paper-debug
+          name: glossa-debug
           path: android/app/build/outputs/apk/

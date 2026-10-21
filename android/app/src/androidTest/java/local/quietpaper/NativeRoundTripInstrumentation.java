@@ -30,7 +30,7 @@ public final class NativeRoundTripInstrumentation extends RendererRecoveryInstru
         if (rendererRecovery) { super.onStart(); return; }
         Bundle results = new Bundle();
         try {
-            Log.i("QuietPaperTest", "Starting native bridge instrumentation");
+            Log.i("GlossaTest", "Starting native bridge instrumentation");
             activity = (MainActivity) startActivitySync(new Intent(getTargetContext(), MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
             runOnMainSync(() -> {
                 web = activity.getWindow().getDecorView().findViewWithTag("quietpaper-web");
@@ -38,7 +38,7 @@ public final class NativeRoundTripInstrumentation extends RendererRecoveryInstru
                 web.loadDataWithBaseURL("https://appassets.quietpaper.local/", "<html><body>native integration fixture<script>window.__nativeFixtureReady=true;</script></body></html>", "text/html", "UTF-8", null);
             });
             waitUntil("window.__nativeFixtureReady===true && document.readyState==='complete'");
-            Log.i("QuietPaperTest", "Dedicated WebView fixture ready");
+            Log.i("GlossaTest", "Dedicated WebView fixture ready");
             evaluate("window.__results=[];window.addEventListener('quietpaper-native',e=>window.__results.push(e.detail));true");
             MainActivity.NativeBridge bridge = activity.new NativeBridge();
             require(bridge.getRole().equals("tablet"), "physical-tablet-role");
@@ -115,7 +115,7 @@ public final class NativeRoundTripInstrumentation extends RendererRecoveryInstru
                 // replaces the prior application document. Retry in the new
                 // document rather than interpreting a canceled callback as a
                 // source-write failure.
-                Log.i("QuietPaperTest", "Evaluation interrupted during fixture navigation; retrying");
+                Log.i("GlossaTest", "Evaluation interrupted during fixture navigation; retrying");
             }
             Thread.sleep(100);
         }
@@ -128,7 +128,7 @@ public final class NativeRoundTripInstrumentation extends RendererRecoveryInstru
         return value.get();
     }
     private static final class EvaluationTimeout extends Exception { EvaluationTimeout() { super("WebView evaluation timeout"); } }
-    private void require(boolean valid, String label) { if (!valid) throw new AssertionError(label); evidence.append("PASS ").append(label).append('\n'); Log.i("QuietPaperTest", "PASS " + label); }
+    private void require(boolean valid, String label) { if (!valid) throw new AssertionError(label); evidence.append("PASS ").append(label).append('\n'); Log.i("GlossaTest", "PASS " + label); }
     private static String sha(String value) throws Exception {
         StringBuilder output = new StringBuilder();
         for (byte item : MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8))) output.append(String.format(Locale.ROOT, "%02x", item & 255));

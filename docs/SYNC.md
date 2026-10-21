@@ -11,30 +11,30 @@
 要求 Node.js 24.19 或兼容的 24.x（使用内置 `node:sqlite`），客户端已 `npm ci && npm run build`。
 
 ```bash
-cd /path/to/quiet-paper
-export QUIET_PAPER_TOKEN="$(openssl rand -hex 32)"
-export QUIET_PAPER_DATA="$PWD/server-data"
+cd /path/to/Glossa
+export GLOSSA_TOKEN="$(openssl rand -hex 32)"
+export GLOSSA_DATA="$PWD/server-data"
 npm run server
 ```
 
 默认监听 `127.0.0.1:8787`，同源提供 `dist` 客户端及 `/api/sync`。令牌由用户保存在密码管理器，在客户端的同步设置中填写；启动日志不打印令牌。`GET /health` 可检测服务存活，`GET /api/status` 需要 Bearer 令牌。
 
-需要对局域网监听时可设置 `HOST=0.0.0.0`；客户端访问 Mac 的局域网地址也必须使用 HTTPS，可通过下述 Caddy 或私网 HTTPS 入口。HTTP 仅允许本机 localhost/回环开发，不能将局域网 HTTP IP 误当成可用生产入口。跨源客户端必须将准确来源加入逗号分隔的 `QUIET_PAPER_ORIGINS`，例如 `http://localhost:5173,https://appassets.quietpaper.local`。只接受显式来源；不接受任意网站。当前 Android 容器固定使用 `https://appassets.quietpaper.local`。
+需要对局域网监听时可设置 `HOST=0.0.0.0`；客户端访问 Mac 的局域网地址也必须使用 HTTPS，可通过下述 Caddy 或私网 HTTPS 入口。HTTP 仅允许本机 localhost/回环开发，不能将局域网 HTTP IP 误当成可用生产入口。跨源客户端必须将准确来源加入逗号分隔的 `GLOSSA_ORIGINS`，例如 `http://localhost:5173,https://appassets.quietpaper.local`。只接受显式来源；不接受任意网站。当前 Android 容器固定使用 `https://appassets.quietpaper.local`。
 
 ## 互联网访问（两种部署方式）
 
-1. 自有域名 + HTTPS：将 `server/Caddyfile.example` 改为真实域名，DNS 指向公网地址，路由器将 TCP 80/443 转发给 Mac，运行 Caddy；服务仍只监听 Mac 本机 8787。设置 `QUIET_PAPER_ORIGINS=https://你的域名,https://appassets.quietpaper.local`。`https://你的域名` 同时是客户端 URL 与同步服务 URL。反向代理转发后仍需准确配置 HTTPS 来源。
-2. 私有互联网互联：Mac 与 Android 安装并配置用户自己的 Tailscale 网络，运行 `tailscale serve --bg http://127.0.0.1:8787`，使用其 HTTPS 地址并将该来源加入 `QUIET_PAPER_ORIGINS`。无需经营公共云，但依赖用户选用的网络协调服务。此工程不自动安装、登录或管理用户 VPN。
+1. 自有域名 + HTTPS：将 `server/Caddyfile.example` 改为真实域名，DNS 指向公网地址，路由器将 TCP 80/443 转发给 Mac，运行 Caddy；服务仍只监听 Mac 本机 8787。设置 `GLOSSA_ORIGINS=https://你的域名,https://appassets.quietpaper.local`。`https://你的域名` 同时是客户端 URL 与同步服务 URL。反向代理转发后仍需准确配置 HTTPS 来源。
+2. 私有互联网互联：Mac 与 Android 安装并配置用户自己的 Tailscale 网络，运行 `tailscale serve --bg http://127.0.0.1:8787`，使用其 HTTPS 地址并将该来源加入 `GLOSSA_ORIGINS`。无需经营公共云，但依赖用户选用的网络协调服务。此工程不自动安装、登录或管理用户 VPN。
 
 普通同步载荷含明文笔记，互联网和需要浏览器端加密的客户端使用 HTTPS。HTTPS 在 Caddy/Tailscale 终止；生产情况下不要将本机 HTTP 端口直接映射公网。该要求是传输实现条件，普通同步不会被误称为端到端加密。
 
 ## 常驻运行
 
-`server/com.quietpaper.sync.plist.example` 是用户 LaunchAgent 示例。先替换 Node 路径、工程路径、数据路径、来源与随机令牌，然后保存到 `~/Library/LaunchAgents/com.quietpaper.sync.plist`。该文件含访问令牌，权限应为 `600`。
+`server/com.glossa.sync.plist.example` 是用户 LaunchAgent 示例。先替换 Node 路径、工程路径、数据路径、来源与随机令牌，然后保存到 `~/Library/LaunchAgents/com.glossa.sync.plist`。该文件含访问令牌，权限应为 `600`。
 
 ```bash
-launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.quietpaper.sync.plist
-launchctl kickstart -k gui/$(id -u)/com.quietpaper.sync
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.glossa.sync.plist
+launchctl kickstart -k gui/$(id -u)/com.glossa.sync
 ```
 
 此配置在用户登录后运行；Mac 睡眠或关机时，各端继续使用本地操作日志。客户端每 8 秒重试，并在 `online` 事件后尝试同步。应用被操作系统挂起时不能保证后台计时器运行，恢复前台后继续。原生系统后台任务集成仍待实现。
@@ -87,4 +87,4 @@ launchctl kickstart -k gui/$(id -u)/com.quietpaper.sync
 node server/backup.mjs /path/to/backup-directory
 ```
 
-使用 SQLite online backup API 生成一致性快照，允许服务仍在运行。可由用户的 Time Machine 或本机定时任务额外保护快照。恢复时先停服务、保留原数据目录副本，把选定快照复制到新目录并命名 `quiet-paper.sqlite`，以该目录设置 `QUIET_PAPER_DATA` 后启动；不要仅复制运行中数据库的主文件而漏掉 WAL，也不支持服务运行中替换数据库。客户端通过新启动世代自动补齐手上完整日志，不需要删除本地内容或手动修改同步游标。恢复测试在普通/加密两模式覆盖：旧快照仅有部分操作、后续操作已持久确认、同工程导入游标为零、丢已提交响应、身份碰撞保护，以及最终全部 A/B/历史载荷一致；不等同于真机磁盘损坏或断电测试。
+使用 SQLite online backup API 生成一致性快照，允许服务仍在运行。可由用户的 Time Machine 或本机定时任务额外保护快照。恢复时先停服务、保留原数据目录副本，把选定快照复制到新目录并命名 `quiet-paper.sqlite`，以该目录设置 `GLOSSA_DATA` 后启动；不要仅复制运行中数据库的主文件而漏掉 WAL，也不支持服务运行中替换数据库。客户端通过新启动世代自动补齐手上完整日志，不需要删除本地内容或手动修改同步游标。恢复测试在普通/加密两模式覆盖：旧快照仅有部分操作、后续操作已持久确认、同工程导入游标为零、丢已提交响应、身份碰撞保护，以及最终全部 A/B/历史载荷一致；不等同于真机磁盘损坏或断电测试。

@@ -27,7 +27,7 @@ export function createSyncServer({
   maxPullBytes = 24 * 1024 * 1024,
 } = {}) {
   if (typeof token !== 'string' || token.length < 24)
-    throw new Error('QUIET_PAPER_TOKEN must contain at least 24 characters');
+    throw new Error('GLOSSA_TOKEN must contain at least 24 characters');
   if (!dataDir) throw new Error('dataDir is required');
   if (
     !Number.isSafeInteger(maxBodyBytes) ||
@@ -114,7 +114,7 @@ export function createSyncServer({
         return res.end();
       }
       if (req.url === '/health' && req.method === 'GET')
-        return send(res, 200, { ok: true, service: 'quiet-paper-sync', protocol: 1 });
+        return send(res, 200, { ok: true, service: 'glossa-sync', protocol: 1 });
       if (req.url?.startsWith('/api/')) {
         const auth = req.headers.authorization || '';
         const suppliedHash = createHash('sha256')

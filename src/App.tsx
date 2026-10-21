@@ -1658,7 +1658,7 @@ function App() {
           <button
             className="button primary"
             onClick={() => {
-              downloadText((note?.title ?? '纸间') + '.quietpaper', w.getEngine()!.exportProject());
+              downloadText((note?.title ?? '笺注') + '.glossa', w.getEngine()!.exportProject());
               setModal(null);
             }}
           >
@@ -1817,8 +1817,8 @@ function App() {
   if (!w.ready)
     return (
       <div className="loading">
-        <div className="brand-mark">纸</div>
-        <span>纸间</span>
+        <div className="brand-mark">笺</div>
+        <span>笺注</span>
       </div>
     );
   if (!e)
@@ -1832,7 +1832,7 @@ function App() {
             className="button"
             onClick={async () => {
               downloadText(
-                '纸间-原始资料库恢复.json',
+                '笺注-原始资料库恢复.json',
                 JSON.stringify(await readLocal('current'), null, 2),
               );
             }}
@@ -1856,8 +1856,8 @@ function App() {
             <i />
             <i />
           </div>
-          <span>纸间</span>
-          <span className="brand-en">QUIET PAPER</span>
+          <span>笺注</span>
+          <span className="brand-en">Glossa</span>
         </div>
         {editable && (
           <button className="new-paper" onClick={() => newNote()}>
@@ -1980,7 +1980,7 @@ function App() {
                 <span>笔记</span>
               </>
             ) : (
-              <span>我的纸间</span>
+              <span>我的笺注</span>
             )}
           </div>
           <div className="topbar-right">
@@ -2940,7 +2940,7 @@ function App() {
         hidden
         ref={projectInput}
         type="file"
-        accept=".quietpaper,.json"
+        accept=".glossa,.quietpaper,.json"
         onChange={async (ev) => {
           const file = ev.target.files?.[0];
           if (file) {

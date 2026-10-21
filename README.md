@@ -1,4 +1,4 @@
-# 纸间 · Quiet Paper
+# 笺注 · Glossa
 
 本地优先的固定纸张笔记系统，当前版本为 **0.1 工程验证版**。工作区原为空，从零实现；没有复用或冒用此前 Quiet Editorial 的美术资源。界面重新设计为暖纸、深墨、灰紫工具与编辑式排版，默认进入原稿纸张。
 
@@ -22,7 +22,7 @@ npm run build
 npm run preview
 ```
 
-生产浏览器首次打开为空。可导入 `examples/变化与积累.quietpaper` 查看、修改已有 B 和复习；完整新建与原稿编辑请安装 Android APK。生产 Service Worker 预缓存本轮所有静态资产，API 不进入缓存；Android 直接从 APK 资产启动，不依赖 Service Worker 或开发服务器。
+生产浏览器首次打开为空。可导入 `examples/变化与积累.glossa` 查看、修改已有 B 和复习；完整新建与原稿编辑请安装 Android APK。生产 Service Worker 预缓存本轮所有静态资产，API 不进入缓存；Android 直接从 APK 资产启动，不依赖 Service Worker 或开发服务器。
 
 ## Android
 
@@ -45,7 +45,7 @@ Android 使用系统 WebView 的 Pointer Events 保存真实采样，并通过 S
 
 ```sh
 npm run build
-export QUIET_PAPER_TOKEN='替换为至少24字符的随机访问令牌'
+export GLOSSA_TOKEN='替换为至少24字符的随机访问令牌'
 npm run server
 ```
 
@@ -62,7 +62,7 @@ npm run server
 - B 修订在原位置创建独立可编辑印刷层。平板“修订与历史”可独立撤销或明确确认不可逆合并；通用故障恢复历史仍保留。
 - 复习按知识块离线排期，可切 A/B/对照、自评“会了/还不会”，固定间隔与可插拔自适应算法均可运行。当前 adaptive 是 FSRS 启发式，不是经过验证的完整 FSRS 模型。
 - 原生 Markdown/LaTeX 可选择源对象插入纸张，并保留完整源快照、历史和待写队列；未经证明的源对象重定位进入人工确认，不能靠坐标或文件名猜。
-- 导出完整 `.quietpaper` 工程恢复原始 A/B、映射、对象/版本、知识关系、复习及源快照。Markdown/独立 HTML 是另行提供的 B 阅读快照，不能替代完整恢复包。
+- 导出完整 `.glossa` 工程恢复原始 A/B、映射、对象/版本、知识关系、复习及源快照。Markdown/独立 HTML 是另行提供的 B 阅读快照，不能替代完整恢复包。
 
 ## 验证
 
@@ -95,3 +95,5 @@ Android 原生往返使用单独 instrumentation APK，命令见 [Android 文档
 平板知识块可按已有段落拆分、合并及跨笔记关联，保留旧块身份的别名和结构档案；段内进一步切分和跨页人工落点仍需扩展。实现与验证见 [知识块管理](docs/BLOCKS.md)、[书写渲染测量](docs/ink-performance.md)。
 
 源码按数据内核、持久化、自动化、复习、同步、格式、导出、原生适配与交互模块分开。新增格式/算法应加真实往返/行为证据，优先保护原稿和可迁移性。
+
+命名与原地升级兼容约定见 [笺注 / Glossa 命名变更](docs/BRANDING.md)。旧 `.quietpaper` 工程仍可导入；数据库与加密身份保持兼容。

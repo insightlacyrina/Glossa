@@ -112,7 +112,7 @@ const segments = (note) =>
   note.blocks.flatMap((block) => block.segments).filter((segment) => !segment.deleted);
 const liveStrokes = (note) =>
   note.pages.flatMap((p) => p.objects).filter((o) => !o.deleted && o.kind === 'stroke');
-const title = '验收 · 纸间';
+const title = '验收 · 笺注';
 
 try {
   await page.goto(base);
@@ -310,7 +310,7 @@ try {
   await page.getByRole('button', { name: /^所有笔记/ }).click();
   await page.getByPlaceholder('搜索文字、公式与标签').fill('验收标签');
   assert.equal(await page.locator('.note-card:not(.new-note-card)').count(), 1);
-  assert.match(await page.locator('.note-card:not(.new-note-card)').innerText(), /验收 · 纸间/);
+  assert.match(await page.locator('.note-card:not(.new-note-card)').innerText(), /验收 · 笺注/);
   await page.getByPlaceholder('搜索文字、公式与标签').fill('');
   await page.locator('.folder-item').filter({ hasText: '数学' }).click();
   assert.ok(
