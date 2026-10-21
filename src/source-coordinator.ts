@@ -1,12 +1,36 @@
 import {
   deleteLinkedObject,
   editLinkedPaper,
+  markSourceUnavailable,
   openNative,
   renameNative,
   type NativeDocument,
   type NativeLink,
 } from './formats';
 import type { NotebookEngine } from './domain';
+
+/** Only measured provider access may reset an earlier source-offline deadline. */
+export function recordSourceFailure(
+  link: NativeLink,
+  reply: { unavailable?: boolean; sourceReachable?: boolean } = {},
+  now = Date.now(),
+  lastVerifiedContact?: number,
+): NativeLink {
+  if (link.mode !== 'linked') return { ...link };
+  const next = { ...link };
+  // A later local error must retain an earlier successful read in this cycle.
+  if (lastVerifiedContact !== undefined) {
+    next.lastSourceContact = lastVerifiedContact;
+    delete next.unavailableSince;
+  }
+  if (reply.unavailable === true) return markSourceUnavailable(next, now);
+  if (reply.sourceReachable === true) {
+    next.lastSourceContact = now;
+    delete next.unavailableSince;
+  }
+  if (next.status !== 'conflict' && next.status !== 'missing') next.status = 'pending';
+  return next;
+}
 
 export type SourceRecord = {
   document: NativeDocument;

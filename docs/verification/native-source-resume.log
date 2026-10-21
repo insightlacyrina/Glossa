@@ -1,0 +1,21 @@
+
+PASS native source resume; assertions=18; pid=2287
+PASS a completed prepare phase exists
+PASS resume executes in a different real Android process: 2231 -> 2287
+PASS restart proof references a test-owned source only
+PASS fixture.md new process reopens exact durable pending text and base SHA
+PASS fixture.md provider source did not silently change while unavailable
+PASS fixture.md queued snapshot survives process termination
+PASS fixture.md restored provider receives complete pending bytes and reopens exactly
+PASS fixture.md only confirmed write clears its pending journal
+PASS fixture.md original and resulting full source versions survive
+PASS restart proof references a test-owned source only
+PASS fixture.tex new process reopens exact durable pending text and base SHA
+PASS fixture.tex provider source did not silently change while unavailable
+PASS fixture.tex queued snapshot survives process termination
+PASS fixture.tex restored provider receives complete pending bytes and reopens exactly
+PASS fixture.tex only confirmed write clears its pending journal
+PASS fixture.tex original and resulting full source versions survive
+PASS confirmed restart write no longer appears in queue
+PASS confirmed restart write no longer appears in queue
+

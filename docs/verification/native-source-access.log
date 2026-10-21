@@ -1,0 +1,11 @@
+✔ verified provider access clears stale offline time even when decoding or local persistence fails (4.341153ms)
+✔ unknown and local pre-read errors cannot invent successful source contact (0.427145ms)
+✔ source reachability preserves unresolved object identity, conflict state and frozen copies (0.954971ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 199.480005

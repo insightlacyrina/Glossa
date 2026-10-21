@@ -22,11 +22,15 @@ public final class NativeRoundTripInstrumentation extends RendererRecoveryInstru
     private WebView web;
     private final StringBuilder evidence = new StringBuilder();
     private boolean rendererRecovery;
+    private String nativeSourcePhase;
     @Override public void onCreate(Bundle arguments) {
         rendererRecovery = arguments != null && "renderer-recovery".equals(arguments.getString("mode"));
+        String mode = arguments == null ? null : arguments.getString("mode");
+        if (mode != null && mode.startsWith("native-source-")) nativeSourcePhase = mode.substring("native-source-".length());
         super.onCreate(arguments);
     }
     @Override public void onStart() {
+        if (nativeSourcePhase != null) { NativeSourceScenarios.run(this, nativeSourcePhase); return; }
         if (rendererRecovery) { super.onStart(); return; }
         Bundle results = new Bundle();
         try {
@@ -69,7 +73,7 @@ public final class NativeRoundTripInstrumentation extends RendererRecoveryInstru
         waitResult("conflict-" + name, "!e.ok && e.error==='source-conflict' && e.pending");
         require(readSource(uri).equals(external), name + " source conflict never overwrites external content");
         String resolved = external + "% resolved\n";
-        bridge.resolveSourceConflict("resolve-" + name, uri.toString(), resolved, sha(external));
+        bridge.saveDocumentVersioned("resolve-" + name, uri.toString(), resolved, sha(external), sha(after + "local"));
         waitResult("resolve-" + name, "e.ok && !e.pending");
         require(readSource(uri).equals(resolved), name + " explicit conflict resolution");
         getTargetContext().getContentResolver().call(uri, "availability", "false", null);

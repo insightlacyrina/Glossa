@@ -3,10 +3,8 @@ package local.quietpaper;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.OpenableColumns;
 import android.util.DisplayMetrics;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
@@ -31,18 +29,13 @@ import android.util.Log;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
-import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.util.Collections;
-import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -57,11 +50,13 @@ public final class MainActivity extends Activity {
     // Destroying a view must not start a competing file-journal executor.
     private static final ExecutorService io = Executors.newSingleThreadExecutor();
     private WebView web;
+    private NativeSourceStore sources;
     private String role, deviceId, openRequest, exportRequest, exportText, exportSession;
     private ValueCallback<Uri[]> fileCallback;
 
     @Override public void onCreate(Bundle saved) {
         super.onCreate(saved);
+        sources = new NativeSourceStore(this);
         SharedPreferences prefs = getSharedPreferences("device", MODE_PRIVATE);
         deviceId = prefs.getString("id", null);
         if (deviceId == null) {
@@ -262,91 +257,32 @@ public final class MainActivity extends Activity {
         }
         @JavascriptInterface public void saveDocument(String requestId, String uri, String text, String expectedSha256) {
             if (!"tablet".equals(role)) { failure(requestId, "save", "tablet-required"); return; }
-            io.execute(() -> save(requestId, uri, text, expectedSha256));
+            io.execute(() -> emit(sources.saveDocument(requestId, uri, text, expectedSha256)));
         }
         @JavascriptInterface public void saveDocumentVersioned(String requestId, String uri, String text, String expectedSourceSha256, String expectedPendingSha256) {
             if (!"tablet".equals(role)) { failure(requestId, "save", "tablet-required"); return; }
-            io.execute(() -> saveInternal(requestId, uri, text, expectedSourceSha256, expectedPendingSha256, true));
+            io.execute(() -> emit(sources.saveDocumentVersioned(requestId, uri, text, expectedSourceSha256, expectedPendingSha256)));
         }
         @JavascriptInterface public void getPendingSource(String requestId, String uri) {
-            io.execute(() -> {
-                try {
-                    JSONObject pending = readPending(uri);
-                    JSONObject result = new JSONObject().put("requestId", requestId).put("ok", true).put("type", "source-pending")
-                        .put("uri", uri).put("pending", pending != null);
-                    if (pending != null) result.put("text", pending.getString("text")).put("sha256", pending.getString("sha256"))
-                        .put("baseSha256", pending.getString("baseSha256"));
-                    emit(result);
-                } catch (Exception e) { failure(requestId, "source-pending", e.getClass().getSimpleName()); }
-            });
+            io.execute(() -> emit(sources.getPendingSource(requestId, uri)));
         }
-        @JavascriptInterface public void readDocument(String requestId, String rawUri) {
-            io.execute(() -> {
-                try {
-                    Uri uri = Uri.parse(rawUri);
-                    if (!"content".equals(uri.getScheme())) throw new IllegalArgumentException("content-uri-required");
-                    String text = readText(getContentResolver().openInputStream(uri));
-                    snapshot(rawUri, text);
-                    emit(new JSONObject().put("requestId", requestId).put("ok", true).put("type", "read").put("uri", rawUri)
-                        .put("name", displayName(uri)).put("text", text).put("sha256", sha(text)));
-                } catch (Exception e) {
-                    try {
-                        emit(new JSONObject().put("requestId", requestId).put("ok", false).put("type", "read")
-                            .put("uri", rawUri).put("unavailable", true).put("error", e.getClass().getSimpleName()));
-                    } catch (Exception ignored) { failure(requestId, "read", "source-unavailable"); }
-                }
-            });
+        @JavascriptInterface public void readDocument(String requestId, String uri) {
+            io.execute(() -> emit(sources.readDocument(requestId, uri)));
         }
         @JavascriptInterface public void retryPendingWrite(String requestId, String uri) {
             if (!"tablet".equals(role)) { failure(requestId, "save", "tablet-required"); return; }
-            io.execute(() -> {
-                try {
-                    JSONObject pending = readPending(uri);
-                    if (pending == null) { failure(requestId, "save", "no-pending-write"); return; }
-                    save(requestId, uri, pending.getString("text"), pending.getString("sha256"));
-                } catch (Exception e) { failure(requestId, "save", e.getClass().getSimpleName()); }
-            });
+            io.execute(() -> emit(sources.retryPendingWrite(requestId, uri)));
         }
-        /** Only call after the user has inspected both conflict versions and chosen a result. */
+        /** Legacy single-SHA conflict decisions cannot bind the pending version shown to the user. */
         @JavascriptInterface public void resolveSourceConflict(String requestId, String uri, String resolvedText, String sourceSha256) {
             if (!"tablet".equals(role)) { failure(requestId, "save", "tablet-required"); return; }
-            io.execute(() -> {
-                try {
-                    JSONObject previous = readPending(uri);
-                    if (previous == null) throw new IllegalStateException("no-pending-conflict");
-                    saveInternal(requestId, uri, resolvedText, sourceSha256, previous.getString("sha256"), true);
-                } catch (Exception e) { failure(requestId, "save", e.getClass().getSimpleName()); }
-            });
+            io.execute(() -> emit(sources.resolveSourceConflict(requestId, uri, resolvedText, sourceSha256)));
         }
         @JavascriptInterface public void getPendingWrites(String requestId) {
-            io.execute(() -> {
-                try {
-                    JSONArray entries = new JSONArray();
-                    File[] files = pendingDirectory().listFiles();
-                    if (files != null) for (File file : files) {
-                        JSONObject item = new JSONObject(readJournal(file));
-                        // Avoid sending full document data to the task center.
-                        item.remove("text"); entries.put(item);
-                    }
-                    emit(new JSONObject().put("requestId", requestId).put("ok", true).put("type", "pending").put("entries", entries));
-                } catch (Exception e) { failure(requestId, "pending", e.getClass().getSimpleName()); }
-            });
+            io.execute(() -> emit(sources.getPendingWrites(requestId)));
         }
         @JavascriptInterface public void getSourceSnapshot(String requestId, String uri) {
-            io.execute(() -> {
-                try {
-                    JSONObject pending = readPending(uri);
-                    if (pending != null) {
-                        emit(new JSONObject().put("requestId", requestId).put("ok", true).put("type", "snapshot")
-                            .put("uri", uri).put("text", pending.getString("text")).put("sha256", pending.getString("sha256")).put("pending", true));
-                        return;
-                    }
-                    File snapshot = new File(sourceDirectory(uri), "latest.txt");
-                    String text = readText(new FileInputStream(snapshot));
-                    emit(new JSONObject().put("requestId", requestId).put("ok", true).put("type", "snapshot")
-                        .put("uri", uri).put("text", text).put("sha256", sha(text)).put("pending", false));
-                } catch (Exception e) { failure(requestId, "snapshot", e.getClass().getSimpleName()); }
-            });
+            io.execute(() -> emit(sources.getSourceSnapshot(requestId, uri)));
         }
     }
 
@@ -364,17 +300,15 @@ public final class MainActivity extends Activity {
             try { getContentResolver().takePersistableUriPermission(uri, permissions); }
             catch (SecurityException ignored) { /* Some providers offer temporary grants only; surfaced below. */ }
             io.execute(() -> {
+                boolean retained = false;
                 try {
-                    String text = readText(getContentResolver().openInputStream(uri));
-                    String name = displayName(uri);
-                    boolean retained = false;
                     for (android.content.UriPermission grant : getContentResolver().getPersistedUriPermissions()) {
                         if (grant.getUri().equals(uri) && grant.isReadPermission()) retained = true;
                     }
-                    snapshot(uri.toString(), text);
-                    emit(new JSONObject().put("requestId", requestId).put("ok", true).put("type", "open").put("uri", uri.toString())
-                        .put("name", name).put("text", text).put("sha256", sha(text)).put("persistentPermission", retained));
-                } catch (Exception e) { failure(requestId, "open", e.getClass().getSimpleName()); }
+                } catch (SecurityException unavailableGrantList) {
+                    // A temporary grant can still permit the read; report its actual retained state.
+                }
+                emit(sources.openDocument(requestId, uri.toString(), retained));
             });
         } else if (request == EXPORT_SOURCE) {
             final String requestId = exportRequest, text = exportText, sessionId = exportSession;
@@ -404,128 +338,13 @@ public final class MainActivity extends Activity {
         }
     }
 
-    private void save(String requestId, String rawUri, String text, String expected) {
-        saveInternal(requestId, rawUri, text, expected, null, false);
-    }
-    private void saveInternal(String requestId, String rawUri, String text, String expected, String expectedPending, boolean versioned) {
-        boolean staged = false, existingPending = false;
-        String previousSha = null;
-        try {
-            if (text.getBytes(StandardCharsets.UTF_8).length > MAX_BYTES) throw new IllegalArgumentException("document-too-large");
-            Uri uri = Uri.parse(rawUri);
-            if (!"content".equals(uri.getScheme())) throw new IllegalArgumentException("content-uri-required");
-            JSONObject previous = readPending(rawUri);
-            existingPending = previous != null;
-            previousSha = previous == null ? null : previous.getString("sha256");
-            String base = SourceWritePolicy.base(previous == null ? null : previous.getString("text"), previousSha,
-                previous == null ? null : previous.getString("baseSha256"), text, expected, expectedPending, versioned);
-            // Journal first, including failed/temporarily unavailable source writes.
-            JSONObject pending = new JSONObject().put("uri", rawUri).put("text", text).put("sha256", sha(text))
-                .put("baseSha256", base).put("queuedAt", System.currentTimeMillis());
-            if (previous != null) durable(new File(sourceDirectory(rawUri), "pending-" + UUID.randomUUID() + ".json"), previous.toString());
-            durable(new File(pendingDirectory(), sha(rawUri) + ".json"), pending.toString());
-            staged = true;
-            String source = readText(getContentResolver().openInputStream(uri));
-            String current = sha(source);
-            // A previous write may have reached the provider before its reply
-            // or journal cleanup was interrupted. Exact bytes already present
-            // are a safe acknowledgment; no source write occurs in this path.
-            if (current.equals(sha(text))) {
-                snapshot(rawUri, source);
-                if (!new File(pendingDirectory(), sha(rawUri) + ".json").delete()) throw new IllegalStateException("pending-journal-remove-failed");
-                emit(new JSONObject().put("requestId", requestId).put("ok", true).put("type", "save").put("uri", rawUri)
-                    .put("sha256", current).put("pending", false));
-                return;
-            }
-            if (!current.equals(base)) {
-                emit(new JSONObject().put("requestId", requestId).put("ok", false).put("type", "save").put("error", "source-conflict")
-                    .put("uri", rawUri).put("sourceText", source).put("sourceSha256", current).put("pending", true).put("sha256", sha(text)));
-                return;
-            }
-            snapshot(rawUri, source);
-            writeSource(uri, text);
-            String verified = readText(getContentResolver().openInputStream(uri));
-            if (!sha(verified).equals(sha(text))) throw new IllegalStateException("write-verification-failed");
-            snapshot(rawUri, verified);
-            if (!new File(pendingDirectory(), sha(rawUri) + ".json").delete()) throw new IllegalStateException("pending-journal-remove-failed");
-            emit(new JSONObject().put("requestId", requestId).put("ok", true).put("type", "save").put("uri", rawUri)
-                .put("sha256", sha(text)).put("pending", false));
-        } catch (Exception e) {
-            try {
-                emit(new JSONObject().put("requestId", requestId).put("ok", false).put("type", "save").put("uri", rawUri)
-                    .put("error", e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()).put("pending", staged || existingPending)
-                    .put("sha256", staged ? sha(text) : previousSha));
-            } catch (Exception ignored) { failure(requestId, "save", "write-failed"); }
-        }
-    }
-
-    private String displayName(Uri uri) {
-        try (Cursor cursor = getContentResolver().query(uri, new String[] {OpenableColumns.DISPLAY_NAME}, null, null, null)) {
-            if (cursor != null && cursor.moveToFirst()) return cursor.getString(0);
-        }
-        return "document";
-    }
-    private String readText(InputStream stream) throws Exception {
-        if (stream == null) throw new IllegalStateException("source-unavailable");
-        try (InputStream input = stream; ByteArrayOutputStream bytes = new ByteArrayOutputStream()) {
-            byte[] buffer = new byte[8192]; int count;
-            while ((count = input.read(buffer)) != -1) {
-                if (bytes.size() + count > MAX_BYTES) throw new IllegalArgumentException("document-too-large");
-                bytes.write(buffer, 0, count);
-            }
-            return StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT)
-                .onUnmappableCharacter(CodingErrorAction.REPORT).decode(ByteBuffer.wrap(bytes.toByteArray())).toString();
-        }
-    }
     private void writeSource(Uri uri, String text) throws Exception {
         try (OutputStream output = getContentResolver().openOutputStream(uri, "rwt")) {
             if (output == null) throw new IllegalStateException("source-unavailable");
             output.write(text.getBytes(StandardCharsets.UTF_8)); output.flush();
         }
     }
-    private File pendingDirectory() {
-        File directory = new File(getFilesDir(), "native-pending"); directory.mkdirs(); return directory;
-    }
     private ExportStore exportStore() { return new ExportStore(new File(getFilesDir(), "export-staging")); }
-    private File sourceDirectory(String uri) throws Exception {
-        File directory = new File(getFilesDir(), "native-sources/" + sha(uri)); directory.mkdirs(); return directory;
-    }
-    private JSONObject readPending(String uri) throws Exception {
-        File file = new File(pendingDirectory(), sha(uri) + ".json");
-        return file.exists() ? new JSONObject(readJournal(file)) : null;
-    }
-    private String readJournal(File file) throws Exception {
-        // JSON escaping can make a source snapshot larger than its UTF-8 document.
-        try (InputStream input = new FileInputStream(file); ByteArrayOutputStream bytes = new ByteArrayOutputStream()) {
-            byte[] buffer = new byte[8192]; int count;
-            while ((count = input.read(buffer)) != -1) {
-                if (bytes.size() + count > MAX_BYTES * 8) throw new IllegalArgumentException("journal-too-large");
-                bytes.write(buffer, 0, count);
-            }
-            return bytes.toString(StandardCharsets.UTF_8.name());
-        }
-    }
-    private void snapshot(String uri, String text) throws Exception {
-        File directory = sourceDirectory(uri);
-        File version = new File(directory, sha(text) + ".txt");
-        if (!version.exists()) durable(version, text);
-        durable(new File(directory, "latest.txt"), text);
-        durable(new File(directory, "source-uri.txt"), uri);
-    }
-    private void durable(File destination, String text) throws Exception {
-        File temporary = new File(destination.getPath() + ".tmp");
-        try (FileOutputStream stream = new FileOutputStream(temporary)) {
-            stream.write(text.getBytes(StandardCharsets.UTF_8)); stream.flush(); stream.getFD().sync();
-        }
-        java.nio.file.Files.move(temporary.toPath(), destination.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING,
-            java.nio.file.StandardCopyOption.ATOMIC_MOVE);
-    }
-    private static String sha(String value) throws Exception {
-        byte[] digest = MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8));
-        StringBuilder output = new StringBuilder();
-        for (byte b : digest) output.append(String.format(Locale.ROOT, "%02x", b & 255));
-        return output.toString();
-    }
     private void failure(String request, String type, String error) {
         try { emit(new JSONObject().put("requestId", request).put("type", type).put("ok", false).put("error", error)); }
         catch (Exception ignored) { }

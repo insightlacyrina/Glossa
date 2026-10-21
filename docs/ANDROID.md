@@ -14,7 +14,13 @@ Android 平板是唯一完整创建与编辑端。Android 手机只能阅读与�
 
 这个 16MiB 限制仅用于当前原生**源文档文本读写**，不用于完整工程包导出。`downloadText` 已接入分块工程导出：每块至多 256KiB，UTF-8 编码前避免切断代理对，原生将块按序持久暂存，不把整份工程一次传入桥接方法。完成后流式写入用户选择的目标，并重新读取计算 SHA-256；校验成功才清理暂存。总工程大小不设 16MiB 上限，实际受可用存储和现阶段 JSON 序列化内存约束。中途退出保留已提交偏移；块写完但清单未提交的尾部，在恢复时截回已提交位置。取消文件选择或目标写失败也不会清除原始工程。
 
-写回先比较原文件 SHA-256，再保存旧内容历史和待写日志，随后写入并重读校验。源内容改变时返回双方内容，由用户选择结果；临时不可访问时，待写日志与本地内容继续保留。URI 是否稳定由文档提供者决定，不能假定移动和重命名后总能继续访问。UI 可调用 `readDocument` 在聚焦与定时轮询时检查源改动；只有实际源读取失败才能启动源失联计时，不能使用同步服务离线状态代替。
+`MainActivity` 将源文件打开、读取、保存、待写恢复与快照查询委托给生产类 `NativeSourceStore`。该文件层直接使用 Android `ContentResolver`，不依赖 Activity、WebView 或 JavaScript 求值器；应用桥与独立文件层 instrumentation 使用同一份生产实现。
+
+写回先校验已有待写日志和待写版本约束，再持久保存新待写日志，随后读取实际源文件并比较调用方提供的源 SHA-256 基准。源内容改变时返回双方内容并保留待写版本，由用户选择结果；源基准一致时，先保存旧源全文快照，再写回、重读校验并保存新快照，最后删除待写日志。实际源全文已经等于目标时可以确认并清理待写，不重复写源。临时不可访问时，待写日志与本地内容继续保留。
+
+本地日志和快照先写同目录临时文件，执行文件 `fsync`，再原子替换并执行父目录 `fsync`；目录创建与待写删除也同步父目录。`NativeSourceStore` 的静态锁在进程内串行保护这些操作，包括不同实例对同一私有目录的访问。上述措施针对本地日志，不构成跨进程锁或外部源文件的原子事务。
+
+URI 是否稳定由文档提供者决定，不能假定移动和重命名后总能继续访问。UI 在聚焦与定时轮询时读取源改动。只有实际 provider 读取失败才返回 `unavailable: true`，用于源失联计时；无效 UTF-8、超限文本、本地日志失败和写权限失败均不能冒充源不可访问。已实测源可读但后续处理失败时返回 `sourceReachable: true`，使协调层能够清除旧失联期限；本地处理失败本身不能证明源已恢复。文件名查询失败可返回 `metadataWarning`，不丢弃已读正文。Mac 同步服务离线不能启动源失联计时。
 
 SAF 提供者不统一支持原子文件替换。当前先持久保存原文和待写快照，避免把单次写回失败当成成功；**这不构成对所有提供者原子写入的保证**。后续必须在 Android DocumentsProvider、Downloads、本地目录、可移除存储和云文档提供者上分别做故障注入。原生私有历史目录不是完整工程包的替代品；工程包须包含共享文件关联模块中的源快照和待写状态。
 
@@ -22,7 +28,7 @@ SAF 提供者不统一支持原子文件替换。当前先持久保存原文和�
 
 `MainActivity` 已加入 `onRenderProcessGone`：当退出的是当前 WebView 时，先取消其文件选择器回调，移除并销毁已失效的窗口，再显示原生“书写窗口已中断”和“重新打开”按钮。用户点击后才通过 `recreate()` 重建 Activity；不会自动循环重启，也不会在这条恢复路径中清理 IndexedDB、源文件日志或工程导出暂存。处理器返回已接管退出事件，目的是避免容器因未处理渲染器退出继续终止；这项实现尚不能单凭源码证明已经通过故障验收。
 
-原生源文件与导出操作使用**进程内共享的静态单线程 I/O 队列**。Activity 重建不会为同一批持久日志启动另一套并行写者；已经排入队列的持久化工作可以继续执行。它不是跨进程锁，也不保证进程被系统终止后未提交的任务还能运行，恢复仍须依靠已提交的日志与暂存。
+原生源文件与导出操作使用**进程内共享的静态单线程 I/O 队列**，源文件层另由上述静态锁保护。Activity 重建不会为同一批持久日志启动另一套并行写者；已经排入队列的持久化工作可以继续执行。它不是跨进程锁，也不保证进程被系统终止后未提交的任务还能运行，恢复仍须依靠已提交的日志与暂存。
 
 异步 `emit` 在主线程再次检查 WebView 是否存在、Activity 是否正在结束或已经销毁、窗口是否仍挂载，并捕获向不可用窗口发送 JavaScript 时的异常。旧 Activity 不会把完成通知投递到重建后的新窗口。文件选择器在窗口退出和 Activity 销毁时清空并以 `null` 结束旧回调；打开/完成导出选择器之前也检查窗口生命周期。失去窗口的导出暂存继续保留，重新打开后可在恢复入口检查，而不是把丢失回调冒充导出成功。
 
@@ -30,36 +36,39 @@ SAF 提供者不统一支持原子文件替换。当前先持久保存原文和�
 
 `window.QuietPaperNative` 暴露以下方法；读写在串行后台线程执行，不占用书写线程。
 
-| 方法                                                                                       | 结果                                                              |
-| ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
-| `getRole()` / `getDeviceId()` / `getPlatform()`                                            | 同步返回 `tablet`/`phone`、安装标识、`android`                    |
-| `openDocument(requestId)`                                                                  | 用户选择已有原生文件，结果 `type: "open"`                         |
-| `readDocument(requestId, uri)`                                                             | 重新读取已有 URI，结果 `type: "read"`；失败含 `unavailable: true` |
-| `saveDocument(requestId, uri, text, expectedSha256)`                                       | 比较版本后写回，结果 `type: "save"`                               |
-| `getPendingSource(requestId, uri)`                                                         | 明确返回 `pending: false`，或待写全文、`sha256`、`baseSha256`     |
-| `saveDocumentVersioned(requestId, uri, text, expectedSourceSha256, expectedPendingSha256)` | 同时比较源与待写版本；空待写指纹要求队列中确实无此 URI 的待写操作 |
-| `retryPendingWrite(requestId, uri)`                                                        | 重试已有持久待写操作，保留最初源版本作为比较依据                  |
-| `resolveSourceConflict(requestId, uri, resolvedText, sourceSha256)`                        | 用户确认冲突预览后，提交选择的内容；仍会再次检查源版本            |
-| `getPendingWrites(requestId)`                                                              | 返回队列元数据，不发送完整源内容到任务中心                        |
-| `getSourceSnapshot(requestId, uri)`                                                        | 返回待写版本或最后有效源快照                                      |
-| `exportDocument(requestId, name, mime, text)`                                              | 用户选择导出目标，结果 `type: "export"`                           |
-| `beginExport(requestId, name, mime)`                                                       | 建立持久工程导出会话，返回 `sessionId`                            |
-| `appendExportChunk(requestId, sessionId, sequence, base64)`                                | 顺序追加有界 UTF-8 字节块并确认持久偏移                           |
-| `completeExport(requestId, sessionId)`                                                     | 校验暂存、选择目标、流式写入、重新读取并校验 SHA-256              |
-| `getPendingExports(requestId)` / `discardExport(requestId, sessionId)`                     | 恢复管理界面检查暂存、继续导出或经确认显式清理                    |
+| 方法                                                                                       | 结果                                                                                  |
+| ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| `getRole()` / `getDeviceId()` / `getPlatform()`                                            | 同步返回 `tablet`/`phone`、安装标识、`android`                                        |
+| `openDocument(requestId)`                                                                  | 用户选择已有原生文件，结果 `type: "open"`                                             |
+| `readDocument(requestId, uri)`                                                             | 重新读取已有 URI，结果 `type: "read"`；仅实际源读取失败标记 `unavailable: true`       |
+| `saveDocument(requestId, uri, text, expectedSha256)`                                       | 比较版本后写回，结果 `type: "save"`                                                   |
+| `getPendingSource(requestId, uri)`                                                         | 成功时明确返回 `pending: false`，或待写全文、`sha256`、`baseSha256`；损坏日志返回失败 |
+| `saveDocumentVersioned(requestId, uri, text, expectedSourceSha256, expectedPendingSha256)` | 同时比较源与待写版本；空待写指纹要求队列中确实无此 URI 的待写操作                     |
+| `retryPendingWrite(requestId, uri)`                                                        | 重试已有持久待写操作，保留最初源版本作为比较依据                                      |
+| `resolveSourceConflict(requestId, uri, resolvedText, sourceSha256)`                        | 旧单 SHA 接口拒绝执行，返回 `versioned-resolution-required`；决议须使用双 SHA 接口    |
+| `getPendingWrites(requestId)`                                                              | 返回有效队列元数据；损坏项另列 `diagnostics` 并设置 `needsRecovery`，不发送源全文     |
+| `getSourceSnapshot(requestId, uri)`                                                        | 返回待写版本或最后有效源快照                                                          |
+| `exportDocument(requestId, name, mime, text)`                                              | 用户选择导出目标，结果 `type: "export"`                                               |
+| `beginExport(requestId, name, mime)`                                                       | 建立持久工程导出会话，返回 `sessionId`                                                |
+| `appendExportChunk(requestId, sessionId, sequence, base64)`                                | 顺序追加有界 UTF-8 字节块并确认持久偏移                                               |
+| `completeExport(requestId, sessionId)`                                                     | 校验暂存、选择目标、流式写入、重新读取并校验 SHA-256                                  |
+| `getPendingExports(requestId)` / `discardExport(requestId, sessionId)`                     | 恢复管理界面检查暂存、继续导出或经确认显式清理                                        |
 
 所有异步结果通过 `quietpaper-native` DOM 事件传递：
 
 ```ts
 window.addEventListener('quietpaper-native', (event) => {
   const result = (event as CustomEvent).detail;
-  // {requestId, type, ok, uri?, name?, text?, sha256?, pending?, error?}
+  // {requestId, type, ok, uri?, name?, text?, sha256?, pending?, error?,
+  //  unavailable?, sourceReachable?, metadataWarning?, diagnostics?, needsRecovery?}
 });
 ```
 
-`source-conflict` 失败包含 `sourceText` 与 `sourceSha256`，保留待写内容。新文件名不用于识别同一源；重新定位须通过共享文件关联模块比较指纹并由用户确认。
+`source-conflict` 失败包含 `sourceText` 与 `sourceSha256`，保留待写内容。新文件名不用于识别同一源；重新定位须通过共享文件关联模块验证完整原文和源区间，并由用户确认。
 
 自动恢复待写时，协调层必须同时证明待写全文就是该源关联已有 `plannedWrite` 的目标，并核对其原始源指纹；读取到一个待写 SHA 本身不构成取代其内容的授权。未知来源的待写版本进入双版预览，不能静默归档。桥接层再次比较待写指纹与实际源指纹，以阻止预览后竞争修改。旧 `saveDocument` 只允许同一全文、同一源基准的幂等重试，或显式以待写版本为基准的后继编辑。当前源全文已精确等于待写目标时，仍先验证待写版本，再确认成功，不重复写入源文件。
+
+已提交待写日志必须通过 URI、文件名与全文 SHA-256 校验。损坏日志返回 `pending-journal-invalid`，不能当作队列为空，也不能静默替换。队列列表逐项保留正常记录、报告损坏文件，不将未提交的 `.tmp` 当成待写记录，不自动删除损坏或临时文件。写入返回失败且 `pending: true` 时只表示仍需核验待写状态；例如原子替换与目录同步之间发生错误，调用方须重新读取 `getPendingSource`，不能凭失败响应清除本地写入计划。
 
 ## 构建与安装
 
@@ -77,13 +86,24 @@ adb install -r android/app/build/outputs/apk/debug/app-debug.apk
 
 调试 APK 只用于本轮验收；正式发布还需要独立签名、升级迁移验证与发布渠道配置。服务端配置应使用 HTTPS。应用默认禁止明文 HTTP；局域网部署也需要设备信任的证书或受信的私有网络 HTTPS 端点。
 
-工程另含无第三方测试框架依赖的 Android instrumentation。它在真实 Android `ContentResolver` 上运行测试专用源提供者，执行 Markdown 与 LaTeX 读入、修改、写回和重新打开，检查原文、公式、注释和空白；再检查源并发冲突、显式解决，以及提供者不可访问时的持久待写和恢复。测试源提供者只存在于单独的测试 APK，不会打进客户端 APK。
+工程另含无第三方测试框架依赖的 Android instrumentation。`NativeRoundTripInstrumentation` 不带 `mode` 时启动完整 WebView/JavaScript 桥源文件场景；旧轮次的实际结果见后文。测试源提供者只存在于单独的测试 APK，不会打进客户端 APK。
 
 ```sh
 ./android/gradlew -p android :app:assembleDebugAndroidTest
 adb install -r -t android/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
 adb shell am instrument -w local.quietpaper.test/local.quietpaper.NativeRoundTripInstrumentation
 ```
+
+新增 `NativeSourceScenarios` 通过同一 runner 的 `native-source-*` 模式直接调用生产 `NativeSourceStore`，在真实 Android `ContentResolver` 与文件支持的测试提供者上验证文件层，不启动 Activity 或 WebView。`prepare` 对 Markdown/LaTeX 全文读改写和字节重开进行断言，检查源/待写竞争与双 SHA 决议，再留下已提交的离线待写日志；随后必须停止目标进程，`resume` 检查不同 PID 下的日志、快照与版本恢复，源恢复后读回确认；`faults` 检查非法 UTF-8、超限、文件名查询、本地日志及真实 provider 访问失败的分类，以及损坏待写日志的保护与队列诊断。安装当前客户端及测试 APK 后，按顺序执行：
+
+```sh
+adb shell am instrument -w -e mode native-source-prepare local.quietpaper.test/local.quietpaper.NativeRoundTripInstrumentation
+adb shell am force-stop local.quietpaper
+adb shell am instrument -w -e mode native-source-resume local.quietpaper.test/local.quietpaper.NativeRoundTripInstrumentation
+adb shell am instrument -w -e mode native-source-faults local.quietpaper.test/local.quietpaper.NativeRoundTripInstrumentation
+```
+
+`resume` 必须消费已完成的 `prepare` 证据，不可通过重置数据绕过未确认的待写；该顺序用于复现新增场景，实际是否通过须以各阶段日志为准。测试专用 ContentProvider 不证明系统文件选择器、持久 URI 授权、各类 DocumentsProvider 或完整 JavaScript 桥已经通过验收。跨进程恢复仅针对已提交待写，不代表写回中途终止、断电或真实 A/IndexedDB 故障恢复已经验证。这里的文本修改直接验证文件层，也不等于已在 Android 验证格式对象抽取、纸张与 B 的完整往返。
 
 本环境标准 `adb` 强制创建不可写的 `~/.android`；`android/tools/adb-direct.py` 仅用于本地无认证模拟器，以 ADB 协议执行安装和测试，避免更改 `HOME` 或写入沙箱以外路径。普通开发机器和真实设备应继续使用标准 `adb`。测试源码编译成功不代表 instrumentation 已执行成功，运行结果以交付证据为准。
 
@@ -102,7 +122,7 @@ node --import tsx --test --test-isolation=none tests/native.test.ts
 
 ## 原生执行记录与恢复专项
 
-源文件往返 `NativeRoundTripInstrumentation` 的两轮实际运行均**未通过**，没有取得 Android Markdown/LaTeX 读改写重开成功的证据：
+此前完整 WebView/JavaScript 桥源文件往返 `NativeRoundTripInstrumentation` 的两轮实际运行均**未通过**，这两轮没有取得 Android Markdown/LaTeX 读改写重开成功的证据：
 
 | 运行   | 实际结果                               | 证据与边界                                                                                                                                                                                |
 | ------ | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -121,7 +141,25 @@ adb shell am instrument -w -e mode renderer-recovery local.quietpaper.test/local
 
 **2026-10-21 专项实际通过，6 项断言成功。** 环境为 Android 15/API 35 软件模拟器：Activity 在渲染器退出后保持、原生私有持久文件保留、导出暂存保留、用户点击后重建 Activity、安装身份保持，以及重开后文件与暂存仍完整。实际输出见 [专项日志](verification/android-renderer-recovery.log)。首次专项未登记成功的问题已修正，失败输出另行保留；已通过的自动、浏览器与 JVM 测试没有重复执行。
 
-这些直接断言只覆盖上述原生文件、导出暂存、安装身份及窗口重建；真实 A 笔迹、IndexedDB 在渲染器崩溃/整进程终止/断电下的完整恢复，以及各种设备的手写体验，仍须分别验收。源文件往返测试仍未通过，不因恢复专项成功而改写结论。
+这些直接断言只覆盖上述原生文件、导出暂存、安装身份及窗口重建；真实 A 笔迹、IndexedDB 在渲染器崩溃/整进程终止/断电下的完整恢复，以及各种设备的手写体验，仍须分别验收。完整 WebView/JavaScript 桥源文件往返仍未通过，不因恢复专项成功而改写结论。
+
+### 0.1.1 文件层专项实际结果
+
+同日新增专项在 API 35 软件模拟器实际通过 **71 项断言**；不依赖 Activity/WebView，调用与客户端共用的生产文件层：
+
+| 阶段    | 断言数 | 进程 | 结果                                                                                                                                                                   |
+| ------- | ------ | ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| prepare | 41     | 2231 | 两种格式真实读改写与字节重开、双版本保护、失败排队；[原始日志](verification/native-source-prepare.log)                                                                 |
+| resume  | 18     | 2287 | [force-stop](verification/native-source-force-stop.log) 后不同 PID，原 pending、SHA、源历史仍在，恢复写回并重开确认；[原始日志](verification/native-source-resume.log) |
+| faults  | 12     | 2319 | 内容/元数据/本地存储/源不可访问区分，损坏日志诊断与保护；[原始日志](verification/native-source-faults.log)                                                             |
+
+源访问状态新增测试分两次执行，首次 3 项、后续只选新增的跨调用用例 1 项，均通过。协调层保留本轮先前已验证的源访问事实，后续真正离线会重新计时；未知本地错误不能伪称在线。等待期间用户重新定位到不同 URI 或 owner 时，旧请求的错误状态不应用于新源。见[首次日志](verification/native-source-access.log)、[跨调用日志](verification/native-source-access-cycle.log)。
+
+随后仅重试此前未通过的默认 WebView 桥场景，仍返回 `WebView evaluation timeout`，文件断言尚未开始。日志确认 `CrRendererMain` 的 `SIGTRAP` 与 `onRenderProcessGone` 接管；没有因此重复已通过的 71 项或旧恢复专项。见[本次桥重试](verification/native-source-webview-roundtrip.log)、[窗口日志](verification/native-source-webview-logcat.log)、[渲染器崩溃摘要](verification/native-source-webview-crash-summary.log)。根因仍待定位，不能推定增加模拟器内存就已解决。
+
+测试时安装包身份、源码摘要与最终 Web 保护补丁的区别记录在[运行上下文](verification/native-source-run-context.json)。最终交付仅另改了 Web 的过期源错误保护，生产原生文件代码与测试 APK 未改变，因此未重跑已通过专项。新文件层证据不包含系统选择器、持久 URI 授权、真实 DocumentsProvider、完整应用格式抽取/纸张/B 链路或写回中断/断电验收。
+
+`prepare` 的 instrumentation 正常结束也会使目标进程退出；随后显式执行 `force-stop` 确保停止，再验证不同 PID 的恢复。因此这次证明的是已提交日志跨进程保留，不是写入进行中强杀进程的故障注入。
 
 ## 验收界线
 

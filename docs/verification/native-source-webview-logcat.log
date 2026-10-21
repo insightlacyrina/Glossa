@@ -1,0 +1,14 @@
+--------- beginning of main
+10-21 16:39:24.285  2441  2441 D AndroidRuntime: Calling main entry org.chromium.components.crash.browser.CrashpadMain
+10-21 16:39:29.817  2352  2366 I GlossaTest: Evaluation interrupted during fixture navigation; retrying
+10-21 16:39:44.941  2352  2366 I GlossaTest: Evaluation interrupted during fixture navigation; retrying
+10-21 16:39:46.597  2441  2441 D AndroidRuntime: Shutting down VM
+--------- beginning of system
+10-21 16:39:53.247   550   577 W ActivityManager: pid 550 system sent binder code 41 with flags 1 to frozen apps and got error -32
+10-21 16:39:53.275   550  2054 I ActivityManager: Process com.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0 (pid 2388) has died: cch CACC
+10-21 16:39:53.302   550  2054 W ActivityManager: Scheduling restart of crashed service local.quietpaper/org.chromium.content.app.SandboxedProcessService0:0 in 1000ms for connection
+10-21 16:39:53.686  2352  2352 W GlossaNative: WebView renderer stopped; crash=true; local stores retained; waiting for user reopen
+10-21 16:40:00.054  2352  2366 I GlossaTest: Evaluation interrupted during fixture navigation; retrying
+10-21 16:40:15.226  2352  2366 I GlossaTest: Evaluation interrupted during fixture navigation; retrying
+10-21 16:40:30.340  2352  2366 I GlossaTest: Evaluation interrupted during fixture navigation; retrying
+10-21 16:40:45.459  2352  2366 I GlossaTest: Evaluation interrupted during fixture navigation; retrying

@@ -1,0 +1,23 @@
+{
+  "androidApi": 35,
+  "emulator": "software x86_64, 1536 MiB guest RAM, no KVM",
+  "installedClientSha256": "66f78397dcf50c87ccb363e5de789e82886c194314aef27c62f33ad8ab7853c8",
+  "nativeSourceStoreSha256": "3b5d67b34089109f505ad2182884f55c285707a6937f75743cfa5bf47e97ad00",
+  "instrumentationApkSha256": "8585bede27b211c793bb8553cbf98d2af7e8a0572b7ef363610f342abd008881",
+  "passedNewPhases": {
+    "prepare": {
+      "assertions": 41,
+      "pid": 2231
+    },
+    "resume": {
+      "assertions": 18,
+      "pid": 2287
+    },
+    "faults": {
+      "assertions": 12,
+      "pid": 2319
+    }
+  },
+  "note": "After these native-only phases, an additional source URI/owner stale-error guard changed only Web assets. Native production code and instrumentation are unchanged. Passed phases were not repeated. Default WebView bridge retry failed before file assertions.",
+  "restartBoundary": "Prepare instrumentation finished normally, which also stops its target process. An explicit am force-stop followed before resume. Different PID and exact payload/history prove committed journal persistence across process termination, not an in-flight kill."
+}

@@ -1,0 +1,45 @@
+
+PASS native source prepare; assertions=41; pid=2231
+PASS fixture.md fixture has no unacknowledged previous test write
+PASS fixture.md actual ContentResolver open preserves all text without claiming a persistent SAF grant
+PASS fixture.md exact UTF-8/BOM/CRLF read and SHA
+PASS fixture.md real source write confirmed
+PASS fixture.md reopened bytes preserve BOM, line endings, comments, whitespace and formula edit
+PASS fixture.md exact target already present is acknowledged without another source write
+PASS fixture.md changed source becomes a real conflict with pending content
+PASS fixture.md source conflict performs no overwrite
+PASS fixture.md conflict retains exact local payload and original base
+PASS fixture.md legacy new text cannot replace an unowned pending write
+PASS fixture.md known pending successor remains queued against externally changed source
+PASS fixture.md single-SHA legacy resolution cannot replace a newer pending version
+PASS fixture.md stale pending preview cannot overwrite either current version
+PASS fixture.md explicit source and pending SHA decision writes exact chosen content
+PASS fixture.md provider write failure retains source and pending intent
+PASS fixture.md provider write failure safely retries the same durable payload
+PASS fixture.md source unavailable leaves durable write queued
+PASS fixture.md offline pending contains exact payload, identity and original base SHA
+PASS fixture.md offline source snapshot remains fully readable
+PASS fixture.tex fixture has no unacknowledged previous test write
+PASS fixture.tex actual ContentResolver open preserves all text without claiming a persistent SAF grant
+PASS fixture.tex exact UTF-8/BOM/CRLF read and SHA
+PASS fixture.tex real source write confirmed
+PASS fixture.tex reopened bytes preserve BOM, line endings, comments, whitespace and formula edit
+PASS fixture.tex exact target already present is acknowledged without another source write
+PASS fixture.tex changed source becomes a real conflict with pending content
+PASS fixture.tex source conflict performs no overwrite
+PASS fixture.tex conflict retains exact local payload and original base
+PASS fixture.tex legacy new text cannot replace an unowned pending write
+PASS fixture.tex known pending successor remains queued against externally changed source
+PASS fixture.tex single-SHA legacy resolution cannot replace a newer pending version
+PASS fixture.tex stale pending preview cannot overwrite either current version
+PASS fixture.tex explicit source and pending SHA decision writes exact chosen content
+PASS fixture.tex provider write failure retains source and pending intent
+PASS fixture.tex provider write failure safely retries the same durable payload
+PASS fixture.tex source unavailable leaves durable write queued
+PASS fixture.tex offline pending contains exact payload, identity and original base SHA
+PASS fixture.tex offline source snapshot remains fully readable
+PASS pending list retains fixture.md
+PASS pending list retains fixture.tex
+PASS restart proof fsynced after both real pending journals were committed
+READY force-stop local.quietpaper before running native-source-resume
+

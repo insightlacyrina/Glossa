@@ -1,0 +1,15 @@
+
+PASS native source faults; assertions=12; pid=2319
+PASS fault fixture has no previous unacknowledged write
+PASS invalid UTF-8 is a reachable content error and original bytes remain unchanged
+PASS size limit is a reachable content error, not source offline or truncation
+PASS display-name query failure does not hide a readable source
+PASS local journal failure cannot start source offline timing or alter source content
+PASS actual provider access failure remains explicitly unavailable
+PASS fault scenario retains a legitimate committed pending write
+PASS corrupt committed JSON cannot hide the legitimate pending queue
+PASS committed corruption is diagnosed per file; temporary bytes are ignored and neither is deleted
+PASS pending payload hash mismatch is not a valid source association
+PASS invalid pending journal is preserved instead of silently replaced
+PASS valid fault-scenario pending content remains recoverable after diagnostics
+

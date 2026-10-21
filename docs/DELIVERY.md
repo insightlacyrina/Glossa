@@ -1,4 +1,4 @@
-# 笺注 0.1 交付报告
+# 笺注 0.1.1 交付报告
 
 日期：2026-10-21。原工作区没有项目代码、需求旧稿或 Quiet Editorial 资源；当前项目位于 `/workspace/quiet-paper`。这是持续迭代的工程验证版，不是全部最终需求已完成的声明。
 
@@ -12,12 +12,12 @@
 
 ## 四个最高风险目标的实际结论
 
-| 目标                 | 当前验证成功的内容                                                                                                   | 仍未完成/未验证                                                                                                  |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| 精确 A/B 映射        | 稳定笔迹/对象、页面、块、段落、B 字符身份；对象版本校验；用户确认与确定性来源；同公式不同 B 字符合流；不确定转校对   | 自动识别真实手写字符/符号并证明其对应 A 字形/采样区间，仍未验证；B 字符 ID 不能冒充这个结果                      |
-| B→A 与独立撤销       | 原位可编辑印刷修订层；删除传播；独立撤销保留后续笔迹；依赖冲突预览；合并前不可逆确认、合并后禁止专用撤销             | 仿既有风格的笔迹生成尚未实现。跨页文字没有可靠逐字符落点时保原稿、显示候选并禁止合并，人工跨页定位工具仍需扩展   |
-| Android 独立原生往返 | Android 原生读写桥/冲突/持久历史/待写实现及 Java、测试 APK 编译；Markdown/LaTeX 共享内核真实文件读改写重开           | 原生文件往返尚无成功运行证据；真机 SAF 提供者、外部并行改写/移动/权限生命周期未验；Office/Keynote/Numbers 未实现 |
-| Mac 自托管互联网同步 | 实际 HTTP 服务、自动重连、增量确认、对象操作归档、普通/加密两模式、SQLite 一致备份恢复；Caddy/Tailscale/launchd 配置 | 实际 Mac、互联网 HTTPS、设备休眠唤醒与网络切换未验；没有用户 Mac/域名的接入条件，不能把 Linux 测试换称公网成功   |
+| 目标                 | 当前验证成功的内容                                                                                                                              | 仍未完成/未验证                                                                                                |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| 精确 A/B 映射        | 稳定笔迹/对象、页面、块、段落、B 字符身份；对象版本校验；用户确认与确定性来源；同公式不同 B 字符合流；不确定转校对                              | 自动识别真实手写字符/符号并证明其对应 A 字形/采样区间，仍未验证；B 字符 ID 不能冒充这个结果                    |
+| B→A 与独立撤销       | 原位可编辑印刷修订层；删除传播；独立撤销保留后续笔迹；依赖冲突预览；合并前不可逆确认、合并后禁止专用撤销                                        | 仿既有风格的笔迹生成尚未实现。跨页文字没有可靠逐字符落点时保原稿、显示候选并禁止合并，人工跨页定位工具仍需扩展 |
+| Android 独立原生往返 | API 35 模拟器上生产 NativeSourceStore 真实文本读改写重开、双 SHA 冲突保护、跨进程待写恢复及故障分类，共 71 项新增断言；共享格式内核另有文件证据 | 完整应用/系统 SAF 选择器、真机提供者、外部并行改写/移动/权限生命周期未验；Office/Keynote/Numbers 未实现        |
+| Mac 自托管互联网同步 | 实际 HTTP 服务、自动重连、增量确认、对象操作归档、普通/加密两模式、SQLite 一致备份恢复；Caddy/Tailscale/launchd 配置                            | 实际 Mac、互联网 HTTPS、设备休眠唤醒与网络切换未验；没有用户 Mac/域名的接入条件，不能把 Linux 测试换称公网成功 |
 
 ## 可运行模块
 
@@ -36,11 +36,12 @@
 
 交付目录为 `releases/`；安装包为调试验收包，不等同正式发布签名。`examples/变化与积累.glossa` 是保留可编辑对象的完整示例工程，另附独立 HTML 阅读快照。示例中的文字与图形是预先编写的对象，不作为 OCR 或仿手写生成证据。
 
-| 产物                               | 用途                                                                                 |
-| ---------------------------------- | ------------------------------------------------------------------------------------ |
-| `releases/glossa-0.1.0-debug.apk`  | Android 调试安装包，内置生产 Web 资源                                                |
-| `releases/glossa-0.1.0-source.zip` | 源码、锁文件、测试、文档、示例和可直接预览的生产资源；不含 SDK、依赖缓存或用户数据库 |
-| `releases/SHA256SUMS`              | 交付文件完整性校验                                                                   |
+| 产物                                    | 用途                                                                                 |
+| --------------------------------------- | ------------------------------------------------------------------------------------ |
+| `releases/glossa-0.1.1-debug.apk`       | Android 调试安装包，内置生产 Web 资源                                                |
+| `releases/glossa-0.1.1-androidTest.apk` | 独立原生验收包，仅测试用途，不含于客户端 APK                                         |
+| `releases/glossa-0.1.1-source.zip`      | 源码、锁文件、测试、文档、示例和可直接预览的生产资源；不含 SDK、依赖缓存或用户数据库 |
+| `releases/SHA256SUMS`                   | 交付文件完整性校验                                                                   |
 
 实际界面截图：[原稿](workspace-desktop.png)、[A/B 对照](workspace-split.png)、[手机已有 B](workspace-mobile.png)。手机截图使用 390×844 视口，没有新建纸张和书写工具。
 
@@ -56,7 +57,7 @@
 
 独立 JVM 测试中，持久分块导出 7 项通过，写入、重启并重读校验 21,045,248 字节；源文件/待写版本双校验策略 9 项通过。主测试中的 JS 分块导出另验证代理对边界与异常清理。
 
-更名前 Android `assembleDebug` / `assembleDebugAndroidTest` 通过，前次 APK v2 签名校验通过，7 份打包 Web 资源共 488,477 字节与最终 `dist` 逐字节一致，版本校验及分块导出桥已包含。**原生文件往返 instrumentation 未通过**：软件模拟器实际启动并安装两份 APK，首轮在 WebView 初始化超时，第二轮报告 `Process crashed`；两轮都未取得 Markdown/LaTeX 往返成功证据。不能把 JVM 与模拟桥通过数替代这一结论。实际日志见 [首轮](verification/android-instrumentation-first.log)、[文件往返重试](verification/android-instrumentation-final.log)。
+更名前 Android `assembleDebug` / `assembleDebugAndroidTest` 通过，前次 APK v2 签名校验通过，7 份打包 Web 资源共 488,477 字节与当时 `dist` 逐字节一致，版本校验及分块导出桥已包含。**此前两轮 WebView 桥往返 instrumentation 未通过**：软件模拟器实际启动并安装两份 APK，首轮在 WebView 初始化超时，第二轮报告 `Process crashed`；两轮都未取得 Markdown/LaTeX 往返成功证据。不能把 JVM 与模拟桥通过数替代这两轮结论。实际日志见 [首轮](verification/android-instrumentation-first.log)、[文件往返重试](verification/android-instrumentation-final.log)。
 
 崩溃日志确认 WebView 渲染进程先发生原生 SIGTRAP，容器随后因未处理渲染器退出而终止。已补 `onRenderProcessGone`：移除死窗口、显示原生“重新打开”按钮，用户主动重建窗口；不自动循环重启、不清理数据库或文件日志。原生 I/O 改为进程内统一串行，旧窗口回调和文件选择器回调有生命周期保护。修复后重新编译的 APK 已通过独立 Android 恢复专项 **6 项断言**：窗口存活、恢复入口、用户重开、安装身份及原生私有文件/导出暂存保留。日志见 [恢复专项](verification/android-renderer-recovery.log) 和 [原崩溃定位](verification/android-crash-summary.log)。渲染器 SIGTRAP 的底层原因、真实 A/IndexedDB 在各种设备故障下的恢复仍须继续验收。
 
@@ -72,9 +73,33 @@
 
 当前证据：[更名专项](verification/branding.log)、[生产构建](verification/branding-build.log)、[Android 构建](verification/branding-android-build.log)、[APK 资源](verification/branding-apk-assets.json)、[安装名称](verification/branding-apk-metadata.txt)、[签名](verification/branding-apk-signature.txt)。已有存储、协议、加密及升级身份的兼容决策见 [命名变更](BRANDING.md)。上述完整验收日志保留原始内容，不冒充本次重跑结果。
 
+## 0.1.1 原生源文件可靠性阶段
+
+**已确认需求**仍是 Android 独立编辑并写回原生文件、源离线保留修改、真实冲突保留双方。**实现决策**是把原有生产文件代码提取为不依赖窗口的 `NativeSourceStore`，Activity 和测试调用同一实现；没有用替代存储引擎避开失败场景。
+
+已修复真实访问错误和内容/本地存储错误混淆、损坏待写日志遮住正常队列、旧单 SHA 决议可能替换较新 pending，以及本轮已成功读源后本地日志失败仍沿用旧离线期限的问题。本地日志使用文件同步、原子替换和父目录同步；损坏记录保留并返回逐文件诊断，未提交临时文件不当作已提交操作。旧单 SHA 决议安全拒绝，用户决议必须同时核对源与 pending。
+
+新增 Android 文件层专项实际通过 **71 项断言**：
+
+| 阶段           | 实际证据                                                                                                                                                                                                                      |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| prepare，41 项 | Markdown/LaTeX 实际读入、修改、写回、按字节重新打开，保留 BOM/CRLF/中文/Emoji/注释/空白；幂等确认、冲突不覆盖、过期双版本决议拒绝、失败保留待写；[日志](verification/native-source-prepare.log)                               |
+| resume，18 项  | 显式 `am force-stop` 后 PID **2231 → 2287**，完整待写 payload、基准 SHA、源历史保留，源恢复后写回且读回确认才清队列；[停止命令](verification/native-source-force-stop.log)、[恢复日志](verification/native-source-resume.log) |
+| faults，12 项  | 非法 UTF-8、超限、元数据失败、本地日志失败、真实源不可访问分类；损坏/篡改日志不覆盖、正常队列不被遮蔽、临时文件不误认；[日志](verification/native-source-faults.log)                                                          |
+
+新增源访问状态测试 **3 项 + 1 项**通过，分别记录在[首次新增用例](verification/native-source-access.log)和[跨调用用例](verification/native-source-access-cycle.log)。后一项只执行新增用例。没有重跑旧 141 项、浏览器套件、离线用例、JVM 测试或已通过的渲染器恢复专项。
+
+生产构建与主/测试 APK 编译成功。0.1.1 调试 APK 标签为“笺注”，versionCode 2，v2 签名通过；包内 7 份 Web 资源共 **488,917 字节**与当前 `dist` 完全一致。SHA-256：`1f99cc461723a9d5d1ae2f39441858d45fede9024da96c85a7466e07f866c349`。证据：[生产构建](verification/native-source-build.log)、[Android 构建](verification/native-source-android-build.log)、[测试增量构建](verification/native-source-test-build.log)、[最终 Web 保护后的主包构建](verification/native-source-final-android-build.log)、[资源](verification/native-source-apk-assets.json)、[元数据](verification/native-source-apk-metadata.txt)、[签名](verification/native-source-apk-signature.txt)。最后只增加了 URI/owner 变化时忽略旧错误的 Web 保护；生产原生文件层与测试 APK 未变，没有重跑已通过专项。运行包与源码摘要见[运行上下文](verification/native-source-run-context.json)。
+
+此前未通过的默认 WebView 桥场景本次重试仍失败：渲染线程再次 `SIGTRAP`，容器接管退出，但 JS 求值超时，尚未进入文件断言。见[失败输出](verification/native-source-webview-roundtrip.log)、[接管日志](verification/native-source-webview-logcat.log)、[崩溃摘要](verification/native-source-webview-crash-summary.log)。独立文件层成功不能改写这一失败结果。
+
+**仍待验证的高风险目标**：以上 71 项直接调用生产文件层，不启动 WebView，不覆盖 React 格式对象抽取→纸张/B→源的完整链路或系统选择器；专用 ContentProvider 不代替真实 SAF 提供者矩阵。跨进程恢复仅覆盖已提交 pending，不证明写入途中断电、任意外部提供者原子写或真实 A/IndexedDB 全故障恢复。损坏日志已有机器可读诊断，专门的逐文件恢复界面尚未实现。复杂格式最终目标没有降低。
+
+恢复实验的 `prepare` 正常结束本身也会退出目标进程，其后再执行显式 `force-stop`。不同 PID 与内容核验构成跨进程持久恢复证据，不将其扩大为写入进行中强杀验证。
+
 ## 交付限制与下一阶段
 
-1. 真实 Android 书写设备矩阵：压感/倾斜、掌触、长笔记延迟、系统回收/断电/磁盘失败、笔迹与工程恢复；内核或 Chromium 时间不能替代真机手感证据。
+1. 先定位 WebView 渲染器 SIGTRAP：核对 provider 版本、可符号化的崩溃栈和硬件加速环境；在可用真机/加速模拟器执行尚未通过的桥与系统 SAF 选择器链路。真实 Android 书写设备矩阵继续覆盖压感/倾斜、掌触、长笔记延迟、系统回收/断电/磁盘失败、笔迹与工程恢复；内核或 Chromium 时间不能替代真机手感证据。
 2. 接入真实本地 OCR/公式识别与 CJK 手写语料；输出不确定范围和候选；建立可验证 A 字形/采样身份，不以高置信度自动授予精确映射。
 3. 仿手写生成插件、风格样本不足/失败回退、修订层合并及独立撤销矩阵；保留现有印刷文字兜底。
 4. 完善跨页修订人工落点与字符校对、套索、图形/箭头识别、几何自动应用、音频和 PDF 背景。当前局部擦除保留剩余原始笔迹，但残段的知识映射仍需重新校对。

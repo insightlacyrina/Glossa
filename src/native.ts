@@ -11,6 +11,9 @@ export type NativeReply = {
   sourceText?: string;
   sourceSha256?: string;
   unavailable?: boolean;
+  /** Set only after the source provider was actually reached; local errors do not imply offline. */
+  sourceReachable?: boolean;
+  metadataWarning?: string;
   sessionId?: string;
   bytes?: number;
   sequence?: number;

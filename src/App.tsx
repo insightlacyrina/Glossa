@@ -72,7 +72,6 @@ import {
 import {
   createNativeLink,
   deleteLinkedObject,
-  markSourceUnavailable,
   openNative,
   reconcileNativeLink,
   serializeNative,
@@ -88,6 +87,7 @@ import {
   identifySourceRead,
   previewNativePending,
   queueCurrentPaper,
+  recordSourceFailure,
   refreshPendingSourceRead,
   verifyNativePending,
   type SourceRecord,
@@ -1107,7 +1107,15 @@ function App() {
     )
       return;
     const id = record.link.id;
+    const requestedUri = record.uri,
+      requestedOwner = record.ownerDeviceId;
     sourceBusy.current.add(id);
+    let lastVerifiedContact: number | undefined;
+    const sourceRequest = async (...args: Parameters<typeof nativeRequest>) => {
+      const reply = await nativeRequest(...args);
+      if (reply.sourceReachable || args[0] === 'readDocument') lastVerifiedContact = Date.now();
+      return reply;
+    };
     try {
       // Persist the actual B/A intent before any source read or write can fail.
       const staged = queueCurrentPaper(record, captureSourcePaper(engine, record));
@@ -1119,7 +1127,7 @@ function App() {
       engine = w.getEngine();
       if (!engine || !record) return;
       let captured = captureSourcePaper(engine, record);
-      let reply = await nativeRequest('readDocument', [record.uri!]);
+      let reply = await sourceRequest('readDocument', [record.uri!]);
       const afterRead = liveSource(id),
         readEngine = w.getEngine();
       if (
@@ -1133,7 +1141,7 @@ function App() {
       }
       if (typeof reply.text !== 'string' || !reply.sha256)
         throw new Error('源文件读取缺少完整内容或版本指纹，未执行写入');
-      const nativePending = await nativeRequest('getPendingSource', [record.uri!]);
+      const nativePending = await sourceRequest('getPendingSource', [record.uri!]);
       const afterPending = liveSource(id),
         pendingEngine = w.getEngine();
       if (
@@ -1175,13 +1183,13 @@ function App() {
           return;
         }
         // Finish the older, proven intent before considering a newer B revision.
-        await nativeRequest('saveDocumentVersioned', [
+        await sourceRequest('saveDocumentVersioned', [
           record.uri!,
           known.text,
           reply.sha256,
           nativePending.sha256!,
         ]);
-        const verified = await nativeRequest('readDocument', [record.uri!]);
+        const verified = await sourceRequest('readDocument', [record.uri!]);
         const retryLive = liveSource(id),
           retryEngine = w.getEngine();
         if (
@@ -1298,7 +1306,7 @@ function App() {
           await retainSourcePending(id, '写回前出现新修改，待重新协调');
           return;
         }
-        const saved = await nativeRequest('saveDocumentVersioned', [
+        const saved = await sourceRequest('saveDocumentVersioned', [
           record.uri!,
           serializeNative(result.document),
           reply.sha256,
@@ -1334,11 +1342,12 @@ function App() {
       const failure = error as Error & { reply?: NativeReply };
       const latest = liveSource(id),
         current = w.getEngine();
+      // Relinking or restoring while I/O is pending invalidates old source observations.
+      if (latest && (latest.uri !== requestedUri || latest.ownerDeviceId !== requestedOwner))
+        return;
       if (latest && current && latest.link.mode === 'linked') {
         const next = queueCurrentPaper(latest, captureSourcePaper(current, latest));
-        if (failure.reply?.unavailable) next.link = markSourceUnavailable(next.link);
-        else if (next.link.status !== 'conflict' && next.link.status !== 'missing')
-          next.link.status = 'pending';
+        next.link = recordSourceFailure(next.link, failure.reply, Date.now(), lastVerifiedContact);
         next.link.writeError = failure.message;
         try {
           await publishSource(next, latest);
