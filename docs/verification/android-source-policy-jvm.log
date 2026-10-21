@@ -1,0 +1,1 @@
+PASS SourceWritePolicy: 9 checks; source/pending CAS and exact-payload retry

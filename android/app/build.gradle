@@ -1,0 +1,28 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'local.quietpaper'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'local.quietpaper'
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName '0.1.0'
+        testInstrumentationRunner 'local.quietpaper.NativeRoundTripInstrumentation'
+    }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    buildTypes { release { minifyEnabled false } }
+}
+
+tasks.register('syncWebAssets', Sync) {
+    def webRoot = rootProject.file('../dist')
+    from(webRoot)
+    into layout.projectDirectory.dir('src/main/assets/web')
+    doFirst {
+        if (!new File(webRoot, 'index.html').exists()) {
+            throw new GradleException('Web assets missing. Run npm ci && npm run build from the project root first.')
+        }
+    }
+}
+tasks.named('preBuild').configure { dependsOn 'syncWebAssets' }

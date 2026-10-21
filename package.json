@@ -1,0 +1,35 @@
+{
+  "name": "quiet-paper",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc --noEmit && vite build && node scripts/build-offline.mjs",
+    "test": "node --import tsx --test --test-isolation=none tests/*.test.ts",
+    "server": "node server/index.mjs",
+    "check": "npm run test && npm run build",
+    "preview": "vite preview --host 0.0.0.0",
+    "test:browser": "node scripts/test-browser.mjs",
+    "test:app": "QP_TEST_SERVE=1 node tests/app.browser.mjs",
+    "test:offline": "npm run build && node --import tsx tests/offline.browser.mjs",
+    "example": "node --import tsx scripts/create-example.ts",
+    "format": "prettier --write src scripts server tests '*.json' '*.md' 'docs/*.md' '.github/workflows/*.yml'",
+    "format:check": "prettier --check src scripts server tests '*.json' '*.md' 'docs/*.md' '.github/workflows/*.yml'"
+  },
+  "dependencies": {
+    "lucide-react": "^0.468.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "prettier": "^3.6.2",
+    "tsx": "^4.20.0",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5"
+  }
+}

@@ -1,0 +1,7 @@
+Port 5173 is in use, trying another one...
+PASS: real hook transactions roll back earlier settings on failure; two tabs have independent writers and one stable installation identity.
+PASS: same-ID restore replaces content, preserves recoveries, stops stale-window writes and restarts background processing without changing provider.
+PASS: the actual RecoveryManager confirmation restores a selected snapshot, retains current ink in another recovery and survives reload.
+PASS: a real delayed HTTP response from the old connection cannot contaminate a restored same-ID project or reactivate its sync status.
+PASS: actual export-recovery UI retains a failed pending export, retries completion and requires confirmation before discarding an incomplete staging session (simulated native bridge).
+Workspace browser acceptance: 5 checks passed.

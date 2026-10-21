@@ -1,0 +1,58 @@
+
+> quiet-paper@0.1.0 test:browser
+> node scripts/test-browser.mjs
+
+PASS: strict IndexedDB commit survives page reload with pressure/tilt/layers/cursor and an interrupted draft.
+PASS: concurrent saves from stale snapshots in two real browser windows retain both immutable journals.
+PASS: operation-ID collision aborts the IDB transaction and leaves the prior database intact.
+PASS: recovered ink commit and exact checkpoint consumption complete in one strict transaction; another window draft stays intact.
+PASS: replay of the same stable draft identity after restart does not duplicate the committed stroke.
+PASS: stale consumption cannot erase a newer gesture; orphan drafts remain discoverable after tab session identity is lost.
+PASS: explicit same-project restore atomically replaces the newer journal and retains a complete recovery snapshot.
+PASS: a stale tab cannot overwrite a restored workspace; its later local ink/journal is preserved as an accessible recovery snapshot.
+PASS: regular saves cannot change project identity, and an outdated restore confirmation fails its generation compare.
+Storage browser acceptance: 9 checks passed.
+PASS real beforeinput selection preserves repeated-symbol identity and disjoint concurrent edits; jump selects active A revision; B reference shows editable-source vector preview
+PASS actual editor branch preserves both candidates when the same repeated symbol is concurrently changed
+PASS concrete repeated-character deletion with session undo/redo
+PASS simulated IME composition verifies original selected range before creating a character operation
+PASS: real hook transactions roll back earlier settings on failure; two tabs have independent writers and one stable installation identity.
+PASS: same-ID restore replaces content, preserves recoveries, stops stale-window writes and restarts background processing without changing provider.
+PASS: the actual RecoveryManager confirmation restores a selected snapshot, retains current ink in another recovery and survives reload.
+PASS: a real delayed HTTP response from the old connection cannot contaminate a restored same-ID project or reactivate its sync status.
+PASS: actual export-recovery UI retains a failed pending export, retries completion and requires confirmation before discarding an incomplete staging session (simulated native bridge).
+Workspace browser acceptance: 5 checks passed.
+PASS: B intent and source write plan are durably stored before native read/write.
+PASS: unchanged source polling does not append whole-document settings events.
+PASS: native write failure preserves the queued edit, paper content, and recovery plan.
+PASS: native pending is retried with its exact older payload before newer B edits; a concurrent fourth B revision also survives.
+PASS: changed target at the same offset requires explicit object selection before paper update.
+PASS: unknown native pending never auto-writes; changed pending rejects stale CAS, explicit preview archives both and requires object identity confirmation.
+PASS: unresolved identity continues read-only access checks and freezes on source offline timeout while preserving both snapshots.
+Source bridge browser acceptance: 7 checks passed (simulated bridge, real app and IndexedDB).
+PASS: real tablet split moves only chosen stable segments across pages and leaves every A object unchanged.
+PASS: real merge preserves segment identities/order and outgoing cross-note relation without moving paper objects.
+PASS: cross-note logical link is independent from both notes’ A geometry.
+PASS: stale B preview blocks structural commit, retains selection/name, and succeeds after explicit refreshed preview.
+PASS: a changed A source version cannot be silently accepted from an old structural preview.
+PASS: unrelated later handwriting neither blocks a valid structural edit nor disappears.
+PASS: phone/Mac render no structural manager; Escape closes the tablet dialog; no browser runtime errors.
+{"test":"1000 editable strokes, 60000 original samples and live pointer input","renderMs":335.69999999995343,"strokeCount":1000,"sampleCount":60000,"pathNodes":1000,"svgNodes":2009,"pathBytes":6814160,"raster":{"oldArea":791,"newArea":787,"difference":4,"relativeContourDifference":0.0050568900126422255},"liveStrokeWallMs":834,"previousSegmentPathNodes":59000,"pathNodeReductionPercent":98.31}
+PASS blank paper accepts pen input before creating a knowledge block; pressure/tilt samples survive durable save and reload
+PASS idle text extraction → faithful B → concrete beforeinput edit → editable A revision; independent undo retains later human ink
+PASS revision merge presents irreversible consequence and retains ordinary ink
+PASS manual B5 landscape grid paper and selection → proofreading → explicit source confirmation
+PASS existing-folder management, tags, library search, and folder browsing
+PASS review queue and user-only know/do-not-know self assessment work with networking disabled
+PASS phone can edit existing B while note/block creation and A handwriting tools stay unavailable; viewport has no horizontal page overflow
+PASS mac can edit existing B while note/block creation and A handwriting tools stay unavailable; viewport has no horizontal page overflow
+Application browser acceptance: 8 groups passed; no uncaught page errors.
+PASS: Chromium reads standalone HTML over a local transport with embedded B text/original geometry/image and no external dependency.
+PASS: malicious labels/IDs create no script, iframe, event handler, dialog or network request.
+PASS: every intra-document source jump resolves to a stable object anchor.
+Browser acceptance: all 8 scripts passed.
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

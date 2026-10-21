@@ -1,0 +1,29 @@
+#!/usr/bin/env sh
+# Small, transparent bootstrap for environments without a checked-in binary wrapper.
+set -eu
+TASK_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+if command -v gradle >/dev/null 2>&1; then
+  exec gradle "$@"
+fi
+GRADLE_VERSION=8.13
+GRADLE_CACHE=${QUIET_PAPER_BUILD_CACHE:-"$TASK_DIR/.tools"}
+GRADLE_BIN="$GRADLE_CACHE/gradle-$GRADLE_VERSION/bin/gradle"
+if [ ! -x "$GRADLE_BIN" ]; then
+  mkdir -p "$GRADLE_CACHE"
+  ZIP_PATH="$GRADLE_CACHE/gradle-$GRADLE_VERSION-bin.zip"
+  BASE_URL="https://services.gradle.org/distributions/gradle-$GRADLE_VERSION-bin.zip"
+  curl --fail --location --retry 2 "$BASE_URL" --output "$ZIP_PATH"
+  curl --fail --location --retry 2 "$BASE_URL.sha256" --output "$ZIP_PATH.sha256"
+  EXPECTED_SUM=$(tr -d '\r\n ' < "$ZIP_PATH.sha256")
+  if command -v sha256sum >/dev/null 2>&1; then
+    ACTUAL_SUM=$(sha256sum "$ZIP_PATH" | cut -d ' ' -f 1)
+  else
+    ACTUAL_SUM=$(shasum -a 256 "$ZIP_PATH" | cut -d ' ' -f 1)
+  fi
+  if [ "$EXPECTED_SUM" != "$ACTUAL_SUM" ]; then
+    echo 'Gradle archive checksum mismatch' >&2
+    exit 1
+  fi
+  unzip -q -o "$ZIP_PATH" -d "$GRADLE_CACHE"
+fi
+exec "$GRADLE_BIN" "$@"

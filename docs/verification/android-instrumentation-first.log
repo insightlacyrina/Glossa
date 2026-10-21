@@ -1,0 +1,47 @@
+boot attempt 1 state= ''
+boot attempt 2 state= ''
+boot attempt 3 state= ''
+boot attempt 4 state= ''
+boot attempt 5 state= ''
+boot attempt 6 state= ''
+boot attempt 7 state= ''
+boot attempt 8 state= ''
+boot attempt 9 state= ''
+boot attempt 10 state= ''
+boot attempt 11 state= ''
+boot attempt 12 state= ''
+boot attempt 13 state= ''
+boot attempt 14 state= ''
+boot attempt 15 state= ''
+boot attempt 16 state= ''
+boot attempt 17 state= ''
+boot attempt 18 state= ''
+boot attempt 19 state= ''
+boot attempt 20 state= ''
+boot attempt 21 state= ''
+boot attempt 22 state= ''
+boot attempt 23 state= ''
+boot attempt 24 state= ''
+boot attempt 25 state= ''
+boot attempt 26 state= ''
+boot attempt 27 state= ''
+boot attempt 28 state= ''
+boot attempt 29 state= ''
+boot attempt 30 state= ''
+boot attempt 31 state= ''
+boot attempt 32 state= ''
+boot attempt 33 state= ''
+boot attempt 34 state= ''
+boot attempt 35 state= ''
+boot attempt 36 state= '1'
+install app-debug.apk Success
+
+install app-debug-androidTest.apk Success
+
+
+FAIL java.lang.IllegalStateException: WebView evaluation timeout
+
+
+Traceback (most recent call last):
+  File "<stdin>", line 29, in <module>
+RuntimeError: Android instrumentation did not report success

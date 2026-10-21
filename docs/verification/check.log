@@ -1,0 +1,187 @@
+
+> quiet-paper@0.1.0 check
+> npm run test && npm run build
+
+
+> quiet-paper@0.1.0 test
+> node --import tsx --test --test-isolation=none tests/*.test.ts
+
+✔ idle recognition is incremental, no backend preserves handwriting as unmapped (64.444858ms)
+✔ dirty revisions coalesce and disabled stages never execute (0.535295ms)
+✔ text extraction is faithful and typed formula content is protected (3.857432ms)
+✔ AI requires first-use explicit authorization and HTTPS (8.648347ms)
+✔ external AI sends changed objects only and even confident output stays unmapped (7.714374ms)
+✔ AI API failure remains visible and preserves original candidate reference (2.929156ms)
+✔ folder classification chooses only uniquely matching existing folders (0.181744ms)
+✔ geometry algorithm preserves pressure and tilt and abstains for curves (0.215594ms)
+✔ only allowlisted very high confidence prose typos are eligible; formulas and facts never autocorrect (0.228544ms)
+✔ a long new stroke suspends old idle work and explicitly reports busy without dropping dirty objects (96.521725ms)
+✔ in-flight recognition is buffered throughout handwriting and published only after end plus idle (67.546726ms)
+✔ close explicitly flushes paused changes, while disposal never publishes a revoked in-flight result (3.400746ms)
+✔ paper is fixed and stores actual editable pressure and tilt (5.677049ms)
+✔ unverified OCR never becomes an exact mapping even with high confidence (5.319682ms)
+✔ verified character identities and source glyphs survive edits and round trips (2.940353ms)
+✔ parallel edits to different characters in the same formula both survive (5.061643ms)
+✔ overlapping edits retain both candidates and require explicit conflict resolution (2.710116ms)
+✔ insertion and deletion preserve stable existing identities (2.22699ms)
+✔ phone and Mac may edit existing B but cannot create papers or blocks or touch A (3.857062ms)
+✔ B edit yields editable printed fallback at original location, preserving raw source (0.700033ms)
+✔ independent undo preserves subsequent unrelated human ink (1.844715ms)
+✔ undo does not consume a later edit of the same character (1.238102ms)
+✔ merging is explicitly irreversible and strips revision provenance from A (3.435167ms)
+✔ cross-page blocks retain page identities and do not have nested block structure (0.55198ms)
+✔ cross-page object-only mappings do not guess character placement (0.915507ms)
+✔ formula content is protected from automatic correction and weak typos are rejected (0.458279ms)
+✔ deleting exact A content removes B counterpart and deleting B removes exact A (3.321215ms)
+✔ geometry-only translation keeps mapping; partial erasure sends source to proofreading (3.52388ms)
+✔ direct A text modification updates existing B segment without creating another block (0.51185ms)
+✔ projects restore metadata, all operations, histories, and enforce identity integrity (1.03082ms)
+✔ only existing user folders can be assigned and archive date is content modification date (0.747093ms)
+✔ same-value concurrent character edits are idempotent rather than a false conflict (0.762567ms)
+✔ concurrent A content edit and source deletion retain data for visible conflict resolution (1.953689ms)
+✔ deleting a B segment also removes all unmerged A revision layers (2.979221ms)
+✔ concurrent B edit and A deletion become a conflict even if deletion replays first (0.799583ms)
+✔ duplicate character map indices cannot fabricate character-level precision (2.774273ms)
+✔ explicit character selection preserves non-overlap intent in repeated symbols (1.882291ms)
+✔ reference-description editing never replaces the original diagram with text (0.994987ms)
+✔ resolving an obsolete preview cannot overwrite a later valid character edit (36.837217ms)
+✔ merged operation equality ignores JSON property order but preserves content integrity (0.825252ms)
+✔ automatic typo APIs require a reviewed prose rule rather than arbitrary rewrites (0.390607ms)
+✔ draft recovery uses immutable draft identity to avoid duplicate ink after a crash (12.527102ms)
+✔ B jumps to the effective A revision while retaining original source identities (4.78655ms)
+✔ proofreading reconfirms existing segment identity against current source versions (0.849598ms)
+✔ different-field changes of one A object merge without a false conflict (1.876833ms)
+✔ B symbol changes do not retain a false exact link to the old handwritten glyph (4.822613ms)
+✔ non-overlapping direct A text and B edits agree in the effective revision layer (0.796048ms)
+✔ direct editing of a printed A revision updates the existing B segment (0.533613ms)
+✔ undoing an AI layer preserves a later independent edit made directly on its A text (1.277922ms)
+✔ dependency-preview choice keeps later human content and finishes the requested independent undo (0.838851ms)
+✔ invalid packages are rejected atomically before replacing a usable project (1.090731ms)
+✔ character precision requires distinct, real source glyph identities (1.267577ms)
+✔ transcription proofreading corrects B and confirms source without changing or covering A (1.230421ms)
+✔ proofreading preserves existing segment and unchanged character IDs across repeated-symbol correction (0.573333ms)
+✔ tablet split moves selected segments across pages without changing any A object or identity (1.596952ms)
+✔ block merge keeps the first stable block identity, complete history, and cross-note relationships (3.945324ms)
+✔ phone and Mac cannot split or merge blocks, including imported unauthorized operations (1.576081ms)
+✔ non-overlapping concurrent block split and B edit retain all content and stable ownership (2.269363ms)
+✔ disjoint concurrent splits retain both new blocks and every segment (1.977355ms)
+✔ competing split ownership is a visible structural conflict and user choice preserves A (4.47457ms)
+✔ knowledge references to an obsolete merged block resolve to its active survivor (1.854559ms)
+✔ concurrent replay uses a locale-independent total order for mixed-case writer identities (1.427577ms)
+✔ HTML and Markdown snapshots retain stable note/block/segment/object identities and formulas (4.152757ms)
+✔ SVG preview varies stroke width by pressure and needs no original project on reading device (1.109278ms)
+✔ unmapped candidates and unsupported objects remain visibly uncovered instead of false precision (1.270762ms)
+✔ all labels/attributes are escaped and unsafe image/color URLs never become active content (0.822738ms)
+✔ raster image previews are embedded, and active revisions hide replaced originals in paper snapshot (1.182649ms)
+✔ Markdown real UTF-8 read → two native-region edits → write → reopen preserves all other bytes (4.225425ms)
+✔ LaTeX real file round trip changes one equation and preserves comments/macros/document structure (29.528705ms)
+✔ unsupported native formats and malformed UTF-8 fail explicitly without converting to images (0.249916ms)
+✔ native range tampering is rejected rather than guessing object correspondence (0.290677ms)
+✔ nonoverlapping symbol revisions in the same formula merge from both writers (1.240275ms)
+✔ true symbol contention produces full conflict preview without overwriting either side (0.444158ms)
+✔ paper/source dynamic writeback preserves independent modifications and native history (0.826253ms)
+✔ a source-only change updates linked paper and filename without a writeback operation (1.102759ms)
+✔ true source conflict waits for explicit preview choice and rejects stale decisions (1.2235ms)
+✔ source outages queue edits then freeze a recoverable independent copy after configured timeout (0.722657ms)
+✔ offline edits write back on source recovery before expiry (0.624319ms)
+✔ move/rename relink requires exact full source and source-span identity; filename alone cannot bind (0.418039ms)
+✔ a missing source object never erases its paper preview or source snapshot (0.584279ms)
+✔ explicit detach never changes source; explicit delete-source removes only the selected region (0.317448ms)
+✔ queued source deletion must preview changed source content before it can delete anything (0.273591ms)
+✔ repeated-symbol identity uncertainty is retained for proofreading instead of inventing precise correspondence (0.137928ms)
+✔ real external write failure retains every queued edit and original recovery snapshot (0.632572ms)
+✔ ink radius retains pen pressure including genuine zero-pressure samples (0.214453ms)
+✔ single taps, stationary pressure changes, and an empty stroke have finite outlines (0.328524ms)
+✔ a path keeps distinct widths for low and high pressure portions without mutating samples (0.177658ms)
+✔ large ink rendering generates one compound path string per stroke rather than one element per sample (123.032744ms)
+✔ domain → plain HTTP → phone/Mac symbols → tablet A revision → backup restoration (119.284227ms)
+✔ domain → e2ee HTTP → phone/Mac symbols → tablet A revision → backup restoration (243.982727ms)
+✔ native full-project export chunks more than 16MiB without changing Unicode or surrogate boundaries (2103.756677ms)
+✔ synchronous native failure removes the listener and rejects the request (0.82456ms)
+✔ review cards use block identity and last content modification, difficulty and importance (0.209135ms)
+✔ local self assessment completes a review loop without AI (0.411189ms)
+✔ fixed interval, exam target and intensity are operational (0.245018ms)
+✔ due queue respects burden cap and subject priority and is deterministic (9.482442ms)
+✔ custom algorithm extension validates outputs and cannot replace built-ins (0.540093ms)
+✔ new content modification is incorporated without deleting review history (0.431729ms)
+✔ daily burden subtracts blocks already reviewed today (0.244999ms)
+✔ immutable simultaneous assessments rebuild a deterministic queue without losing either user judgement (0.707714ms)
+✔ review projection preserves legacy history and stored custom intervals without requiring that algorithm plugin (0.634164ms)
+✔ unchanged native bytes reuse every exact source identity (0.861466ms)
+✔ a provider rename with identical native contents updates the name while preserving object identities (0.356026ms)
+✔ changed content at the exact old offset never inherits the original object ID by position (0.517548ms)
+✔ an unchanged unique region and exact nearby context can survive an unrelated distant source change (0.720885ms)
+✔ manual source selection is explicit, keeps the paper edit, and preserves the old source snapshot (0.714654ms)
+✔ unresolved source identity can observe availability and new candidates without rebinding or dropping pending edits (0.521755ms)
+✔ capture guards detect B revisions even when a later edit restores the same visible string (0.894536ms)
+✔ unrelated later handwriting does not invalidate a source object capture (0.382195ms)
+✔ a durable pending write can be acknowledged after a crash only by exact full target contents (0.836568ms)
+✔ a post-write newer B revision remains queued after recovery acknowledges the earlier write (1.044201ms)
+✔ explicit content conflict choice rebases against the verified source and queues the chosen text (0.670168ms)
+✔ delete conflict confirmation retains a real delete-source operation instead of empty text editing (0.781375ms)
+✔ native pending verification requires both the complete known target and original base, never its SHA alone (0.515645ms)
+✔ unknown native pending preview preserves the source, B queue, and prior write plan until an explicit whole-document choice (0.82466ms)
+✔ a failed explicitly chosen native resolution is retryable only for its known full target and authorized base (0.730348ms)
+✔ DOM UTF16 selection resolves exact repeated symbol identity across surrogate pairs (0.325199ms)
+✔ backspace and selected cuts keep the concrete symbol range (0.12681ms)
+✔ editor session branch merges disjoint edits on repeated symbols without whole string guesses (2.222573ms)
+✔ editor branch surfaces a true conflict on the same repeated symbol (0.886583ms)
+✔ automatic generation handshake validates HTTPS and URL credentials before sending any token (1.504232ms)
+✔ remote sync refuses cleartext transport before sending a token or note operations (0.171558ms)
+✔ wire canonicalization uses locale-independent UTF-16 key order for mixed case and Unicode (189.842498ms)
+✔ plain HTTP retries rejected batches by bisection and pulls every operation within byte pages (90.492952ms)
+✔ e2ee HTTP retries rejected batches by bisection and pulls every operation within byte pages (337.516437ms)
+✔ UTF-8 upload budget splits more than 24 MiB before HTTP and avoids server 413 (1484.193238ms)
+✔ an indivisible operation rejected with 413 leaves the local queue and acknowledgements intact (58.049674ms)
+✔ one archived operation larger than a soft pull budget is sent whole without cursor starvation (10.888137ms)
+✔ real HTTP push/pull preserves full A payload, stable IDs and idempotent retries (9.853841ms)
+✔ WAL archive survives server restart and SQLite consistent backup restores (6.119735ms)
+✔ authorization, CORS, invalid requests and encryption mode mismatch reject safely (226.63228ms)
+✔ E2EE sends only authenticated ciphertext, uses fresh nonces and detects tampering (854.471305ms)
+✔ pagination retrieves all 1205 operations without missing changed objects (115.773541ms)
+✔ auto sync retries durable local operations when a Mac comes back online (10.513174ms)
+✔ auto sync uploads only unacknowledged operations and retains acknowledgements across restart (15.357338ms)
+✔ plain auto sync repairs an old Mac backup despite persisted acknowledgements, lost response and imported cursor zero (84.91733ms)
+✔ e2ee auto sync repairs an old Mac backup despite persisted acknowledgements, lost response and imported cursor zero (168.347038ms)
+✔ static client serves locally with traversal and symlink escapes blocked (7.574703ms)
+✔ a failing multi-operation transaction restores the entire previous project (0.953835ms)
+✔ delayed responses cannot apply after disconnect or same-project restore (0.321954ms)
+✔ review modification date follows block content and ignores unrelated ink or translation (1.481698ms)
+ℹ tests 141
+ℹ suites 0
+ℹ pass 141
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7361.413804
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice
+
+> quiet-paper@0.1.0 build
+> tsc --noEmit && vite build && node scripts/build-offline.mjs
+
+vite v6.4.4 building for production...
+transforming...
+✓ 1600 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.48 kB │ gzip:   0.33 kB
+dist/assets/index-DQYmwbpk.css   40.77 kB │ gzip:   9.42 kB
+dist/assets/export-S3Id-VXV.js    7.91 kB │ gzip:   3.62 kB
+dist/assets/index-D9ob-Shx.js   437.66 kB │ gzip: 134.53 kB
+✓ built in 2.89s
+Offline shell: 6 files, quiet-paper-8d748677dfdc137a
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="zh-CN">
+  <meta charset="utf-8" /><title>Workspace hook acceptance</title>
+  <body>
+    <div id="root"></div>
+    <script type="module">
+      import React from 'react';
+      import { createRoot } from 'react-dom/client';
+      import { useWorkspace } from '/src/useWorkspace.ts';
+      import { RecoveryManager } from '/src/RecoveryManager.tsx';
+      function Probe() {
+        const workspace = useWorkspace();
+        const [recovering, setRecovering] = React.useState(false);
+        window.workspaceHarness = workspace;
+        return React.createElement(
+          React.Fragment,
+          null,
+          React.createElement('div', { 'data-ready': workspace.ready }, workspace.saveState),
+          React.createElement('button', { onClick: () => setRecovering(true) }, '打开恢复列表'),
+          recovering &&
+            React.createElement(RecoveryManager, {
+              workspace,
+              onClose: () => setRecovering(false),
+              onRestored: () => {
+                window.recoveryRestored = true;
+                setRecovering(false);
+              },
+            }),
+        );
+      }
+      createRoot(document.getElementById('root')).render(React.createElement(Probe));
+    </script>
+  </body>
+</html>

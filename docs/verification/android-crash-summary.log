@@ -1,0 +1,36 @@
+10-21 07:55:20.751  1010  1128 F libc    : Fatal signal 6 (SIGABRT), code -1 (SI_QUEUE) in tid 1128 (bt_stack_manage), pid 1010 (droid.bluetooth)
+10-21 07:57:33.466  1618  1737 F libc    : Fatal signal 6 (SIGABRT), code -1 (SI_QUEUE) in tid 1737 (bt_stack_manage), pid 1618 (droid.bluetooth)
+10-21 08:01:37.567  2741  2879 F libc    : Fatal signal 6 (SIGABRT), code -1 (SI_QUEUE) in tid 2879 (bt_stack_manage), pid 2741 (droid.bluetooth)
+10-21 08:03:05.266  3098  3220 F libc    : Fatal signal 6 (SIGABRT), code -1 (SI_QUEUE) in tid 3220 (bt_stack_manage), pid 3098 (droid.bluetooth)
+10-21 08:03:22.514  1945  3272 E ActivityManager: ANR in com.android.phone
+10-21 08:04:20.417  1945  3483 E ActivityManager: ANR in com.android.phone
+10-21 08:05:02.381  1945  3670 E ActivityManager: ANR in com.android.phone
+10-21 08:05:13.665  3657  3771 F libc    : Fatal signal 6 (SIGABRT), code -1 (SI_QUEUE) in tid 3771 (bt_stack_manage), pid 3657 (droid.bluetooth)
+10-21 08:05:49.923  1945  3849 E ActivityManager: ANR in com.android.phone
+10-21 08:06:31.010  1945  4052 E ActivityManager: ANR in com.android.phone
+10-21 08:06:51.706  1945  4117 E ActivityManager: ANR in com.android.phone
+10-21 08:07:34.639  1945  4189 E ActivityManager: ANR in com.android.phone
+10-21 08:08:09.279  1945  4279 E ActivityManager: ANR in com.android.phone
+10-21 08:08:36.226  1945  4367 E ActivityManager: ANR in com.android.phone
+10-21 08:08:55.318  4369  4411 F libc    : Fatal signal 6 (SIGABRT), code -1 (SI_QUEUE) in tid 4411 (bt_stack_manage), pid 4369 (droid.bluetooth)
+10-21 08:09:03.846  1945  4438 E ActivityManager: ANR in com.android.phone
+10-21 08:09:25.871  1945  4499 E ActivityManager: ANR in com.android.phone
+10-21 08:09:53.267  1945  4596 E ActivityManager: ANR in com.android.phone
+10-21 08:10:22.026  4662  4686 I QuietPaperTest: Starting native bridge instrumentation
+10-21 08:10:30.958  1945  4689 E ActivityManager: ANR in com.android.phone
+10-21 08:10:47.774  4696  4774 F libc    : Fatal signal 6 (SIGABRT), code -1 (SI_QUEUE) in tid 4774 (bt_stack_manage), pid 4696 (droid.bluetooth)
+10-21 08:11:05.151  4662  4686 I QuietPaperTest: Evaluation interrupted during fixture navigation; retrying
+10-21 08:11:07.478  1945  4817 E ActivityManager: ANR in com.android.phone
+10-21 08:11:20.317  4662  4686 I QuietPaperTest: Evaluation interrupted during fixture navigation; retrying
+10-21 08:11:34.867  1945  4881 E ActivityManager: ANR in com.android.phone
+10-21 08:11:35.473  4662  4686 I QuietPaperTest: Evaluation interrupted during fixture navigation; retrying
+10-21 08:11:50.645  4662  4686 I QuietPaperTest: Evaluation interrupted during fixture navigation; retrying
+10-21 08:11:53.006  4662  4662 F chromium: [FATAL:crashpad_client_linux.cc(745)] Render process (4716)'s crash wasn't handled by all associated  webviews, triggering application crash.
+10-21 08:11:53.047  4662  4662 F libc    : Fatal signal 5 (SIGTRAP), code 128 (SI_KERNEL), fault addr 0x0 in tid 4662 (ocal.quietpaper), pid 4662 (ocal.quietpaper)
+10-21 08:12:05.089  4915  4915 F DEBUG   : Abort message: '[FATAL:crashpad_client_linux.cc(745)] Render process (4716)'s crash wasn't handled by all associated  webviews, triggering application crash.'
+10-21 08:12:05.786  4662  4686 I QuietPaperTest: Evaluation interrupted during fixture navigation; retrying
+10-21 08:12:07.311  1945  4926 E ActivityManager: ANR in com.android.phone
+10-21 08:12:08.122  1945  4687 I ActivityManager: Process local.quietpaper (pid 4662) has died: fg  TOP 
+10-21 08:12:40.603  1945  5045 E ActivityManager: ANR in com.android.phone
+10-21 08:13:06.911  1945  5143 E ActivityManager: ANR in com.android.phone
+10-21 08:13:34.455  1945  5233 E ActivityManager: ANR in com.android.phone

@@ -1,0 +1,2 @@
+PASS production reader retains existing B edits and loads the complete app after a first-install offline reload
+PASS offline dynamic export module is precached and production role cannot be widened by the viewport

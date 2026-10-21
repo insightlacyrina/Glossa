@@ -1,0 +1,6 @@
+
+> quiet-paper@0.1.0 format:check
+> prettier --check src scripts server tests '*.json' '*.md' 'docs/*.md' '.github/workflows/*.yml'
+
+Checking formatting...
+All matched files use Prettier code style!

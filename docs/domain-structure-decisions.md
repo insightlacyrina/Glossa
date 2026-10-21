@@ -1,0 +1,13 @@
+# Additional data-model implementation decisions
+
+These are implementation decisions within the confirmed product semantics, not changes to the requirements.
+
+- `correctTranscription` means the original paper is correct and its B transcription needs proofreading. It changes B, confirms the currently observed source object versions, preserves the segment identity, and does not generate or modify paper objects. A concurrent source change prevents the confirmation from being presented as exact. `editSegment` remains the separate operation that changes the actual content and requires an A revision layer.
+- Tablet knowledge-block splitting moves an explicit, nonempty proper subset of existing segments. Segment, character and source-object identities remain stable. A split leaves existing logical edges on the original block; the new block starts with no inferred semantic edges. This avoids guessing which claim a relationship belongs to.
+- Merging blocks uses the first requested active block as survivor. Segment order follows the requested block order, while each block's internal semantic order stays intact. All source references and segment versions survive. Outgoing links are combined, self-links are removed, and incoming links from other notes resolve to the survivor.
+- Old block IDs remain aliases, and pre-structure block snapshots remain available in `state.blockArchive` and the operation history. `resolveBlockId` permits consumers, including review projections, to resolve old references. Active `note.blocks` does not contain archived blocks.
+- Concurrent splits of disjoint segments preserve both operations. A source can become empty if two individually valid concurrent splits jointly move its whole content; the empty block is retained instead of silently deleting it. Competing ownership of the same segment becomes a tablet-only structural conflict with both proposals retained. Choosing a proposal moves the existing segment and does not recreate its paper objects.
+- A segment may retain an exact object-level source association while individual character-to-glyph alignment is unknown. Character precision requires explicitly confirmed, distinct glyph identities that resolve to real source objects. A changed B symbol does not keep a false claim to the previous handwritten glyph.
+- Merging an A revision removes its source marker and dedicated inverse from the active model and permanently disables independent undo for that revision ID. General immutable project history remains for crash recovery. This is separate from a dedicated AI rollback capability.
+
+Covered by `tests/domain.test.ts`; the structure UI has separate real-browser acceptance tests.

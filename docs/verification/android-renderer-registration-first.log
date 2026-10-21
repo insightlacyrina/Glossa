@@ -1,0 +1,22 @@
+Focused renderer recovery, Android 15/API35 software emulator; prior passed tests are not repeated.
+install quiet-paper-0.1.0-debug.apk Success
+
+install quiet-paper-0.1.0-androidTest.apk Success
+
+RUN local.quietpaper.RendererRecoveryInstrumentation
+INSTRUMENTATION_STATUS: Error=Unable to find instrumentation info for: ComponentInfo{local.quietpaper.test/local.quietpaper.RendererRecoveryInstrumentation}
+INSTRUMENTATION_STATUS: id=ActivityManagerService
+INSTRUMENTATION_STATUS_CODE: -1
+android.util.AndroidException: INSTRUMENTATION_FAILED: local.quietpaper.test/local.quietpaper.RendererRecoveryInstrumentation
+	at com.android.commands.am.Instrument.run(Instrument.java:543)
+	at com.android.commands.am.Am.runInstrument(Am.java:213)
+	at com.android.commands.am.Am.onRun(Am.java:85)
+	at com.android.internal.os.BaseCommand.run(BaseCommand.java:62)
+	at com.android.commands.am.Am.main(Am.java:54)
+	at com.android.internal.os.RuntimeInit.nativeFinishInit(Native Method)
+	at com.android.internal.os.RuntimeInit.main(RuntimeInit.java:369)
+
+RuntimeError: Renderer recovery instrumentation did not report success
+Traceback (most recent call last):
+  File "<stdin>", line 18, in <module>
+RuntimeError: Renderer recovery instrumentation did not report success

@@ -1,0 +1,11 @@
+install quiet-paper-0.1.0-debug.apk Success
+
+install quiet-paper-0.1.0-androidTest.apk Success
+
+RUN API35/1280x800/160dpi/software-TCG/1GiB RAM
+INSTRUMENTATION_RESULT: shortMsg=Process crashed.
+INSTRUMENTATION_CODE: 0
+
+Traceback (most recent call last):
+  File "<stdin>", line 14, in <module>
+RuntimeError: Android instrumentation did not report success

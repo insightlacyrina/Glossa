@@ -1,0 +1,6 @@
+# Replace paper.example.com with your own DNS hostname pointing to this Mac.
+# Caddy obtains/renews HTTPS certificates. Configure router TCP 80/443 forwarding.
+paper.example.com {
+    encode zstd gzip
+    reverse_proxy 127.0.0.1:8787
+}

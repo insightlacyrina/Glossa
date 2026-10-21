@@ -1,0 +1,14 @@
+Focused renderer recovery after fixing runner registration; existing passing tests are not repeated.
+install updated test APK Success
+
+RUN NativeRoundTripInstrumentation -e mode renderer-recovery
+
+PASS renderer recovery fault injection
+PASS application Activity survives renderer termination
+PASS private durable file retained
+PASS completed export staging retained
+PASS explicit user reopen creates replacement Activity
+PASS installation identity retained after user reopen
+PASS private file and export staging retained after user reopen
+
+

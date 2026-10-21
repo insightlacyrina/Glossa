@@ -1,0 +1,9 @@
+node_modules/
+dist/
+releases/
+examples/
+test-results/
+android/app/src/main/assets/web/
+android/**/build/
+android/.gradle/
+package-lock.json

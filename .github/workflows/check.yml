@@ -1,0 +1,37 @@
+name: Verify notebook and Android package
+on: [push, pull_request, workflow_dispatch]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npx playwright install --with-deps chromium
+      - name: Use the installed browser
+        run: node --input-type=module -e "import {chromium} from '@playwright/test'; import {appendFileSync} from 'node:fs'; appendFileSync(process.env.GITHUB_ENV, 'CHROMIUM_PATH='+chromium.executablePath()+'\n');"
+      - run: npm run test:browser
+      - run: npm run test:offline
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Verify durable native queues
+        run: |
+          mkdir -p "$RUNNER_TEMP/quiet-paper-jvm"
+          javac -d "$RUNNER_TEMP/quiet-paper-jvm" android/app/src/main/java/local/quietpaper/ExportStore.java android/app/src/main/java/local/quietpaper/SourceWritePolicy.java android/tools/ExportStoreTest.java android/tools/SourceWritePolicyTest.java
+          java -cp "$RUNNER_TEMP/quiet-paper-jvm" local.quietpaper.ExportStoreTest
+          java -cp "$RUNNER_TEMP/quiet-paper-jvm" local.quietpaper.SourceWritePolicyTest
+      - uses: android-actions/setup-android@v3
+      - run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - run: ./android/gradlew -p android :app:assembleDebug :app:assembleDebugAndroidTest
+      - run: python3 android/tools/verify-apk.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: quiet-paper-debug
+          path: android/app/build/outputs/apk/
