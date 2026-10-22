@@ -1,0 +1,23 @@
+
+FAIL real packaged homepage native bridge
+java.lang.AssertionError: production renderer-gone recovery is displayed; stop using the old WebView
+	at local.quietpaper.NativeAppBridgeScenarios.assertUsableWeb(NativeAppBridgeScenarios.java:229)
+	at local.quietpaper.NativeAppBridgeScenarios.lambda$windowProgress$4(NativeAppBridgeScenarios.java:217)
+	at local.quietpaper.NativeAppBridgeScenarios.$r8$lambda$GrGDgz3TuGtv3D7iz9Ez0tsYRjc(Unknown Source:0)
+	at local.quietpaper.NativeAppBridgeScenarios$$ExternalSyntheticLambda2.call(D8$$SyntheticClass:0)
+	at local.quietpaper.NativeAppBridgeScenarios.lambda$onMain$5(NativeAppBridgeScenarios.java:245)
+	at local.quietpaper.NativeAppBridgeScenarios$$ExternalSyntheticLambda5.run(D8$$SyntheticClass:0)
+	at android.os.Handler.handleCallback(Handler.java:959)
+	at android.os.Handler.dispatchMessage(Handler.java:100)
+	at android.os.Looper.loopOnce(Looper.java:232)
+	at android.os.Looper.loop(Looper.java:317)
+	at android.app.ActivityThread.main(ActivityThread.java:8705)
+	at java.lang.reflect.Method.invoke(Native Method)
+	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:580)
+	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:886)
+; pid=2513; elapsedMs=55823
+WebView provider: com.android.webview version=124.0.6367.219 code=636771907
+Android sdk=35 model=Android SDK built for x86_64
+Last native window state: url=https://appassets.quietpaper.local/index.html progress=10 attached=true
+Scope: actual packaged homepage, JavaScript interface calls, native DOM callbacks and one real provider write. No SAF picker, persistent grant, complete source matrix or interactive editor acceptance is claimed.
+

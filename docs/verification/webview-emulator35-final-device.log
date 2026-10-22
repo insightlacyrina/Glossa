@@ -1,0 +1,78 @@
+1
+Android/sdk_phone64_x86_64/emu64x:15/AE3A.240806.019/12368160:userdebug/test-keys
+processor	: 0
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 6
+model name	: Android virtual processor
+stepping	: 3
+cpu MHz		: 0.001
+cache size	: 16384 KB
+physical id	: 0
+siblings	: 2
+core id		: 0
+cpu cores	: 2
+apicid		: 0
+initial apicid	: 0
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 4
+wp		: yes
+flags		: fpu de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pse36 clflush mmx fxsr sse sse2 ht syscall nx lm rep_good nopl cpuid pni ssse3 cx16 sse4_1 sse4_2 popcnt hypervisor lahf_lm abm pti
+bugs		: cpu_meltdown spectre_v1 spectre_v2 spec_store_bypass l1tf mds swapgs itlb_multihit mmio_unknown bhi
+bogomips	: 4597.24
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 40 bits physical, 48 bits virtual
+power management:
+
+processor	: 1
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 6
+model name	: Android virtual processor
+stepping	: 3
+cpu MHz		: 0.001
+cache size	: 16384 KB
+physical id	: 0
+siblings	: 2
+core id		: 1
+cpu cores	: 2
+apicid		: 1
+initial apicid	: 1
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 4
+wp		: yes
+flags		: fpu de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pse36 clflush mmx fxsr sse sse2 ht syscall nx lm rep_good nopl cpuid pni ssse3 cx16 sse4_1 sse4_2 popcnt hypervisor lahf_lm abm pti
+bugs		: cpu_meltdown spectre_v1 spectre_v2 spec_store_bypass l1tf mds swapgs itlb_multihit mmio_unknown bhi
+bogomips	: 4628.26
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 40 bits physical, 48 bits virtual
+power management:
+
+MemTotal:        2019876 kB
+MemFree:          296824 kB
+MemAvailable:    1144188 kB
+Buffers:           18916 kB
+Cached:           984320 kB
+Current WebView Update Service state
+  Current WebView package (name, version): (com.android.webview, 124.0.6367.219)
+  Minimum targetSdkVersion: 33
+  Minimum WebView version code: 636771907
+  Number of relros started: 1
+  Number of relros finished: 1
+  WebView package dirty: false
+  Any WebView package installed: true
+  Preferred WebView package (name, version): (com.android.webview, 124.0.6367.219)
+  WebView packages:
+    Valid package com.android.webview (versionName: 124.0.6367.219, versionCode: 636771907, targetSdkVersion: 34) is  installed/enabled for all users
+--------- beginning of main
+10-22 06:08:16.341  2497  2533 I chromium: [1022/060816.302956:INFO:variations_seed_loader.cc(66)] Failed to open file for reading.: No such file or directory (2)
+10-22 06:08:16.362  2497  2533 I chromium: [1022/060816.362410:INFO:variations_seed_loader.cc(66)] Failed to open file for reading.: No such file or directory (2)
+10-22 06:08:21.786  2497  2584 W chromium: [WARNING:dns_config_service_android.cc(81)] Failed to read DnsConfig.
+10-22 06:08:28.703  2550  2567 W chromium: [WARNING:runtime_features.cc(694)] SharedStorage for M118+ cannot be enabled in this configuration. Use --enable-features=SharedStorageAPI,SharedStorageAPIM118 in addition.
+10-22 06:08:29.002  2497  2580 E chromium: [ERROR:directory_reader_posix.cc(43)] opendir /data/user/0/local.quietpaper/cache/WebView/Crashpad/attachments/4c3eb0d9-2e31-4a2e-ac0d-c5516d255a4d: No such file or directory (2)
+10-22 06:08:31.708  2497  2580 W chromium: [WARNING:minidump_to_upload_parameters.cc(67)] duplicate annotation name ptype, discarding value browser
+10-22 06:08:36.682  2497  2603 W chromium: [WARNING:display_webview.cc(32)] WebView overlays are enabled!

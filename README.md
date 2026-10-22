@@ -1,6 +1,6 @@
 # 笺注 · Glossa
 
-本地优先的固定纸张笔记系统，当前版本为 **0.1.1 工程验证版**。工作区原为空，从零实现；没有复用或冒用此前 Quiet Editorial 的美术资源。界面重新设计为暖纸、深墨、灰紫工具与编辑式排版，默认进入原稿纸张。
+本地优先的固定纸张笔记系统，当前版本为 **0.1.2 工程验证版**。工作区原为空，从零实现；没有复用或冒用此前 Quiet Editorial 的美术资源。界面重新设计为暖纸、深墨、灰紫工具与编辑式排版，默认进入原稿纸张。
 
 这不是全部需求的最终完成版。当前交付包含可操作的客户端、Android 原生工程、Mac 自托管同步服务、可恢复数据内核和自动验收。**印刷文字修订层已实现；仿手写生成尚未实现。** Office、Keynote、Numbers 未实现，不能把文本往返或 PDF 截图算作这些格式的兼容。
 
@@ -39,7 +39,9 @@ adb install -r android/app/build/outputs/apk/debug/app-debug.apk
 
 Android 使用系统 WebView 的 Pointer Events 保存真实采样，并通过 SAF 独立读写 Markdown/LaTeX。SAF、原生历史、待写回及编译细节见 [Android 文档](docs/ANDROID.md)。APK 编译、模拟器运行和真实触控笔验证是不同证据，最终结果见 [交付报告](docs/DELIVERY.md)。
 
-0.1.1 的 Android 生产文件层已在 API 35 模拟器通过 71 项新增断言，覆盖文本往返、双版本冲突保护、强制停止后的待写恢复与错误分类。测试使用真实 ContentResolver 和专用文件提供者，不代表系统文件选择器、持久授权或真实触控笔已验。当前安装包为 `releases/glossa-0.1.1-debug.apk`。
+0.1.1 的 Android 生产文件层已在 API 35 模拟器通过 71 项新增断言，覆盖文本往返、双版本冲突保护、强制停止后的待写恢复与错误分类。测试使用真实 ContentResolver 和专用文件提供者，不代表系统文件选择器、持久授权或真实触控笔已验。当前安装包为 `releases/glossa-0.1.2-debug.apk`。
+
+0.1.2 新增“运行状态 → 窗口记录”：Android 持久保存最近 8 次可捕获的渲染器退出元数据，不记录笔记正文、文件 URI 或令牌。新增原生持久化 4 项、模拟桥界面 2 项及后续 1 项协议检查各通过一次，旧通过测试未重跑。原模拟器的 WebView 124 故障已缩小到快照校验所用优化计算路径；另用官方旧版模拟器、正常 CPU 配置启动后，完整主页仍未在时限内就绪。主页 JS 桥和系统 SAF 链路仍未通过验收，详见 [本阶段交付与限制](docs/DELIVERY.md) 和 [Android 诊断](docs/ANDROID-WEBVIEW-DIAGNOSIS.md)。
 
 ## Mac 自托管服务
 

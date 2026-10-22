@@ -1,6 +1,6 @@
 {
   "androidApi": 35,
-  "emulator": "software x86_64, 1536 MiB guest RAM, no KVM",
+  "emulator": "software x86_64, requested 1536 MiB; emulator startup log raised guest RAM to 2560 MiB; no KVM",
   "installedClientSha256": "66f78397dcf50c87ccb363e5de789e82886c194314aef27c62f33ad8ab7853c8",
   "nativeSourceStoreSha256": "3b5d67b34089109f505ad2182884f55c285707a6937f75743cfa5bf47e97ad00",
   "instrumentationApkSha256": "8585bede27b211c793bb8553cbf98d2af7e8a0572b7ef363610f342abd008881",

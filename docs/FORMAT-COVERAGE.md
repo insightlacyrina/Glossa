@@ -44,7 +44,7 @@ node --import tsx --test --test-isolation=none tests/formats.test.ts
 
 源协调器 `src/source-coordinator.ts` 此前另有 15 项测试通过，验证同源重命名保留对象身份、目标相同坐标而内容已变时不继承对象身份、唯一原文加上下文重新识别、人工确认候选、A/B 版本保护、持久写入计划的崩溃恢复确认，以及删除冲突仍使用真正的 `delete-source` 操作。本阶段未重跑这 15 项。
 
-本阶段新增 [source-access.test.ts](../tests/source-access.test.ts) 的源访问分类用例，分两次仅执行新增的 **3 + 1 项，均通过**：已验证源可读时清除旧失联期限；本地或未知错误不能伪造恢复；保留对象待定位、冲突和冻结副本；同一轮成功读取后发生本地日志错误仍保留访问事实，后续真实 provider 失败则从新时间开始计时。证据见 [新增 3 项](verification/native-source-access.log) 和 [新增 1 项](verification/native-source-access-cycle.log)。这些是协调层单元证据，不是完整 Android 应用交互验收。
+0.1.1 阶段新增 [source-access.test.ts](../tests/source-access.test.ts) 的源访问分类用例，分两次仅执行新增的 **3 + 1 项，均通过**：已验证源可读时清除旧失联期限；本地或未知错误不能伪造恢复；保留对象待定位、冲突和冻结副本；同一轮成功读取后发生本地日志错误仍保留访问事实，后续真实 provider 失败则从新时间开始计时。证据见 [新增 3 项](verification/native-source-access.log) 和 [新增 1 项](verification/native-source-access-cycle.log)。这些是协调层单元证据，不是完整 Android 应用交互验收。
 
 运行 Vite 后，可执行真实 App/IndexedDB 配合**模拟 Android 文件桥**的交互验收：
 
@@ -68,6 +68,14 @@ node tests/source.browser.mjs
 | `native-source-faults`  | 12 项断言，PID 2319                     | [日志](verification/native-source-faults.log)：非法 UTF-8、超限与文件名查询失败；本地日志故障与实际源不可访问的区分；损坏 JSON/摘要的诊断与保护；忽略未提交临时文件且保留内容        |
 
 测试提供者不等于系统 DocumentsProvider、Downloads、可移除存储或云文档提供者；测试打开结果不声称已获得持久 URI 权限。上述跨进程恢复针对已提交待写，不能证明写回中途终止、断电、全部磁盘故障或真实 A/IndexedDB 已完成恢复验收。这里的公式修改是文件层的精确文本修改，不是 Android 格式对象抽取、纸张、B 与源文件的完整往返。此前完整 WebView/JS 桥往返失败记录仍保留于 [Android 验证说明](ANDROID.md)，不得用这 71 项文件层断言替代完整 React/JS/SAF 选择器验收。
+
+## 0.1.2 完整应用链路状态
+
+本阶段未重跑已通过的格式、协调器、源访问及 Android 文件层测试。新增运行诊断的原生 4 项、模拟桥界面 2 项及后续协议界面 1 项各通过一次，旧 UI 2 项没有因协议保护重复运行。这些结果只证明窗口元数据的保存、展示与错误回复处理，不增加 Markdown/LaTeX 或复杂格式覆盖率。
+
+为补足完整应用证据，新增 `app-bridge` 场景，经真实打包主页 JavaScript 调用生产桥；原模拟器上的 WebView 124 和官方 AOSP 128 对照均未通过，前者渲染器退出、后者浏览器进程 fatal。隔离安装官方旧模拟器 35.2.10 后，正常 CPU 配置和相同数据成功启动且恢复 WebView 124；首次桥场景被冷启动文件提供者超时打断，预热后仅重试失败场景，主页仍在 45 秒内未就绪，未取得桥成功断言。没有在新配置重测 Adler，不能把这次超时定性为相同 SIGTRAP 或校验异常。
+
+系统 DocumentsUI 选择器与跨进程持久授权的 `saf-prepare` / `saf-resume` 场景已编译，因真实主页尚未就绪而**未执行**；不能把专用提供者或模拟桥当作系统 SAF 成功。原 124 的精确 Adler 对照将故障缩小到原 TCG 配置中的优化计算路径，具体错误指令仍未定位，完整应用链路的高风险状态保持不变。实际输出和对照范围见 [0.1.2 交付记录](DELIVERY.md#012-窗口诊断与-android-链路定位)、[专项诊断](ANDROID-WEBVIEW-DIAGNOSIS.md) 和 [最终运行上下文](verification/webview-phase-run-context.json)。
 
 ## Android 原生 pending 与源写入协议
 

@@ -23,13 +23,28 @@ public final class NativeRoundTripInstrumentation extends RendererRecoveryInstru
     private final StringBuilder evidence = new StringBuilder();
     private boolean rendererRecovery;
     private String nativeSourcePhase;
+    private boolean webViewProbe;
+    private boolean appBridge;
+    private boolean adlerProbe;
+    private boolean runtimeDiagnostics;
+    private String safPhase;
     @Override public void onCreate(Bundle arguments) {
         rendererRecovery = arguments != null && "renderer-recovery".equals(arguments.getString("mode"));
         String mode = arguments == null ? null : arguments.getString("mode");
+        webViewProbe = "webview-probe".equals(mode);
+        appBridge = "app-bridge".equals(mode);
+        adlerProbe = "adler-probe".equals(mode);
+        runtimeDiagnostics = "runtime-diagnostics".equals(mode);
+        if (mode != null && mode.startsWith("saf-")) safPhase = mode.substring(4);
         if (mode != null && mode.startsWith("native-source-")) nativeSourcePhase = mode.substring("native-source-".length());
         super.onCreate(arguments);
     }
     @Override public void onStart() {
+        if (webViewProbe) { WebViewProbeScenarios.run(this); return; }
+        if (appBridge) { NativeAppBridgeScenarios.run(this); return; }
+        if (adlerProbe) { AdlerProbeScenarios.run(this); return; }
+        if (runtimeDiagnostics) { RuntimeDiagnosticsScenarios.run(this); return; }
+        if (safPhase != null) { SafPickerScenarios.run(this, safPhase); return; }
         if (nativeSourcePhase != null) { NativeSourceScenarios.run(this, nativeSourcePhase); return; }
         if (rendererRecovery) { super.onStart(); return; }
         Bundle results = new Bundle();
@@ -127,8 +142,19 @@ public final class NativeRoundTripInstrumentation extends RendererRecoveryInstru
     }
     private String evaluate(String script) throws Exception {
         AtomicReference<String> value = new AtomicReference<>(); CountDownLatch latch = new CountDownLatch(1);
-        runOnMainSync(() -> web.evaluateJavascript(script, result -> { value.set(result); latch.countDown(); }));
+        AtomicReference<Throwable> unavailable = new AtomicReference<>();
+        runOnMainSync(() -> {
+            if (web == null || !web.isAttachedToWindow() || activity.isDestroyed()) {
+                unavailable.set(new IllegalStateException("WebView window unavailable; recovery="
+                    + (activity.getWindow().getDecorView().findViewWithTag("quietpaper-native-recovery") != null)));
+                latch.countDown();
+                return;
+            }
+            try { web.evaluateJavascript(script, result -> { value.set(result); latch.countDown(); }); }
+            catch (Throwable failure) { unavailable.set(failure); latch.countDown(); }
+        });
         if (!latch.await(15, TimeUnit.SECONDS)) throw new EvaluationTimeout();
+        if (unavailable.get() != null) throw new IllegalStateException("WebView evaluation unavailable", unavailable.get());
         return value.get();
     }
     private static final class EvaluationTimeout extends Exception { EvaluationTimeout() { super("WebView evaluation timeout"); } }

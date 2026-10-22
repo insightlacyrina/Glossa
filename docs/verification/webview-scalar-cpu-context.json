@@ -1,0 +1,20 @@
+{
+  "scope": "test emulator only, not a product workaround or successful acceptance",
+  "emulator": "37.2.12",
+  "api": 35,
+  "architecture": "x86_64",
+  "hardwareAcceleration": false,
+  "cpuOverride": [
+    "-qemu",
+    "-cpu",
+    "android64,-ssse3"
+  ],
+  "requestedMemoryMiB": 1536,
+  "runtimeMemoryMiB": 2560,
+  "observedDurationSeconds": 677,
+  "result": "No completed Android boot or working ADB handshake observed; experiment stopped using SIGTERM. No UI or SAF assertions ran.",
+  "cause": "Not established; masking a baseline CPU feature is not a supported Android runtime assumption.",
+  "dataWiped": false,
+  "snapshotVerificationDisabled": false,
+  "followup": "Start an isolated official 35.2.10 emulator with normal CPU feature selection, same API35 AVD and data."
+}

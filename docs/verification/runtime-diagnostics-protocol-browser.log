@@ -1,0 +1,2 @@
+PASS simulated-bridge protocol UI: ok:true without runtime and non-array runtime produce errors rather than empty success; runtime:[] shows 暂无窗口记录, and navigation/processing remain usable with no page errors
+Runtime diagnostics UI acceptance: 1 targeted protocol check; previous 2 checks not run; simulated bridge only, not Android renderer-exit validation.

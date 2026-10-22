@@ -1,0 +1,23 @@
+{
+  "originalProvider": {
+    "version": "124.0.6367.219",
+    "apkSha256": "fcbfe9634f8c60dc28ad13eb905a6aa5659d9a35e5893681d6230c6701ff5ec7",
+    "elfSha256": "e154b524119b6670b824d3e11a1794bf32e4a497aef18ed5d76fbe6e01d4eded",
+    "buildId": "68dabd72c6088238cbfc9a5fbfe211f916771df5",
+    "snapshotBytes": 74109,
+    "snapshotSha256": "f10aada9cfd5446cb0036ecb879f7262189e0ddeadaaeef33e1b236d49da6d48",
+    "snapshotHeader": "0x882b7eae",
+    "hostAdlerSeed0": "0x882b7eae"
+  },
+  "comparisonProvider": {
+    "version": "128.0.6613.88",
+    "source": "https://android.googlesource.com/platform/external/chromium-webview/+/27ac2bdb9a1a4e55dc65bb6cdc752dbfdea3b9f4/128.0.6613.88/x86_64/webview.apk",
+    "gitCommit": "27ac2bdb9a1a4e55dc65bb6cdc752dbfdea3b9f4",
+    "gitBlobSha1": "fcd919744aaba4ff5f9d30701e0f1e135cbf0ad6",
+    "originalApkSha256": "deb1987501d40c4c326697be8fdd7733abdf2e0ab7fb6e028205b0ff786876e5",
+    "bytes": 261423172,
+    "emulatorSignedApkSha256": "8b4a06ac3e92beec1492efadcceed2aa14ecaf19b7d0e213eb5c2e7c6a0b1f09",
+    "signingNote": "Official prebuilt re-signed with public AOSP testkey to match this disposable SDK image system package. This is test-emulator setup; no system-provider binary or test key is shipped in the Glossa client."
+  },
+  "verificationSettings": "No snapshot verification, V8 CPU feature, or product permission flags were disabled."
+}

@@ -1,0 +1,46 @@
+Checked at: 2026-10-22T06:06:05.425174+00:00
+Scope: final APK artifact inspection only; no functionality or regression test executed.
+
+[debug]
+Path: android/app/build/outputs/apk/debug/app-debug.apk
+Bytes: 374258
+SHA-256: 16bef95d69fd1d048fd672ffdf31af5b050cfa8d7989e1e33078acf2df944f75
+aapt dump badging:
+package: name='local.quietpaper' versionCode='3' versionName='0.1.2' platformBuildVersionName='15' platformBuildVersionCode='35' compileSdkVersion='35' compileSdkVersionCodename='15'
+sdkVersion:'26'
+targetSdkVersion:'35'
+uses-permission: name='android.permission.INTERNET'
+application-label:'笺注'
+application-icon-160:'res/drawable/ic_paper.xml'
+application: label='笺注' icon='res/drawable/ic_paper.xml'
+application-debuggable
+launchable-activity: name='local.quietpaper.MainActivity'  label='' icon=''
+feature-group: label=''
+  uses-feature-not-required: name='android.hardware.touchscreen'
+  uses-feature-not-required: name='android.hardware.touchscreen.stylus'
+main
+other-activities
+supports-screens: 'small' 'normal' 'large' 'xlarge'
+supports-any-density: 'true'
+locales: '--_--'
+densities: '160'
+
+[androidTest]
+Path: android/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+Bytes: 140215
+SHA-256: 96236062c597c3aed455df60c0790aa37112c686d4a8a2f7be32cede700e68f2
+aapt dump badging:
+package: name='local.quietpaper.test' versionCode='' versionName='' platformBuildVersionName='15' platformBuildVersionCode='35' compileSdkVersion='35' compileSdkVersionCodename='15'
+sdkVersion:'26'
+targetSdkVersion:'35'
+application: label='' icon=''
+application-debuggable
+uses-library:'android.test.runner'
+feature-group: label=''
+  uses-feature: name='android.hardware.faketouch'
+  uses-implied-feature: name='android.hardware.faketouch' reason='default feature for all apps'
+supports-screens: 'small' 'normal' 'large' 'xlarge'
+supports-any-density: 'true'
+locales:
+densities:
+native-code: 'x86_64'

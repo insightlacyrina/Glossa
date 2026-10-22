@@ -1,0 +1,7 @@
+
+PASS runtime diagnostics; assertions=4; pid=2687
+PASS renderer metadata survives a new store instance and the committed file contains only the allowed non-content fields
+PASS ten committed exits retain the latest eight complete metadata entries in order
+PASS corrupt committed bytes remain unchanged and both read and append report recovery errors
+PASS a directory blocking the temporary file cannot report a successful write or create committed history
+

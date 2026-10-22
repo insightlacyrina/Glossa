@@ -1,0 +1,151 @@
+
+/workspace/.quiet-paper-build/webview-diagnosis/lib/x86_64/libwebviewchromium.so:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000001797790 <Java_J_N_MLJecZJ9@@Base+0xa5cf0>:
+ 1797790:	mov    %edi,%eax
+ 1797792:	movzwl %ax,%r10d
+ 1797796:	shr    $0x10,%eax
+ 1797799:	mov    %edx,%ecx
+ 179779b:	and    $0x1f,%ecx
+ 179779e:	cmp    $0x20,%rdx
+ 17977a2:	jb     17978fd <Java_J_N_MLJecZJ9@@Base+0xa5e5d>
+ 17977a8:	shr    $0x5,%rdx
+ 17977ac:	mov    $0xad,%r8d
+ 17977b2:	pxor   %xmm0,%xmm0
+ 17977b6:	movdqa -0xa9804e(%rip),%xmm1        # cff770 <Java_J_N_MHELqQxx@@Base-0x511e70>
+ 17977be:	pmovsxbw -0xa9c417(%rip),%xmm2        # cfb3b0 <Java_J_N_MHELqQxx@@Base-0x516230>
+ 17977c7:	movdqa -0xa94e1f(%rip),%xmm3        # d029b0 <Java_J_N_MHELqQxx@@Base-0x50ec30>
+ 17977cf:	mov    $0x80078071,%r9d
+ 17977d5:	cmp    %r8,%rdx
+ 17977d8:	mov    $0xad,%r11d
+ 17977de:	cmovb  %rdx,%r11
+ 17977e2:	mov    %r10d,%edi
+ 17977e5:	imul   %r11d,%edi
+ 17977e9:	movd   %edi,%xmm4
+ 17977ed:	movd   %eax,%xmm5
+ 17977f1:	mov    %r11d,%eax
+ 17977f4:	pxor   %xmm6,%xmm6
+ 17977f8:	nopl   0x0(%rax,%rax,1)
+ 1797800:	movdqu (%rsi),%xmm7
+ 1797804:	movdqa %xmm7,%xmm8
+ 1797809:	pmaddubsw %xmm1,%xmm7
+ 179780e:	pmaddwd %xmm2,%xmm7
+ 1797812:	paddd  %xmm5,%xmm7
+ 1797816:	movdqu 0x10(%rsi),%xmm5
+ 179781b:	paddd  %xmm6,%xmm4
+ 179781f:	psadbw %xmm0,%xmm8
+ 1797824:	paddd  %xmm6,%xmm8
+ 1797829:	movdqa %xmm5,%xmm6
+ 179782d:	psadbw %xmm0,%xmm6
+ 1797831:	paddd  %xmm8,%xmm6
+ 1797836:	pmaddubsw %xmm3,%xmm5
+ 179783b:	pmaddwd %xmm2,%xmm5
+ 179783f:	paddd  %xmm7,%xmm5
+ 1797843:	add    $0x20,%rsi
+ 1797847:	dec    %eax
+ 1797849:	jne    1797800 <Java_J_N_MLJecZJ9@@Base+0xa5d60>
+ 179784b:	phaddd %xmm6,%xmm6
+ 1797850:	pslld  $0x5,%xmm4
+ 1797855:	paddd  %xmm4,%xmm5
+ 1797859:	pshufd $0xff,%xmm6,%xmm4
+ 179785e:	paddd  %xmm6,%xmm4
+ 1797862:	movd   %xmm4,%edi
+ 1797866:	phaddd %xmm5,%xmm5
+ 179786b:	add    %r10d,%edi
+ 179786e:	pshufd $0xff,%xmm5,%xmm4
+ 1797873:	paddd  %xmm5,%xmm4
+ 1797877:	movd   %xmm4,%eax
+ 179787b:	mov    %rdi,%r10
+ 179787e:	imul   %r9,%r10
+ 1797882:	shr    $0x2f,%r10
+ 1797886:	imul   $0xfff1,%r10d,%r10d
+ 179788d:	sub    %r10d,%edi
+ 1797890:	mov    %rax,%r10
+ 1797893:	imul   %r9,%r10
+ 1797897:	shr    $0x2f,%r10
+ 179789b:	imul   $0xfff1,%r10d,%r10d
+ 17978a2:	sub    %r10d,%eax
+ 17978a5:	mov    %edi,%r10d
+ 17978a8:	sub    %r11,%rdx
+ 17978ab:	jne    17977d5 <Java_J_N_MLJecZJ9@@Base+0xa5d35>
+ 17978b1:	test   %rcx,%rcx
+ 17978b4:	je     17978f7 <Java_J_N_MLJecZJ9@@Base+0xa5e57>
+ 17978b6:	cmp    $0x10,%ecx
+ 17978b9:	jae    1797902 <Java_J_N_MLJecZJ9@@Base+0xa5e62>
+ 17978bb:	xor    %edx,%edx
+ 17978bd:	movzbl (%rsi,%rdx,1),%r8d
+ 17978c2:	add    %r8d,%edi
+ 17978c5:	add    %edi,%eax
+ 17978c7:	inc    %rdx
+ 17978ca:	cmp    %rdx,%rcx
+ 17978cd:	jne    17978bd <Java_J_N_MLJecZJ9@@Base+0xa5e1d>
+ 17978cf:	lea    -0xfff1(%rdi),%ecx
+ 17978d5:	cmp    $0xfff1,%edi
+ 17978db:	cmovb  %edi,%ecx
+ 17978de:	mov    %eax,%edx
+ 17978e0:	mov    $0x80078071,%esi
+ 17978e5:	imul   %rdx,%rsi
+ 17978e9:	shr    $0x2f,%rsi
+ 17978ed:	imul   $0xfff1,%esi,%edx
+ 17978f3:	sub    %edx,%eax
+ 17978f5:	mov    %ecx,%edi
+ 17978f7:	shl    $0x10,%eax
+ 17978fa:	or     %edi,%eax
+ 17978fc:	ret
+ 17978fd:	mov    %r10d,%edi
+ 1797900:	jmp    17978b1 <Java_J_N_MLJecZJ9@@Base+0xa5e11>
+ 1797902:	movzbl (%rsi),%edx
+ 1797905:	add    %edx,%edi
+ 1797907:	add    %edi,%eax
+ 1797909:	movzbl 0x1(%rsi),%edx
+ 179790d:	add    %edi,%edx
+ 179790f:	add    %edx,%eax
+ 1797911:	movzbl 0x2(%rsi),%edi
+ 1797915:	add    %edx,%edi
+ 1797917:	add    %edi,%eax
+ 1797919:	movzbl 0x3(%rsi),%edx
+ 179791d:	add    %edi,%edx
+ 179791f:	add    %edx,%eax
+ 1797921:	movzbl 0x4(%rsi),%edi
+ 1797925:	add    %edx,%edi
+ 1797927:	add    %edi,%eax
+ 1797929:	movzbl 0x5(%rsi),%edx
+ 179792d:	add    %edi,%edx
+ 179792f:	add    %edx,%eax
+ 1797931:	movzbl 0x6(%rsi),%edi
+ 1797935:	add    %edx,%edi
+ 1797937:	add    %edi,%eax
+ 1797939:	movzbl 0x7(%rsi),%edx
+ 179793d:	add    %edi,%edx
+ 179793f:	add    %edx,%eax
+ 1797941:	movzbl 0x8(%rsi),%edi
+ 1797945:	add    %edx,%edi
+ 1797947:	add    %edi,%eax
+ 1797949:	movzbl 0x9(%rsi),%edx
+ 179794d:	add    %edi,%edx
+ 179794f:	add    %edx,%eax
+ 1797951:	movzbl 0xa(%rsi),%edi
+ 1797955:	add    %edx,%edi
+ 1797957:	add    %edi,%eax
+ 1797959:	movzbl 0xb(%rsi),%edx
+ 179795d:	add    %edi,%edx
+ 179795f:	add    %edx,%eax
+ 1797961:	movzbl 0xc(%rsi),%edi
+ 1797965:	add    %edx,%edi
+ 1797967:	add    %edi,%eax
+ 1797969:	movzbl 0xd(%rsi),%edx
+ 179796d:	add    %edi,%edx
+ 179796f:	add    %edx,%eax
+ 1797971:	movzbl 0xe(%rsi),%r8d
+ 1797976:	add    %edx,%r8d
+ 1797979:	add    %r8d,%eax
+ 179797c:	movzbl 0xf(%rsi),%edi
+ 1797980:	add    %r8d,%edi
+ 1797983:	add    %edi,%eax
+ 1797985:	add    $0xfffffffffffffff0,%rcx
+ 1797989:	je     17978cf <Java_J_N_MLJecZJ9@@Base+0xa5e2f>
+ 179798f:	add    $0x10,%rsi
+ 1797993:	jmp    17978bb <Java_J_N_MLJecZJ9@@Base+0xa5e1b>

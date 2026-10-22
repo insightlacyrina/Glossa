@@ -1,0 +1,13 @@
+
+FAIL real packaged homepage native bridge
+java.lang.AssertionError: real homepage did not become ready within 45 seconds: null
+	at local.quietpaper.NativeAppBridgeScenarios.bridge(NativeAppBridgeScenarios.java:121)
+	at local.quietpaper.NativeAppBridgeScenarios.run(NativeAppBridgeScenarios.java:66)
+	at local.quietpaper.NativeRoundTripInstrumentation.onStart(NativeRoundTripInstrumentation.java:44)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2594)
+; pid=2497; elapsedMs=76713
+WebView provider: com.android.webview version=124.0.6367.219 code=636771907
+Android sdk=35 model=Android SDK built for x86_64
+Last native window state: url=https://appassets.quietpaper.local/index.html progress=10 attached=true
+Scope: actual packaged homepage, JavaScript interface calls, native DOM callbacks and one real provider write. No SAF picker, persistent grant, complete source matrix or interactive editor acceptance is claimed.
+

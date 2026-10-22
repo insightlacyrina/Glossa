@@ -1,3 +1,13 @@
+export type RuntimeDiagnostic = {
+  at: number;
+  kind: 'renderer-exit';
+  didCrash: boolean;
+  priority: number;
+  osApi: number;
+  webViewPackage: string;
+  webViewVersion: string;
+  appVersion: string;
+};
 export type NativeReply = {
   requestId: string;
   ok: boolean;
@@ -18,6 +28,7 @@ export type NativeReply = {
   bytes?: number;
   sequence?: number;
   pending?: boolean;
+  runtime?: RuntimeDiagnostic[];
 };
 type NativeMethod =
   | 'openDocument'
@@ -33,6 +44,7 @@ type NativeMethod =
   | 'discardExport'
   | 'resolveSourceConflict'
   | 'getPendingWrites'
+  | 'getRuntimeDiagnostics'
   | 'getSourceSnapshot'
   | 'retryPendingWrite';
 export function nativeRequest(method: NativeMethod, args: string[] = []): Promise<NativeReply> {

@@ -1,0 +1,19 @@
+{
+  "date": "2026-10-22",
+  "purpose": "Isolated official older-emulator comparison for current 37.2.12 TCG SIMD execution anomaly; no product acceptance implied",
+  "officialArchivePage": "https://developer.android.com/studio/emulator_archive",
+  "officialArchiveFrame": "https://developer.android.com/frame/studio/emulator_archive_ba3e947d0d2e9a5d37fa645a86d6cfd53959007b4e54b61dfa2893259a9fec90.frame",
+  "officialListedDownload": "https://edgedl.me.gvt1.com/edgedl/android/repository/emulator-linux_x64-12414864.zip",
+  "downloadedFrom": "https://dl.google.com/android/repository/emulator-linux_x64-12414864.zip",
+  "version": "35.2.10",
+  "channel": "Stable",
+  "buildId": "12414864",
+  "bytes": 294827850,
+  "sha256": "03f3265250613cd697129f7633ca6f4815dd5ce4c94db845284d1a2a95732aad",
+  "officialPublishedSha256": "03f3265250613cd697129f7633ca6f4815dd5ce4c94db845284d1a2a95732aad",
+  "checksumMatches": true,
+  "executable": "/workspace/.quiet-paper-build/emulator-fallback/35.2.10/emulator/emulator",
+  "existingSdkReplaced": false,
+  "existingAvdModifiedByDownload": false,
+  "avdStartedByDownloader": false
+}

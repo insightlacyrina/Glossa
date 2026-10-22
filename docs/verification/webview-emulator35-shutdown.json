@@ -1,0 +1,10 @@
+{
+  "requestedSignal": "SIGTERM",
+  "emulatorPid": 5895,
+  "emulatorVersion": "35.2.10",
+  "shellExitCode": 139,
+  "shellReported": "Segmentation fault during emulator termination",
+  "dataWipeRequested": false,
+  "snapshotSaveRequested": false,
+  "scope": "Host emulator shutdown failure after the failed app-bridge trial; not an Android app failure or a successful clean shutdown."
+}

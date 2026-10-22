@@ -16,7 +16,9 @@ import time
 class LocalEmulator:
     def __init__(self, port=5555, timeout=90):
         self.socket = socket.create_connection(("127.0.0.1", port), timeout=timeout)
-        self.send(b"CNXN", 0x01000001, 4096, b"host::\0")
+        self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        # Avoid thousands of 4 KiB acknowledgments when inspecting system APKs.
+        self.send(b"CNXN", 0x01000001, 65536, b"host::\0")
         command, _, maximum, _ = self.receive()
         if command != b"CNXN":
             raise RuntimeError("Local emulator is not ready or requires ADB authentication")

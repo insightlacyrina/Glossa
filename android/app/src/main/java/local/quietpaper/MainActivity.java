@@ -51,12 +51,14 @@ public final class MainActivity extends Activity {
     private static final ExecutorService io = Executors.newSingleThreadExecutor();
     private WebView web;
     private NativeSourceStore sources;
+    private NativeRuntimeDiagnostics runtimeDiagnostics;
     private String role, deviceId, openRequest, exportRequest, exportText, exportSession;
     private ValueCallback<Uri[]> fileCallback;
 
     @Override public void onCreate(Bundle saved) {
         super.onCreate(saved);
         sources = new NativeSourceStore(this);
+        runtimeDiagnostics = new NativeRuntimeDiagnostics(this);
         SharedPreferences prefs = getSharedPreferences("device", MODE_PRIVATE);
         deviceId = prefs.getString("id", null);
         if (deviceId == null) {
@@ -97,6 +99,12 @@ public final class MainActivity extends Activity {
                 return !request.getUrl().toString().startsWith(ORIGIN + "/");
             }
             @Override public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
+                boolean crashed = detail.didCrash();
+                int priority = detail.rendererPriorityAtExit();
+                io.execute(() -> {
+                    JSONObject recorded = runtimeDiagnostics.recordRendererExit(crashed, priority);
+                    if (!recorded.optBoolean("ok")) Log.w("GlossaNative", "Renderer diagnostic could not be committed: " + recorded.optString("error"));
+                });
                 boolean current = web == view;
                 if (current) web = null;
                 if (current) cancelFileChooser();
@@ -179,6 +187,16 @@ public final class MainActivity extends Activity {
         @JavascriptInterface public String getRole() { return role; }
         @JavascriptInterface public String getDeviceId() { return deviceId; }
         @JavascriptInterface public String getPlatform() { return "android"; }
+        @JavascriptInterface public void getRuntimeDiagnostics(String requestId) {
+            io.execute(() -> {
+                JSONObject result = runtimeDiagnostics.read();
+                try {
+                    result.put("requestId", requestId).put("type", "runtime-diagnostics");
+                    if (result.has("entries")) result.put("runtime", result.remove("entries"));
+                    emit(result);
+                } catch (Exception failed) { failure(requestId, "runtime-diagnostics", "runtime-diagnostics-read-failed"); }
+            });
+        }
         @JavascriptInterface public void openDocument(String requestId) {
             runOnUiThread(() -> {
                 if (!canUseWeb()) return;

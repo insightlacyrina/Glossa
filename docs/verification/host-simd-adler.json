@@ -1,0 +1,32 @@
+{
+  "scope": "new host CPU execution diagnostic, not application acceptance",
+  "elf_sha256": "e154b524119b6670b824d3e11a1794bf32e4a497aef18ed5d76fbe6e01d4eded",
+  "gnu_build_id": "68dabd72c6088238cbfc9a5fbfe211f916771df5",
+  "snapshot_sha256": "f10aada9cfd5446cb0036ecb879f7262189e0ddeadaaeef33e1b236d49da6d48",
+  "entry": "0x1797790",
+  "function_end_exclusive": "0x1797998",
+  "corrected_requested_entry": "0x1798a90 is not the Adler entry and was never executed",
+  "static_instruction_count": 144,
+  "relocations_checked": 412805,
+  "static_constants": [
+    "0xcff770",
+    "0xcfb3b0",
+    "0xd029b0"
+  ],
+  "android_external_calls": 0,
+  "mapped_bytes": 109428736,
+  "payload_bytes": 74097,
+  "host_cpu": {
+    "architecture": "x86_64",
+    "all_visible_cpus_ssse3_sse4_1": true,
+    "model": "INTEL(R) XEON(R) PLATINUM 8573C"
+  },
+  "header": "0x882b7eae",
+  "python_scalar_seed0": "0x882b7eae",
+  "host_zlib_seed0": "0x882b7eae",
+  "same_elf_simd_on_host_seed0": "0x882b7eae",
+  "simd_equals_scalar": true,
+  "android_whole_payload_reference": "0xb2987c76",
+  "android_chunk32_reference": "0x882b7eae",
+  "limitations": "Host leaf-function result does not validate Android WebView UI or identify the exact failing TCG instruction."
+}

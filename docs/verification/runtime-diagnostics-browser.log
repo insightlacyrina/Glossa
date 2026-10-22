@@ -1,0 +1,3 @@
+PASS simulated-bridge UI: window records show latest-first exit type, time, app/API/component versions, with no explanatory fine print or 390px horizontal overflow
+PASS simulated-bridge UI: failed diagnostic read shows an error instead of empty success; navigation and retry remain usable
+Runtime diagnostics UI acceptance: 2 checks; simulated bridge only, not Android renderer-exit validation.

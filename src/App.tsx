@@ -1730,6 +1730,49 @@ function App() {
       ),
     });
   }
+  async function runtimeDiagnosticsDialog() {
+    try {
+      const reply = await nativeRequest('getRuntimeDiagnostics');
+      if (!Array.isArray(reply.runtime)) throw new Error('runtime-diagnostics-invalid');
+      setModal({
+        title: '窗口记录',
+        content: (
+          <div className="dialog-stack runtime-records">
+            {reply.runtime?.length ? (
+              [...reply.runtime].reverse().map((entry, index) => (
+                <article className="source-object" key={`${entry.at}:${index}`}>
+                  <strong>{entry.didCrash ? '异常退出' : '系统终止'}</strong>
+                  <time
+                    dateTime={
+                      entry.at <= 8640000000000000 ? new Date(entry.at).toISOString() : undefined
+                    }
+                  >
+                    {entry.at <= 8640000000000000
+                      ? new Date(entry.at).toLocaleString()
+                      : '时间不可用'}
+                  </time>
+                  <dl>
+                    <dt>应用</dt>
+                    <dd>Glossa {entry.appVersion}</dd>
+                    <dt>Android API</dt>
+                    <dd>{entry.osApi}</dd>
+                    <dt>书写组件</dt>
+                    <dd>{entry.webViewVersion}</dd>
+                  </dl>
+                </article>
+              ))
+            ) : (
+              <div className="empty">
+                <h2>暂无窗口记录</h2>
+              </div>
+            )}
+          </div>
+        ),
+      });
+    } catch {
+      w.setError('窗口记录暂不可读，已有记录仍保留在本机');
+    }
+  }
   function settingsDialog() {
     setModal({
       title: '偏好与同步',
@@ -2746,10 +2789,18 @@ function App() {
                 <div className="eyebrow">BEHIND THE PAPER</div>
                 <h1>运行状态</h1>
               </div>
-              <button className="button" onClick={() => void w.flush()}>
-                立即整理
-                <Sparkles size={16} />
-              </button>
+              <div className="activity-actions">
+                {window.QuietPaperNative?.getRuntimeDiagnostics && (
+                  <button className="button" onClick={() => void runtimeDiagnosticsDialog()}>
+                    窗口记录
+                    <History size={16} />
+                  </button>
+                )}
+                <button className="button" onClick={() => void w.flush()}>
+                  立即整理
+                  <Sparkles size={16} />
+                </button>
+              </div>
             </div>
             <div className="status-grid">
               {PIPELINE_STAGES.map((stage) => (

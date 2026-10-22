@@ -1,0 +1,17 @@
+10-22 06:03:25.373   595   632 I ActivityManager: Force stopping local.quietpaper appid=10148 user=-1: installPackageLI
+10-22 06:03:31.197   595   658 I ActivityManager: Force stopping local.quietpaper appid=10148 user=0: pkg removed
+10-22 06:04:15.578   595   632 I ActivityManager: Killing 1329:android.process.acore/u0a67 (adj 0): timeout publishing content providers
+10-22 06:04:23.818   595   632 I ActivityManager: Force stopping local.quietpaper.test appid=10149 user=-1: installPackageLI
+10-22 06:04:33.230   595   658 I ActivityManager: Force stopping local.quietpaper.test appid=10149 user=0: pkg removed
+10-22 06:04:52.899   595   632 I ActivityManager: Killing 1538:android.process.acore/u0a67 (adj 0): timeout publishing content providers
+10-22 06:05:12.267   595   695 I ActivityManager: Force stopping local.quietpaper appid=10148 user=0: start instr
+10-22 06:05:12.631   595   633 I ActivityManager: Start proc 1695:local.quietpaper/u0a148 for added application local.quietpaper
+10-22 06:05:29.694   595   633 I ActivityManager: Start proc 1785:local.quietpaper.test/u0a149 for content provider {local.quietpaper.test/local.quietpaper.FixtureProvider}
+10-22 06:05:42.382   595  1832 E ActivityManager:   17% 1785/local.quietpaper.test: 7.7% user + 9.2% kernel / faults: 1223 minor
+10-22 06:05:42.382   595  1832 E ActivityManager:   5.1% 1695/local.quietpaper: 2.6% user + 2.5% kernel / faults: 207 minor
+10-22 06:05:42.648   595   632 W ActivityManager: Unable to launch app local.quietpaper.test/10149 for provider local.quietpaper.test.source: launching app became null
+10-22 06:05:42.651   595   632 I ActivityManager: Killing 1695:local.quietpaper/u0a148 (adj 0): depends on provider local.quietpaper.test/local.quietpaper.FixtureProvider in dying proc local.quietpaper.test (adj 0)
+10-22 06:05:42.785   595   632 I ActivityManager: Killing 1785:local.quietpaper.test/u0a149 (adj 0): timeout publishing content providers
+10-22 06:05:43.243   595  1120 W ActivityManager: Crash of app local.quietpaper running instrumentation ComponentInfo{local.quietpaper.test/local.quietpaper.NativeRoundTripInstrumentation}
+10-22 06:05:43.251   595  1120 I ActivityManager: Force stopping local.quietpaper appid=10148 user=0: finished inst
+10-22 06:05:43.961   595  1120 V ActivityManager: Got obituary of 1785:local.quietpaper.test

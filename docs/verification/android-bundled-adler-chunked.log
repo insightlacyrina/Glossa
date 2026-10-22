@@ -1,0 +1,21 @@
+
+DIAGNOSTIC complete; comparison results follow, no product acceptance claimed; pid=2871
+comparisonStartedAt=1792647310104
+MainActivity created to load WebView; proceeding without any JavaScript readiness dependency
+provider=com.android.webview; version=124.0.6367.219; apk=/product/app/webview/webview.apk
+testApk=/data/app/~~cd6REdXG3ddCnZRuqHBNyw==/local.quietpaper.test-PzPCXJD-A73d7Lel8b70Fw==/base.apk
+exactExecutableMap=73e13a831000-73e140691000 r-xp 07428000 fe:03 92                         /product/app/webview/webview.apk
+elfBias=0x73e13a831000; APK library offset=0x7428000; bundledAdlerOffset=0x3f8f260
+additionalContextAssetPresent=false
+snapshot=assets/snapshot_blob_64.bin; bytes=74109; payloadBytes=74097; sha256=f10aada9cfd5446cb0036ecb879f7262189e0ddeadaaeef33e1b236d49da6d48
+header=0x882b7eae; scalarSeed0=0x882b7eae; headerEqualsScalar=true; knownHostHeaderReference=0x882b7eae
+Starting one exact-ELF SHA256 guard and two individually BuildId-guarded bundled Adler paths: whole payload and <=32-byte chunks
+exactElfSha256=e154b524119b6670b824d3e11a1794bf32e4a497aef18ed5d76fbe6e01d4eded; mappedBuildId=68dabd72c6088238cbfc9a5fbfe211f916771df5; both guards accepted
+diagnosticJniLoadedVia=/data/app/~~cd6REdXG3ddCnZRuqHBNyw==/local.quietpaper.test-PzPCXJD-A73d7Lel8b70Fw==/base.apk!/lib/x86_64/libglossa_adler_probe.so
+bundledSeed0=0xb2987c76; scalarSeed0=0x882b7eae; bundledEqualsScalar=false; bundledEqualsHeader=false
+bundledChunk32Seed0=0x882b7eae; chunkCalls=2316; chunk32EqualsScalar=true; chunk32EqualsHeader=true; chunk32EqualsWholePayload=false
+Optional runtime observation begins; only naturally occurring persisted exits are read; maxWaitMs=60000
+runtimeRendererExitMetadata={"at":1792647383929,"kind":"renderer-exit","didCrash":true,"priority":2,"osApi":35,"webViewPackage":"com.android.webview","webViewVersion":"124.0.6367.219","appVersion":"0.1.2"}
+runtimeRendererExitObserved=true; observationElapsedMs=29733; diagnostic observation only, no product acceptance claimed
+Scope: androidTest-only checksum observation in the instrumented application/browser process. MainActivity starts solely to load the active WebView provider. No JavaScript, page callback or renderer result is awaited. The payload is copied from the guarded provider APK into a direct buffer; this does not inspect the sandboxed renderer's actual snapshot mapping. The chunk32 comparison calls the original function with a rolling Adler seed and at most 32 bytes per call. An optional observation waits up to 60 seconds for a naturally occurring, persisted renderer-exit record since this comparison began; absence does not fail the diagnostic. A checksum mismatch is a diagnostic result, not an application pass. This does not verify WebView UI, the A/B model, source round trips or SAF picker behavior. No WebView bytes, CPU feature flags or snapshot verification settings are changed.
+

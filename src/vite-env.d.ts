@@ -22,6 +22,7 @@ interface Window {
     getPendingExports(id: string): void;
     discardExport(id: string, sessionId: string): void;
     getPendingWrites(id: string): void;
+    getRuntimeDiagnostics?(id: string): void;
     getSourceSnapshot(id: string, uri: string): void;
     retryPendingWrite(id: string, uri: string): void;
     resolveSourceConflict(id: string, uri: string, text: string, sourceHash: string): void;

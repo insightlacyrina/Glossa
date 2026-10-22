@@ -1,0 +1,45 @@
+Checked at: 2026-10-22T06:06:05.425174+00:00
+
+[debug]
+Path: android/app/build/outputs/apk/debug/app-debug.apk
+Exit code: 0
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): true
+Verified using v3 scheme (APK Signature Scheme v3): false
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+Signer #1 certificate DN: C=US, O=Android, CN=Android Debug
+Signer #1 certificate SHA-256 digest: 986b444ef62f28a847efda701b9d3dfe2ae7e4151eb4a1409299da8ab9859f24
+Signer #1 certificate SHA-1 digest: 5b7ad12216c342a908a6b99e864e3ce1625edbbc
+Signer #1 certificate MD5 digest: 9548326f248be66f1119a6bc64b3d7b9
+Signer #1 key algorithm: RSA
+Signer #1 key size (bits): 2048
+Signer #1 public key SHA-256 digest: a84302b139fe79acd6db22768500c397c85cc7c72e34fdab3eb871642c2aaa08
+Signer #1 public key SHA-1 digest: c079e2c3fb20b27103eea3f06e8bab4e9885c2d4
+Signer #1 public key MD5 digest: e3e45619d1ce3c6fde1225bd62dc2570
+
+
+[androidTest]
+Path: android/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+Exit code: 0
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): true
+Verified using v3 scheme (APK Signature Scheme v3): false
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+Signer #1 certificate DN: C=US, O=Android, CN=Android Debug
+Signer #1 certificate SHA-256 digest: 986b444ef62f28a847efda701b9d3dfe2ae7e4151eb4a1409299da8ab9859f24
+Signer #1 certificate SHA-1 digest: 5b7ad12216c342a908a6b99e864e3ce1625edbbc
+Signer #1 certificate MD5 digest: 9548326f248be66f1119a6bc64b3d7b9
+Signer #1 key algorithm: RSA
+Signer #1 key size (bits): 2048
+Signer #1 public key SHA-256 digest: a84302b139fe79acd6db22768500c397c85cc7c72e34fdab3eb871642c2aaa08
+Signer #1 public key SHA-1 digest: c079e2c3fb20b27103eea3f06e8bab4e9885c2d4
+Signer #1 public key MD5 digest: e3e45619d1ce3c6fde1225bd62dc2570
+

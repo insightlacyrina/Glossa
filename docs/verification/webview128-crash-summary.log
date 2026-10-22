@@ -1,0 +1,56 @@
+10-22 05:20:51.179  2553  2573 F DEBUG   : *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+10-22 05:20:51.182  2553  2573 F DEBUG   : Build fingerprint: 'Android/sdk_phone64_x86_64/emu64x:15/AE3A.240806.019/12368160:userdebug/test-keys'
+10-22 05:20:51.182  2553  2573 F DEBUG   : Revision: '0'
+10-22 05:20:51.182  2553  2573 F DEBUG   : ABI: 'x86_64'
+10-22 05:20:51.182  2553  2573 F DEBUG   : Timestamp: 2026-10-22 05:20:45.113602133+0000
+10-22 05:20:51.183  2553  2573 F DEBUG   : Process uptime: 42s
+10-22 05:20:51.189  2553  2573 F DEBUG   : Cmdline: com.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0
+10-22 05:20:51.189  2553  2573 F DEBUG   : pid: 2553, tid: 2573, name: CrRendererMain  >>> com.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0 <<<
+10-22 05:20:51.190  2553  2573 F DEBUG   : uid: 99001
+10-22 05:20:51.190  2553  2573 F DEBUG   : signal 5 (SIGTRAP), code 128 (SI_KERNEL), fault addr --------
+10-22 05:20:51.191  2553  2573 F DEBUG   :     rax 00000000b2987c00  rbx 0000316c001d4000  rcx 0000000000007c76  rdx 000000000007ff88
+10-22 05:20:51.196  2553  2573 F DEBUG   :     r8  0000000000000000  r9  0000000080078071  r10 00000000000074db  r11 0000000000000042
+10-22 05:20:51.196  2553  2573 F DEBUG   :     r12 000073e18b82cb90  r13 0000316c00151e28  r14 000073e140b86e90  r15 0000000000000000
+10-22 05:20:51.197  2553  2573 F DEBUG   :     rdi 0000000000007c76  rsi 0000000000000008
+10-22 05:20:51.197  2553  2573 F DEBUG   :     rbp 0000316c00000000  rsp 000073e18b82cab0  rip 000073e13bfc81cc
+10-22 05:20:51.197  2553  2573 F DEBUG   : 1 total frames
+10-22 05:20:51.197  2553  2573 F DEBUG   : backtrace:
+10-22 05:20:51.198  2553  2573 F DEBUG   :       #00 pc 00000000017971cc  /product/app/webview/webview.apk!libwebviewchromium.so (offset 0x7428000) (BuildId: 68dabd72c6088238cbfc9a5fbfe211f916771df5)
+10-22 05:36:22.895  2895  2923 F DEBUG   : *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+10-22 05:36:22.902  2895  2923 F DEBUG   : Build fingerprint: 'Android/sdk_phone64_x86_64/emu64x:15/AE3A.240806.019/12368160:userdebug/test-keys'
+10-22 05:36:22.903  2895  2923 F DEBUG   : Revision: '0'
+10-22 05:36:22.903  2895  2923 F DEBUG   : ABI: 'x86_64'
+10-22 05:36:22.908  2895  2923 F DEBUG   : Timestamp: 2026-10-22 05:36:09.691949937+0000
+10-22 05:36:22.908  2895  2923 F DEBUG   : Process uptime: 55s
+10-22 05:36:22.914  2895  2923 F DEBUG   : Cmdline: com.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0
+10-22 05:36:22.914  2895  2923 F DEBUG   : pid: 2895, tid: 2923, name: CrRendererMain  >>> com.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0 <<<
+10-22 05:36:22.914  2895  2923 F DEBUG   : uid: 99003
+10-22 05:36:22.914  2895  2923 F DEBUG   : signal 5 (SIGTRAP), code 128 (SI_KERNEL), fault addr --------
+10-22 05:36:22.915  2895  2923 F DEBUG   :     rax 00000000b2987c00  rbx 0000316c001d8000  rcx 0000000000007c76  rdx 000000000007ff88
+10-22 05:36:22.915  2895  2923 F DEBUG   :     r8  0000000000000000  r9  0000000080078071  r10 00000000000074db  r11 0000000000000042
+10-22 05:36:22.924  2895  2923 F DEBUG   :     r12 000073e18b8fbb90  r13 0000316c00152a28  r14 000073e140b86e90  r15 0000000000000000
+10-22 05:36:22.925  2895  2923 F DEBUG   :     rdi 0000000000007c76  rsi 0000000000000008
+10-22 05:36:22.925  2895  2923 F DEBUG   :     rbp 0000316c00000000  rsp 000073e18b8fbab0  rip 000073e13bfc81cc
+10-22 05:36:22.925  2895  2923 F DEBUG   : 1 total frames
+10-22 05:36:22.925  2895  2923 F DEBUG   : backtrace:
+10-22 05:36:22.926  2895  2923 F DEBUG   :       #00 pc 00000000017971cc  /product/app/webview/webview.apk!libwebviewchromium.so (offset 0x7428000) (BuildId: 68dabd72c6088238cbfc9a5fbfe211f916771df5)
+10-22 05:41:07.022  3059  3059 F libc    : Fatal signal 5 (SIGTRAP), code 128 (SI_KERNEL), fault addr 0x0 in tid 3059 (ocal.quietpaper), pid 3059 (ocal.quietpaper)
+10-22 05:41:15.641  3163  3163 F DEBUG   : *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+10-22 05:41:15.643  3163  3163 F DEBUG   : Build fingerprint: 'Android/sdk_phone64_x86_64/emu64x:15/AE3A.240806.019/12368160:userdebug/test-keys'
+10-22 05:41:15.648  3163  3163 F DEBUG   : Revision: '0'
+10-22 05:41:15.648  3163  3163 F DEBUG   : ABI: 'x86_64'
+10-22 05:41:15.649  3163  3163 F DEBUG   : Timestamp: 2026-10-22 05:41:08.193932201+0000
+10-22 05:41:15.649  3163  3163 F DEBUG   : Process uptime: 36s
+10-22 05:41:15.649  3163  3163 F DEBUG   : Cmdline: local.quietpaper
+10-22 05:41:15.650  3163  3163 F DEBUG   : pid: 3059, tid: 3059, name: ocal.quietpaper  >>> local.quietpaper <<<
+10-22 05:41:15.650  3163  3163 F DEBUG   : uid: 10148
+10-22 05:41:15.650  3163  3163 F DEBUG   : signal 5 (SIGTRAP), code 128 (SI_KERNEL), fault addr 0x0000000000000000
+10-22 05:41:15.651  3163  3163 F DEBUG   : Abort message: '[FATAL:check.cc(376)] Check failed: false. NOTREACHED log messages are omitted in official builds. Sorry!'
+10-22 05:41:15.663  3163  3163 F DEBUG   :     rax 000073e142b72328  rbx 00007ffd54ce6d98  rcx 0000000000000000  rdx 0000000000000002
+10-22 05:41:15.667  3163  3163 F DEBUG   :     r8  00007ffd54d780a0  r9  000073e13b37d710  r10 ffffffffffffffff  r11 0000000000000246
+10-22 05:41:15.672  3163  3163 F DEBUG   :     r12 000017fe000954a0  r13 000000000000006a  r14 000017fe000954a0  r15 00007ffd54ce6950
+10-22 05:41:15.672  3163  3163 F DEBUG   :     rdi 000073e142b718c0  rsi 0000000000000001
+10-22 05:41:15.673  3163  3163 F DEBUG   :     rbp 0000000000000069  rsp 00007ffd54ce6920  rip 000073e13fb5ec76
+10-22 05:41:15.673  3163  3163 F DEBUG   : 1 total frames
+10-22 05:41:15.674  3163  3163 F DEBUG   : backtrace:
+10-22 05:41:15.674  3163  3163 F DEBUG   :       #00 pc 000000000532dc76  /data/app/~~lH5qmK-6DRH7W1oMHstinQ==/com.android.webview-0R6bism9BeIHO5qQDAPuNw==/base.apk!libwebviewchromium.so (offset 0xbc0000) (BuildId: a50ae06cf3364cac8e883152f5608305937de10d)

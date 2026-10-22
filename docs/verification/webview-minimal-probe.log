@@ -1,0 +1,14 @@
+
+FAIL isolated minimal WebView probe
+java.lang.AssertionError: single-navigation page/report timeout; no JavaScript polling was performed
+	at local.quietpaper.WebViewProbeScenarios.probe(WebViewProbeScenarios.java:57)
+	at local.quietpaper.WebViewProbeScenarios.run(WebViewProbeScenarios.java:33)
+	at local.quietpaper.NativeRoundTripInstrumentation.onStart(NativeRoundTripInstrumentation.java:35)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2594)
+; pid=1665
+Native lifecycle diagnostics:
+410934 create pid=1665 sdk=35 model=Android SDK built for x86_64 savedState=false
+411043 webview-package com.android.webview version=124.0.6367.219 code=636771907
+425999 load count=1 base=https://glossa-probe.invalid/ inline-bytes=368
+Scope: standalone debug Activity only; no MainActivity, production assets, native file bridge or SAF picker acceptance.
+

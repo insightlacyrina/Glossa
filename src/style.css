@@ -1460,6 +1460,27 @@ nav {
 .source-object .button {
   align-self: flex-end;
 }
+.runtime-records time {
+  color: var(--muted);
+}
+.activity-page .section-heading {
+  flex-wrap: wrap;
+}
+.activity-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.runtime-records dl {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px 24px;
+  margin: 0;
+}
+.runtime-records dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
 .revision-card {
   border: 1px solid #decdbd;
   padding: 20px;

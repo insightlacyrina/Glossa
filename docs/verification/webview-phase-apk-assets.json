@@ -1,0 +1,69 @@
+{
+  "checkedAt": "2026-10-22T06:06:05.425174+00:00",
+  "sourceApk": "android/app/build/outputs/apk/debug/app-debug.apk",
+  "distDirectory": "dist",
+  "exactFileSetMatch": true,
+  "missingFromApk": [],
+  "extraInApk": [],
+  "files": [
+    {
+      "distPath": "dist/assets/export-BKLx2JxG.js",
+      "apkPath": "assets/web/assets/export-BKLx2JxG.js",
+      "bytes": 7913,
+      "distSha256": "5b309b55a6b685e50cc9ce802f3f5878288cce3441e8bd15fe9d33220d449c7d",
+      "apkSha256": "5b309b55a6b685e50cc9ce802f3f5878288cce3441e8bd15fe9d33220d449c7d",
+      "bytesIdentical": true
+    },
+    {
+      "distPath": "dist/assets/index-C6lGpBNB.js",
+      "apkPath": "assets/web/assets/index-C6lGpBNB.js",
+      "bytes": 439342,
+      "distSha256": "e41afa1a834c1a58e30f196d7cb576c8547e51298e303b149c072ce3199425e0",
+      "apkSha256": "e41afa1a834c1a58e30f196d7cb576c8547e51298e303b149c072ce3199425e0",
+      "bytesIdentical": true
+    },
+    {
+      "distPath": "dist/assets/index-CPymiRD4.css",
+      "apkPath": "assets/web/assets/index-CPymiRD4.css",
+      "bytes": 41060,
+      "distSha256": "fb4b399ff6a85990cf877d94776a6c846c7a5408e33a6c74ee226c037ef9300d",
+      "apkSha256": "fb4b399ff6a85990cf877d94776a6c846c7a5408e33a6c74ee226c037ef9300d",
+      "bytesIdentical": true
+    },
+    {
+      "distPath": "dist/icon.svg",
+      "apkPath": "assets/web/icon.svg",
+      "bytes": 322,
+      "distSha256": "ec6fa82de6b0e45422ef4c725e3116d82d21a644108837b07c4219cc151b7eb5",
+      "apkSha256": "ec6fa82de6b0e45422ef4c725e3116d82d21a644108837b07c4219cc151b7eb5",
+      "bytesIdentical": true
+    },
+    {
+      "distPath": "dist/index.html",
+      "apkPath": "assets/web/index.html",
+      "bytes": 477,
+      "distSha256": "611e50422b38970ff449395b90ce19636998c798bf37ce6653739c68d6a07342",
+      "apkSha256": "611e50422b38970ff449395b90ce19636998c798bf37ce6653739c68d6a07342",
+      "bytesIdentical": true
+    },
+    {
+      "distPath": "dist/manifest.webmanifest",
+      "apkPath": "assets/web/manifest.webmanifest",
+      "bytes": 225,
+      "distSha256": "935fe0ea7d49ba24aed01e67b376fc4e6d29943871e852ccde304228970893e5",
+      "apkSha256": "935fe0ea7d49ba24aed01e67b376fc4e6d29943871e852ccde304228970893e5",
+      "bytesIdentical": true
+    },
+    {
+      "distPath": "dist/sw.js",
+      "apkPath": "assets/web/sw.js",
+      "bytes": 1122,
+      "distSha256": "208be954875f8f46dc4b2fa660fac077045c8df4e6811c7d9238ff505ba77eb8",
+      "apkSha256": "208be954875f8f46dc4b2fa660fac077045c8df4e6811c7d9238ff505ba77eb8",
+      "bytesIdentical": true
+    }
+  ],
+  "fileCount": 7,
+  "totalDistBytes": 490461,
+  "allAssetsIdentical": true
+}

@@ -1,0 +1,4 @@
+--------- beginning of main
+10-22 05:20:51.806  2513  2513 W GlossaNative: WebView renderer stopped; crash=true; local stores retained; waiting for user reopen
+10-22 05:36:23.927  2871  2871 W GlossaNative: WebView renderer stopped; crash=true; local stores retained; waiting for user reopen
+10-22 05:40:47.638  3059  3059 F chromium: [FATAL:check.cc(376)] Check failed: false. NOTREACHED log messages are omitted in official builds. Sorry!

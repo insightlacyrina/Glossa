@@ -1,6 +1,6 @@
-# 笺注 0.1.1 交付报告
+# 笺注 0.1.2 交付报告
 
-日期：2026-10-21。原工作区没有项目代码、需求旧稿或 Quiet Editorial 资源；当前项目位于 `/workspace/quiet-paper`。这是持续迭代的工程验证版，不是全部最终需求已完成的声明。
+日期：2026-10-22。原工作区没有项目代码、需求旧稿或 Quiet Editorial 资源；当前项目位于 `/workspace/quiet-paper`。这是持续迭代的工程验证版，不是全部最终需求已完成的声明。下列旧版通过记录沿用其原始证据，0.1.2 新增验证单列，不冒充整套重跑。
 
 ## 已确认需求、实现决策与风险
 
@@ -29,6 +29,7 @@
 - Markdown/LaTeX 源对象关联、待写队列、源版本比较、失败保留、显式删除选择、源失联冻结、源不确定时人工重新定位。
 - 完整工程包与导入恢复、本地恢复副本、未完成笔迹检查点；独立 HTML/Markdown 阅读快照内嵌受支持原稿预览。
 - 知识块离线复习、固定/自适应可插拔算法、每日负担、考试目标、A/B 展示和完全由用户判断的会/不会自评。独立自评事件可保留多端并行记录。
+- Android 渲染器退出元数据持久记录与“运行状态 → 窗口记录”。仅保留最近 8 条时间、退出类型、优先级、系统/WebView/应用版本；不保存笔记正文、URI、令牌或安装身份。
 
 ## 启动、使用与产物
 
@@ -38,10 +39,12 @@
 
 | 产物                                    | 用途                                                                                 |
 | --------------------------------------- | ------------------------------------------------------------------------------------ |
-| `releases/glossa-0.1.1-debug.apk`       | Android 调试安装包，内置生产 Web 资源                                                |
-| `releases/glossa-0.1.1-androidTest.apk` | 独立原生验收包，仅测试用途，不含于客户端 APK                                         |
-| `releases/glossa-0.1.1-source.zip`      | 源码、锁文件、测试、文档、示例和可直接预览的生产资源；不含 SDK、依赖缓存或用户数据库 |
+| `releases/glossa-0.1.2-debug.apk`       | Android 调试安装包，内置生产 Web 资源                                                |
+| `releases/glossa-0.1.2-androidTest.apk` | 独立原生验收包，仅测试用途，不含于客户端 APK                                         |
+| `releases/glossa-0.1.2-source.zip`      | 源码、锁文件、测试、文档、示例和可直接预览的生产资源；不含 SDK、依赖缓存或用户数据库 |
 | `releases/SHA256SUMS`                   | 交付文件完整性校验                                                                   |
+
+0.1.2 最终主 APK 的安装标签为“笺注”、versionCode **3**，v2 签名校验通过；7 份内置 Web 资源共 **490,461 字节**，与最终 `dist` 逐字节一致。客户端 APK 不包含研究 JNI 或测试类。SHA-256：`16bef95d69fd1d048fd672ffdf31af5b050cfa8d7989e1e33078acf2df944f75`。证据：[元数据](verification/webview-phase-apk-metadata.txt)、[资源](verification/webview-phase-apk-assets.json)、[签名](verification/webview-phase-apk-signature.txt)、[打包范围](verification/webview-phase-apk-scope.json)。这些是最终交付文件的校验，不表示完整 Android 交互通过。
 
 实际界面截图：[原稿](workspace-desktop.png)、[A/B 对照](workspace-split.png)、[手机已有 B](workspace-mobile.png)。手机截图使用 390×844 视口，没有新建纸张和书写工具。
 
@@ -89,7 +92,7 @@
 
 新增源访问状态测试 **3 项 + 1 项**通过，分别记录在[首次新增用例](verification/native-source-access.log)和[跨调用用例](verification/native-source-access-cycle.log)。后一项只执行新增用例。没有重跑旧 141 项、浏览器套件、离线用例、JVM 测试或已通过的渲染器恢复专项。
 
-生产构建与主/测试 APK 编译成功。0.1.1 调试 APK 标签为“笺注”，versionCode 2，v2 签名通过；包内 7 份 Web 资源共 **488,917 字节**与当前 `dist` 完全一致。SHA-256：`1f99cc461723a9d5d1ae2f39441858d45fede9024da96c85a7466e07f866c349`。证据：[生产构建](verification/native-source-build.log)、[Android 构建](verification/native-source-android-build.log)、[测试增量构建](verification/native-source-test-build.log)、[最终 Web 保护后的主包构建](verification/native-source-final-android-build.log)、[资源](verification/native-source-apk-assets.json)、[元数据](verification/native-source-apk-metadata.txt)、[签名](verification/native-source-apk-signature.txt)。最后只增加了 URI/owner 变化时忽略旧错误的 Web 保护；生产原生文件层与测试 APK 未变，没有重跑已通过专项。运行包与源码摘要见[运行上下文](verification/native-source-run-context.json)。
+生产构建与主/测试 APK 编译成功。0.1.1 调试 APK 标签为“笺注”，versionCode 2，v2 签名通过；包内 7 份 Web 资源共 **488,917 字节**与当时 `dist` 完全一致。SHA-256：`1f99cc461723a9d5d1ae2f39441858d45fede9024da96c85a7466e07f866c349`。证据：[生产构建](verification/native-source-build.log)、[Android 构建](verification/native-source-android-build.log)、[测试增量构建](verification/native-source-test-build.log)、[最终 Web 保护后的主包构建](verification/native-source-final-android-build.log)、[资源](verification/native-source-apk-assets.json)、[元数据](verification/native-source-apk-metadata.txt)、[签名](verification/native-source-apk-signature.txt)。最后只增加了 URI/owner 变化时忽略旧错误的 Web 保护；生产原生文件层与测试 APK 未变，没有重跑已通过专项。运行包与源码摘要见[运行上下文](verification/native-source-run-context.json)。
 
 此前未通过的默认 WebView 桥场景本次重试仍失败：渲染线程再次 `SIGTRAP`，容器接管退出，但 JS 求值超时，尚未进入文件断言。见[失败输出](verification/native-source-webview-roundtrip.log)、[接管日志](verification/native-source-webview-logcat.log)、[崩溃摘要](verification/native-source-webview-crash-summary.log)。独立文件层成功不能改写这一失败结果。
 
@@ -97,9 +100,36 @@
 
 恢复实验的 `prepare` 正常结束本身也会退出目标进程，其后再执行显式 `force-stop`。不同 PID 与内容核验构成跨进程持久恢复证据，不将其扩大为写入进行中强杀验证。
 
+## 0.1.2 窗口诊断与 Android 链路定位
+
+**已确认需求**是运行故障可定位、原稿可靠保存和 Android 独立原生文件编辑，不能因当前软件模拟器失败而降低验收范围。**实现决策**是在原有恢复入口之外增加独立的本地诊断记录，串行写入、文件同步、原子替换、父目录同步，最多保存 8 条严格校验的元数据。损坏的已提交文件保留并返回恢复错误，不能当作空记录，也不能被下一次退出静默覆盖。
+
+“运行状态 → 窗口记录”按最新优先显示退出类型、时间、应用版本、Android API 和 WebView 版本；旧原生桥没有新接口时不显示入口。该界面没有说明性小字。记录只覆盖到达 `onRenderProcessGone` 的事件，浏览器主进程直接终止等故障不保证能被记录，空记录不代表从未发生中断。
+
+本阶段只执行新增检查及此前失败链路：
+
+| 验证 | 实际结果与证据 |
+| --- | --- |
+| 原生诊断持久化 | **4 项通过一次**：[日志](verification/runtime-diagnostics-android.log)。覆盖新实例重读、允许字段、10 次保留最近 8 次、损坏保留并拒绝追加、临时文件无法写入时不误报成功。使用隔离测试目录，不覆盖用户诊断文件。 |
+| 窗口记录界面 | **2 项通过一次**：[日志](verification/runtime-diagnostics-browser.log)。模拟桥配合真实界面和 IndexedDB，验证最新优先、实际元数据、390px 无横向溢出、读取失败及重试。模拟桥不替代 Android JS 桥验收；后续仅执行 [1 项新协议检查](verification/runtime-diagnostics-protocol-browser.log)，缺失/非数组回复保持错误，合法空数组正常显示，原 2 项未重跑。 |
+| 自然渲染器退出 | 实际捕获并持久保存 WebView 124 的崩溃元数据：[记录](verification/runtime-diagnostics-renderer-event.json)。这是一条实际观察，不另计为测试断言。 |
+| WebView 124 完整主页桥 | **未通过**：[日志](verification/app-bridge-webview124.log)。渲染器退出后快速失败，未取得主页 JS→原生文件读写→回调的成功断言。最小内联页面探针也未成功：[日志](verification/webview-minimal-probe.log)。 |
+| 官方 AOSP WebView 128 对照 | **未通过**：[桥日志](verification/app-bridge-webview128.log)、[崩溃摘要](verification/webview128-crash-summary.log)。测试镜像安装官方预编译 128.0.6613.88 后仍发生浏览器进程 fatal；已执行恢复系统 124 的操作。提供者来源、摘要及仅测试镜像重签范围见 [记录](verification/webview-provider-provenance.json)。 |
+| 旧版官方模拟器 35.2.10 对照 | API 35 同一数据在正常 CPU 配置成功启动，SSSE3/SSE4.1 保留，WebView 124 已恢复。[来源与摘要](verification/emulator35-provenance.json)。首次主页桥因冷启动测试文件提供者发布超时、依赖进程终止而失败：[桥输出](verification/app-bridge-emulator35-webview124.log)、[系统日志](verification/webview-emulator35-provider-timeout.log)。预热该提供者后只重试失败链路，主页 45 秒内未就绪，进度 10、窗口仍 attached，**0 项成功桥断言**：[输出](verification/app-bridge-emulator35-webview124-warm.log)。没有在此配置重测 Adler，也没有证据将这次超时定性为此前 SIGTRAP。 |
+
+旧 141 项、既有浏览器套件、2 项断网、JVM、渲染恢复 6 项、原生源文件 71 项及源访问 4 项都未重跑；新协议保护加入后也只运行新增 1 项，先前 UI 2 项没有重跑。本阶段新增结果为 **原生 4 项 + 模拟桥 UI 2 项 + 协议 UI 1 项**。最终生产 TypeScript/Vite 与主/测试 APK 构建通过：[Web 构建](verification/webview-phase-production-build.log)、[打包 Android 构建](verification/webview-phase-packaged-android-build.log)。编译通过不补足完整应用验收。
+
+对原始 WebView 124 的精确 ELF、BuildId、快照和固定源版本核对后，旧 SIGTRAP 分支对应 V8 `VerifyChecksum` 检查失败。快照头、主机 seed-0 Adler 和 Android 标量参考均为 `0x882b7eae`，原 Android 提供者同一 bundled Adler 整体调用却返回 `0xb2987c76`；同库分成不超过 32 字节的滚动调用恢复正确值。主机执行同一原始 ELF 的经过静态边界审查的 SIMD 叶函数也得正确值。证据见 [快照校验分析](verification/snapshot-check-analysis.md)、[整体调用](verification/android-bundled-adler.log)、[分块调用](verification/android-bundled-adler-chunked.log) 和 [主机同函数验证](verification/host-simd-adler-analysis.md)。
+
+这些对照强烈指向原无 KVM 的 TCG 配置在优化计算路径上的执行异常，尚未定位具体错误指令或翻译规则，不能概括为 Android 或全部 WebView 有此缺陷，也不把其他 fatal 自动归于同一原因。没有跳过快照校验、篡改提供者库或在产品中关闭 V8 特性来取得假通过。额外屏蔽 SSSE3 的测试配置约 11 分钟仍无有效启动或 ADB 握手，已停止且未擦除数据，不能计为修复成功。随后隔离安装官方模拟器 35.2.10，正常 CPU/ISA 配置成功启动，但主页仍未就绪；这项新环境结果不能外推为其 Adler 同样错误或校验故障已经解决。完整诊断、配置边界及输出见 [专项报告](ANDROID-WEBVIEW-DIAGNOSIS.md) 和 [最终运行上下文](verification/webview-phase-run-context.json)。
+
+旧版模拟器在请求 SIGTERM 后于宿主退出过程发生段错误（exit 139），[退出记录](verification/webview-emulator35-shutdown.json)单列保存；未请求清空数据，不能将其记为干净关机或 Android 应用故障。
+
+**仍待验证的高风险目标**：完整 React 主页 JS 桥、系统 DocumentsUI 选择器、持久 URI 授权及停止进程后的重新读写仍未通过本阶段验收。新增专用 `app-bridge`、`saf-prepare`/`saf-resume` 场景用于取得这些证据；因真实主页尚未就绪，SAF prepare/resume **未执行**。场景代码存在不代表已通过。Office/Apple 原生格式、真机自然手写、真实 Mac 公网等最终目标不变。
+
 ## 交付限制与下一阶段
 
-1. 先定位 WebView 渲染器 SIGTRAP：核对 provider 版本、可符号化的崩溃栈和硬件加速环境；在可用真机/加速模拟器执行尚未通过的桥与系统 SAF 选择器链路。真实 Android 书写设备矩阵继续覆盖压感/倾斜、掌触、长笔记延迟、系统回收/断电/磁盘失败、笔迹与工程恢复；内核或 Chromium 时间不能替代真机手感证据。
+1. 将当前已缩小的 WebView/TCG 校验异常与真实 Android 环境隔离：定位原配置的具体错误计算路径，并分析旧官方模拟器正常 CPU 配置下的主页就绪超时；在符合 Android ISA 要求的加速模拟器/真机完成已有 `app-bridge`，再执行系统 SAF prepare/resume。不得通过跳过快照校验换取通过。真实 Android 书写设备矩阵继续覆盖压感/倾斜、掌触、长笔记延迟、系统回收/断电/磁盘失败、笔迹与工程恢复；内核或 Chromium 时间不能替代真机手感证据。
 2. 接入真实本地 OCR/公式识别与 CJK 手写语料；输出不确定范围和候选；建立可验证 A 字形/采样身份，不以高置信度自动授予精确映射。
 3. 仿手写生成插件、风格样本不足/失败回退、修订层合并及独立撤销矩阵；保留现有印刷文字兜底。
 4. 完善跨页修订人工落点与字符校对、套索、图形/箭头识别、几何自动应用、音频和 PDF 背景。当前局部擦除保留剩余原始笔迹，但残段的知识映射仍需重新校对。

@@ -1,0 +1,64 @@
+{
+  "date": "2026-10-22",
+  "product": "Glossa / 笺注",
+  "version": "0.1.2",
+  "emulatorComparisons": [
+    {
+      "emulator": "37.2.12",
+      "webview": "124.0.6367.219",
+      "cpu": "normal",
+      "result": "app-bridge failed after renderer recovery; checksum diagnostics recorded separately"
+    },
+    {
+      "emulator": "37.2.12",
+      "webview": "128.0.6613.88",
+      "cpu": "normal",
+      "result": "app-bridge process fatal; official provider tested in disposable image then update removed"
+    },
+    {
+      "emulator": "37.2.12",
+      "webview": "not observed after boot",
+      "cpu": "android64,-ssse3",
+      "result": "no successful boot or ADB handshake after about 11 minutes; stopped without wiping data"
+    },
+    {
+      "emulator": "35.2.10",
+      "webview": "124.0.6367.219",
+      "cpu": "normal; ssse3 and sse4_1 present",
+      "requestedMemoryMiB": 1536,
+      "runtimeMemoryMiB": 2048,
+      "bootCompleted": true,
+      "result": "first app-bridge stopped by cold fixture provider publish timeout/dependency death; warm provider then retry reached packaged homepage progress10 but failed 45-second readiness; no successful bridge assertions",
+      "evidence": [
+        "app-bridge-emulator35-webview124.log",
+        "webview-emulator35-provider-timeout.log",
+        "webview-emulator35-provider-warmup.log",
+        "app-bridge-emulator35-webview124-warm.log"
+      ]
+    }
+  ],
+  "newChecks": {
+    "androidRuntimeDiagnostics": 4,
+    "simulatedBridgeUi": 2,
+    "simulatedBridgeProtocolUi": 1
+  },
+  "newChecksExecutedOnce": true,
+  "previouslyPassedSuitesRerun": false,
+  "safPhases": {
+    "prepare": "compiled but not run; real homepage readiness remains blocked",
+    "resume": "compiled but not run; depends on successful prepare"
+  },
+  "clientApkSha256": "16bef95d69fd1d048fd672ffdf31af5b050cfa8d7989e1e33078acf2df944f75",
+  "testApkSha256": "96236062c597c3aed455df60c0790aa37112c686d4a8a2f7be32cede700e68f2",
+  "scope": "Engineering validation; no physical stylus or complete Android UI/SAF acceptance claimed; diagnostic JNI and external WebView binaries are absent from client APK.",
+  "environmentShutdown": {
+    "requestedSignal": "SIGTERM",
+    "emulatorPid": 5895,
+    "emulatorVersion": "35.2.10",
+    "shellExitCode": 139,
+    "shellReported": "Segmentation fault during emulator termination",
+    "dataWipeRequested": false,
+    "snapshotSaveRequested": false,
+    "scope": "Host emulator shutdown failure after the failed app-bridge trial; not an Android app failure or a successful clean shutdown."
+  }
+}
