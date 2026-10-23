@@ -5,6 +5,7 @@ import {
   ArrowLeftRight,
   ArrowRight,
   BookOpen,
+  CalendarDays,
   Check,
   ChevronDown,
   ChevronLeft,
@@ -296,6 +297,61 @@ function App() {
       ),
     ) ?? [];
   const conflicts = e?.state.conflicts.filter((c) => !c.resolved) ?? [];
+  const notes = e?.state.notes ?? [];
+  const visibleNotes = notes.filter(
+    (n) =>
+      (!folderFilter || n.folderId === folderFilter) &&
+      `${n.title} ${n.tags.join(' ')} ${n.blocks.flatMap((b) => b.segments.map((s) => s.text)).join(' ')}`
+        .toLowerCase()
+        .includes(search.toLowerCase()),
+  );
+  const proofCount = candidates.length + unmapped.length + conflicts.length;
+  const folderName = e?.state.folders.find(
+    (f) => f.id === (view === 'paper' ? note?.folderId : folderFilter),
+  )?.name;
+  const viewTitle =
+    view === 'review'
+      ? '温故'
+      : view === 'proof'
+        ? '校对'
+        : view === 'activity'
+          ? '运行状态'
+          : '所有笔记';
+  const ViewIcon =
+    view === 'review'
+      ? History
+      : view === 'proof'
+        ? ScanLine
+        : view === 'activity'
+          ? GitBranch
+          : BookOpen;
+  const showSaveStatus =
+    (view === 'paper' && !!note) || !['已存于本机', '正在打开'].includes(w.saveState);
+  function showLibrary() {
+    setView('library');
+    setFolderFilter(null);
+    setSearch('');
+    setSidebar(false);
+  }
+  function entryAction() {
+    return notes.length ? (
+      <button className="button" onClick={showLibrary}>
+        查看笔记
+        <ArrowRight size={16} />
+      </button>
+    ) : editable ? (
+      <button className="button primary" onClick={() => newNote()}>
+        一张新纸
+        <Plus size={16} />
+      </button>
+    ) : (
+      <button className="button primary" onClick={() => projectInput.current?.click()}>
+        导入笔记
+        <FileInput size={16} />
+      </button>
+    );
+  }
+
   const sources = Object.entries(settings)
     .filter(([k, v]) => k.startsWith('source:') && v)
     .map(([, v]) => v as SourceRecord);
@@ -1903,13 +1959,15 @@ function App() {
     <div className="app-shell">
       <aside className={`sidebar ${sidebar ? 'open' : ''}`}>
         <div className="brand">
-          <div className="brand-symbol">
+          <div className="brand-symbol" aria-hidden="true">
             <i />
             <i />
             <i />
           </div>
-          <span>笺注</span>
-          <span className="brand-en">Glossa</span>
+          <div className="brand-wordmark">
+            <strong>笺注</strong>
+            <small>Glossa</small>
+          </div>
         </div>
         {editable && (
           <button className="new-paper" onClick={() => newNote()}>
@@ -1920,7 +1978,11 @@ function App() {
         )}
         <nav>
           <button
-            className={view === 'paper' || view === 'library' ? 'nav-item active' : 'nav-item'}
+            className={
+              view === 'paper' || (view === 'library' && !folderFilter)
+                ? 'nav-item active'
+                : 'nav-item'
+            }
             onClick={() => {
               setView('library');
               setFolderFilter(null);
@@ -1948,7 +2010,7 @@ function App() {
             }}
           >
             <ScanLine size={18} />
-            校对<span>{candidates.length + unmapped.length + conflicts.length}</span>
+            校对<span>{proofCount}</span>
           </button>
         </nav>
         <div className="sidebar-section">
@@ -1978,6 +2040,7 @@ function App() {
         </div>
         <div className="sidebar-section recent-label">最近打开</div>
         <div className="recent-list">
+          {!notes.length && <p className="recent-empty">打开的笔记，会留在这里。</p>}
           {e?.state.notes
             .slice()
             .sort((a, b) => b.modifiedAt - a.modifiedAt)
@@ -1996,22 +2059,44 @@ function App() {
             ))}
         </div>
         <div className="sidebar-bottom">
-          <button className="sync-indicator" onClick={settingsDialog}>
-            {w.syncConfig ? <Cloud size={17} /> : <CloudOff size={17} />}
-            <span>{w.syncState}</span>
-            <span className="connection-dot" />
+          <button
+            className="sync-indicator"
+            onClick={settingsDialog}
+            aria-label="Mac 同步设置"
+            data-state={
+              w.syncState === '同步完成'
+                ? 'connected'
+                : /离线|失败|错误|待解锁|待处理/.test(w.syncState)
+                  ? 'error'
+                  : 'offline'
+            }
+          >
+            {w.syncConfig ? <Cloud size={18} /> : <CloudOff size={18} />}
+            <span className="sync-copy">
+              <strong>{w.syncState}</strong>
+              <small>设置 Mac 同步</small>
+            </span>
+            <ChevronRight size={15} />
           </button>
-          <div className="sidebar-bottom-row">
+          <div className="sidebar-tools">
             <button onClick={settingsDialog}>
               <Settings2 size={17} />
-              设置
+              <span>设置</span>
             </button>
-            <IconButton title="运行状态" onClick={() => setView('activity')}>
+            <button
+              onClick={() => {
+                setView('activity');
+                setSidebar(false);
+              }}
+              aria-current={view === 'activity' ? 'page' : undefined}
+            >
               <GitBranch size={17} />
-            </IconButton>
-            <IconButton title="导出与恢复" onClick={exportDialog}>
+              <span>运行状态</span>
+            </button>
+            <button onClick={exportDialog} aria-label="导出与恢复">
               <ArrowDownToLine size={17} />
-            </IconButton>
+              <span>导出恢复</span>
+            </button>
           </div>
         </div>
       </aside>
@@ -2021,25 +2106,59 @@ function App() {
           <IconButton title="导航" onClick={() => setSidebar(!sidebar)}>
             <Menu size={18} />
           </IconButton>
-          <div className="breadcrumb">
-            {view === 'paper' ? (
+          <div className="breadcrumb" aria-label="当前位置">
+            <ViewIcon size={15} />
+            {view === 'paper' && note ? (
               <>
-                <Folder size={14} />
-                <span>
-                  {e?.state.folders.find((f) => f.id === note?.folderId)?.name ?? '未归档'}
-                </span>
+                <button className="breadcrumb-link" onClick={showLibrary}>
+                  所有笔记
+                </button>
+                {folderName && (
+                  <>
+                    <ChevronRight size={13} />
+                    <button
+                      className="breadcrumb-link"
+                      onClick={() => {
+                        setFolderFilter(note.folderId!);
+                        setView('library');
+                      }}
+                    >
+                      {folderName}
+                    </button>
+                  </>
+                )}
                 <ChevronRight size={13} />
-                <span>笔记</span>
+                <span title={note.title}>{note.title}</span>
               </>
             ) : (
-              <span>我的笺注</span>
+              <>
+                <span>{viewTitle}</span>
+                {view === 'library' && folderName && (
+                  <>
+                    <ChevronRight size={13} />
+                    <span>{folderName}</span>
+                  </>
+                )}
+              </>
             )}
           </div>
           <div className="topbar-right">
-            <span className={`save-status ${w.saveState === '保存失败' ? 'bad' : ''}`}>
-              <span />
-              {w.saveState}
-            </span>
+            {showSaveStatus && (
+              <span
+                className={`save-status ${w.saveState === '保存失败' ? 'bad' : ''}`}
+                role="status"
+                data-state={
+                  w.saveState === '已存于本机'
+                    ? 'saved'
+                    : w.saveState.includes('失败')
+                      ? 'error'
+                      : 'pending'
+                }
+              >
+                <span />
+                {w.saveState}
+              </span>
+            )}
             <span className="device-label">
               {window.QuietPaperNative
                 ? w.role === 'tablet'
@@ -2352,20 +2471,16 @@ function App() {
             )}
           </>
         ) : view === 'paper' ? (
-          <div className="empty hero">
-            <div className="empty-paper" />
-            <h1>从一张纸开始</h1>
-            {editable ? (
-              <button className="button primary" onClick={() => newNote()}>
-                打开新纸
-                <Plus size={16} />
-              </button>
-            ) : (
-              <button className="button primary" onClick={exportDialog}>
-                导入已有工程
-                <FileInput size={16} />
-              </button>
-            )}
+          <div className={`empty hero ${editable ? 'kind-create' : 'kind-reader'}`}>
+            <div className="empty-paper" aria-hidden="true" />
+            <h1>{editable ? '从一张纸开始' : '把笔记带在身边'}</h1>
+            <p className="empty-copy">
+              {editable
+                ? '落笔即可记录，整理与温故留待稍后。'
+                : '导入已有笔记，阅读原稿，也让文字与公式继续生长。'}
+            </p>
+            <div className="empty-actions">{entryAction()}</div>
+            {!editable && <p className="empty-note">新笔记，从 Android 平板开始。</p>}
           </div>
         ) : null}
         {view === 'library' && (
@@ -2390,126 +2505,156 @@ function App() {
               </div>
             </div>
             <div className="note-grid">
-              {e?.state.notes
-                .filter(
-                  (n) =>
-                    (!folderFilter || n.folderId === folderFilter) &&
-                    `${n.title} ${n.tags.join(' ')} ${n.blocks.flatMap((b) => b.segments.map((s) => s.text)).join(' ')}`
-                      .toLowerCase()
-                      .includes(search.toLowerCase()),
-                )
-                .map((n) => (
-                  <button className="note-card" key={n.id} onClick={() => openNote(n)}>
-                    <div className="note-card-preview">
-                      <PaperPreview page={n.pages[0]} />
-                      <span>{n.pages.length} 页</span>
+              {visibleNotes.map((n) => (
+                <button className="note-card" key={n.id} onClick={() => openNote(n)}>
+                  <div className="note-card-preview">
+                    <PaperPreview page={n.pages[0]} />
+                    <span>{n.pages.length} 页</span>
+                  </div>
+                  <div className="note-card-body">
+                    <span className="eyebrow">
+                      {e.state.folders.find((f) => f.id === n.folderId)?.name ?? '未归档'}
+                    </span>
+                    <h2>{n.title}</h2>
+                    <div>
+                      <span>{date(n.modifiedAt)}</span>
+                      <ArrowRight size={16} />
                     </div>
-                    <div className="note-card-body">
-                      <span className="eyebrow">
-                        {e.state.folders.find((f) => f.id === n.folderId)?.name ?? '未归档'}
-                      </span>
-                      <h2>{n.title}</h2>
-                      <div>
-                        <span>{date(n.modifiedAt)}</span>
-                        <ArrowRight size={16} />
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              {editable && (
+                  </div>
+                </button>
+              ))}
+              {editable && visibleNotes.length > 0 && (
                 <button className="note-card new-note-card" onClick={() => newNote()}>
                   <Plus size={30} />
                   <span>一张新纸</span>
                 </button>
               )}
             </div>
+            {!visibleNotes.length && (
+              <div className="empty library-empty">
+                {notes.length ? (
+                  <Search size={34} />
+                ) : (
+                  <div className="empty-paper" aria-hidden="true" />
+                )}
+                <h2>
+                  {search
+                    ? '还没有找到这段记忆'
+                    : folderFilter
+                      ? '这个文件夹，留给下一篇笔记'
+                      : editable
+                        ? '记下第一笔'
+                        : '让已有笔记，回到眼前'}
+                </h2>
+                <p className="empty-copy">
+                  {notes.length
+                    ? '试试其他文字、公式或标签，也可以回看全部笔记。'
+                    : editable
+                      ? '无需先建知识块，打开一张纸就能开始。'
+                      : '导入笔记后，即可阅读原稿、修订已有内容与温故。'}
+                </p>
+                <div className="empty-actions">
+                  {notes.length ? (
+                    <button className="button" onClick={showLibrary}>
+                      查看所有笔记
+                      <ArrowRight size={16} />
+                    </button>
+                  ) : (
+                    entryAction()
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
         {view === 'review' && (
           <div className="content-page review-page">
             <div className="section-heading">
               <div>
-                <div className="eyebrow">RETURN, REMEMBER</div>
+                <div className="eyebrow">REVISIT &amp; REMEMBER</div>
                 <h1>温故</h1>
               </div>
-              <button
-                className="button"
-                onClick={() =>
-                  setModal({
-                    title: '复习偏好',
-                    content: (
-                      <FormModal
-                        onSubmit={(data) => {
-                          w.transact((engine) =>
-                            engine.setSetting('reviewSettings', {
-                              algorithm: String(data.get('algorithm')),
-                              dailyLimit: Number(data.get('limit')),
-                              intensity: Number(data.get('intensity')),
-                              fixedDays: Number(data.get('days')),
-                              examAt: String(data.get('exam'))
-                                ? new Date(String(data.get('exam'))).getTime()
-                                : undefined,
-                            }),
-                          );
-                          setModal(null);
-                        }}
-                      >
-                        <label>
-                          间隔算法
-                          <select name="algorithm" defaultValue={reviewSettings.algorithm}>
-                            <option value="adaptive">自适应间隔</option>
-                            <option value="fixed">固定间隔</option>
-                          </select>
-                        </label>
-                        <div className="form-grid">
+              <div className="section-meta">
+                <span className="count-badge">{due.length} 今日待复习</span>
+                <button
+                  className="button"
+                  onClick={() =>
+                    setModal({
+                      title: '复习偏好',
+                      content: (
+                        <FormModal
+                          onSubmit={(data) => {
+                            w.transact((engine) =>
+                              engine.setSetting('reviewSettings', {
+                                algorithm: String(data.get('algorithm')),
+                                dailyLimit: Number(data.get('limit')),
+                                intensity: Number(data.get('intensity')),
+                                fixedDays: Number(data.get('days')),
+                                examAt: String(data.get('exam'))
+                                  ? new Date(String(data.get('exam'))).getTime()
+                                  : undefined,
+                              }),
+                            );
+                            setModal(null);
+                          }}
+                        >
                           <label>
-                            每日知识块
-                            <input
-                              name="limit"
-                              type="number"
-                              min="0"
-                              max="1000"
-                              defaultValue={reviewSettings.dailyLimit ?? 20}
-                            />
+                            间隔算法
+                            <select name="algorithm" defaultValue={reviewSettings.algorithm}>
+                              <option value="adaptive">自适应间隔</option>
+                              <option value="fixed">固定间隔</option>
+                            </select>
+                          </label>
+                          <div className="form-grid">
+                            <label>
+                              每日知识块
+                              <input
+                                name="limit"
+                                type="number"
+                                min="0"
+                                max="1000"
+                                defaultValue={reviewSettings.dailyLimit ?? 20}
+                              />
+                            </label>
+                            <label>
+                              固定间隔 / 天
+                              <input
+                                name="days"
+                                type="number"
+                                min="1"
+                                defaultValue={reviewSettings.fixedDays ?? 3}
+                              />
+                            </label>
+                          </div>
+                          <label>
+                            强度
+                            <select name="intensity" defaultValue={reviewSettings.intensity ?? 1}>
+                              <option value="0.5">舒缓</option>
+                              <option value="1">日常</option>
+                              <option value="2">加强</option>
+                            </select>
                           </label>
                           <label>
-                            固定间隔 / 天
+                            考试目标
                             <input
-                              name="days"
-                              type="number"
-                              min="1"
-                              defaultValue={reviewSettings.fixedDays ?? 3}
+                              name="exam"
+                              type="date"
+                              defaultValue={
+                                reviewSettings.examAt
+                                  ? new Date(reviewSettings.examAt).toISOString().slice(0, 10)
+                                  : ''
+                              }
                             />
                           </label>
-                        </div>
-                        <label>
-                          强度
-                          <select name="intensity" defaultValue={reviewSettings.intensity ?? 1}>
-                            <option value="0.5">舒缓</option>
-                            <option value="1">日常</option>
-                            <option value="2">加强</option>
-                          </select>
-                        </label>
-                        <label>
-                          考试目标
-                          <input
-                            name="exam"
-                            type="date"
-                            defaultValue={
-                              reviewSettings.examAt
-                                ? new Date(reviewSettings.examAt).toISOString().slice(0, 10)
-                                : ''
-                            }
-                          />
-                        </label>
-                      </FormModal>
-                    ),
-                  })
-                }
-              >
-                <Settings2 size={15} />
-                排期
-              </button>
+                        </FormModal>
+                      ),
+                    })
+                  }
+                >
+                  <CalendarDays size={16} />
+                  排期
+                </button>
+              </div>
             </div>
             <div className="review-tabs">
               <button
@@ -2522,7 +2667,7 @@ function App() {
                 今日待复习 <b>{due.length}</b>
               </button>
               <button className={reviewAll ? 'active' : ''} onClick={() => setReviewAll(true)}>
-                全部知识块 <b>{cards.length}</b>
+                全部复习内容 <b>{cards.length}</b>
               </button>
             </div>
             {(() => {
@@ -2532,25 +2677,28 @@ function App() {
               const block = n?.blocks.find((b) => b.id === card?.blockId);
               return (
                 <div className="review-layout">
-                  <aside className="review-list">
-                    {list.map((c) => (
-                      <button
-                        key={c.blockId}
-                        className={c.blockId === card?.blockId ? 'active' : ''}
-                        onClick={() => setReviewId(c.blockId)}
-                      >
-                        <span>
-                          {
-                            e?.state.notes.flatMap((n) => n.blocks).find((b) => b.id === c.blockId)
-                              ?.title
-                          }
-                        </span>
-                        <span>
-                          {date(c.dueAt)} · {c.reviews} 次
-                        </span>
-                      </button>
-                    ))}
-                  </aside>
+                  {list.length > 0 && (
+                    <aside className="review-list">
+                      {list.map((c) => (
+                        <button
+                          key={c.blockId}
+                          className={c.blockId === card?.blockId ? 'active' : ''}
+                          onClick={() => setReviewId(c.blockId)}
+                        >
+                          <span>
+                            {
+                              e?.state.notes
+                                .flatMap((n) => n.blocks)
+                                .find((b) => b.id === c.blockId)?.title
+                            }
+                          </span>
+                          <span>
+                            {date(c.dueAt)} · {c.reviews} 次
+                          </span>
+                        </button>
+                      ))}
+                    </aside>
+                  )}
                   {card && n && block ? (
                     <section className="review-sheet">
                       <div className="review-sheet-top">
@@ -2674,12 +2822,33 @@ function App() {
                     </section>
                   ) : (
                     <div className="empty review-empty">
-                      <CircleCheck size={36} />
-                      <h2>今天已从容收好</h2>
-                      <button className="text-button" onClick={() => setReviewAll(true)}>
-                        查看已有知识块
-                        <ArrowRight size={15} />
-                      </button>
+                      {cards.length ? <CircleCheck size={36} /> : <BookOpen size={36} />}
+                      <h2>
+                        {cards.length
+                          ? '今日暂无待复习'
+                          : notes.length
+                            ? '还没有复习内容'
+                            : '温故，从记录开始'}
+                      </h2>
+                      <p className="empty-copy">
+                        {cards.length
+                          ? '知识块仍在这里，想回顾时，随时翻开。'
+                          : notes.length
+                            ? '整理后的知识块会在这里排期，先回到笔记看看。'
+                            : editable
+                              ? '先留下一张纸，整理后的知识会在这里等待下一次相见。'
+                              : '导入已有笔记后，在这里回看知识、安排复习。'}
+                      </p>
+                      <div className="empty-actions">
+                        {cards.length ? (
+                          <button className="text-button" onClick={() => setReviewAll(true)}>
+                            查看全部复习内容
+                            <ArrowRight size={15} />
+                          </button>
+                        ) : (
+                          entryAction()
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -2691,12 +2860,12 @@ function App() {
           <div className="content-page proof-page">
             <div className="section-heading">
               <div>
-                <div className="eyebrow">KEEP THE ORIGINAL TRUE</div>
+                <div className="eyebrow">TRUE TO THE SOURCE</div>
                 <h1>校对</h1>
               </div>
-              <span className="large-count">
-                {String(candidates.length + unmapped.length + conflicts.length).padStart(2, '0')}
-              </span>
+              <div className="section-meta">
+                <span className="count-badge">{proofCount} 待校对</span>
+              </div>
             </div>
             {conflicts.map((c) => (
               <div className="conflict-card" key={c.id}>
@@ -2774,10 +2943,14 @@ function App() {
                 </button>
               );
             })}
-            {!candidates.length && !unmapped.length && !conflicts.length && (
-              <div className="empty">
+            {!proofCount && (
+              <div className="empty proof-empty">
                 <ShieldCheck size={36} />
-                <h2>每一处对应，都有来处</h2>
+                <h2>{notes.length ? '目前没有待校对内容' : '原稿先留下，校对慢慢来'}</h2>
+                <p className="empty-copy">
+                  识别结果或来源对应存疑时，会保留原稿，在这里标明原因，由你核对后确认。
+                </p>
+                <div className="empty-actions">{entryAction()}</div>
               </div>
             )}
           </div>

@@ -319,7 +319,7 @@ try {
   console.log('PASS existing-folder management, tags, library search, and folder browsing');
 
   await page.getByRole('button', { name: /^温故/ }).click();
-  await page.getByRole('button', { name: /^全部知识块/ }).click();
+  await page.getByRole('button', { name: /^全部复习内容/ }).click();
   await page.locator('.review-list button').filter({ hasText: '已校对记录' }).click();
   const reviewBefore = Object.entries((await snapshot()).settings)
     .filter(([key]) => key.startsWith('review:'))

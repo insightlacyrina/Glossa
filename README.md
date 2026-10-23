@@ -39,7 +39,7 @@ adb install -r android/app/build/outputs/apk/debug/app-debug.apk
 
 Android 使用系统 WebView 的 Pointer Events 保存真实采样，并通过 SAF 独立读写 Markdown/LaTeX。SAF、原生历史、待写回及编译细节见 [Android 文档](docs/ANDROID.md)。APK 编译、模拟器运行和真实触控笔验证是不同证据，最终结果见 [交付报告](docs/DELIVERY.md)。
 
-0.1.1 的 Android 生产文件层已在 API 35 模拟器通过 71 项新增断言，覆盖文本往返、双版本冲突保护、强制停止后的待写恢复与错误分类。测试使用真实 ContentResolver 和专用文件提供者，不代表系统文件选择器、持久授权或真实触控笔已验。当前本机验收安装包为 [glossa-0.1.2-local-20261022-debug.apk](releases/local-macos-20261022/glossa-0.1.2-local-20261022-debug.apk)。
+0.1.1 的 Android 生产文件层已在 API 35 模拟器通过 71 项新增断言，覆盖文本往返、双版本冲突保护、强制停止后的待写恢复与错误分类。测试使用真实 ContentResolver 和专用文件提供者，不代表系统文件选择器、持久授权或真实触控笔已验。当前本机验收安装包为 [glossa-0.1.2-visual-refresh-debug.apk](releases/visual-refresh-20261022/glossa-0.1.2-visual-refresh-debug.apk)。
 
 0.1.2 新增“运行状态 → 窗口记录”：Android 持久保存最近 8 次可捕获的渲染器退出元数据，不记录笔记正文、文件 URI 或令牌。原生持久化 4 项、模拟桥界面 2 项及后续 1 项协议检查的既有证据沿用。云端 x86 软件模拟器阶段曾因 WebView 快照校验及首页超时未通过主页桥与 SAF；原失败日志与 [Android 诊断](docs/ANDROID-WEBVIEW-DIAGNOSIS.md) 保留。
 
@@ -103,3 +103,5 @@ Android 原生往返使用单独 instrumentation APK，命令见 [Android 文档
 源码按数据内核、持久化、自动化、复习、同步、格式、导出、原生适配与交互模块分开。新增格式/算法应加真实往返/行为证据，优先保护原稿和可迁移性。
 
 命名与原地升级兼容约定见 [笺注 / Glossa 命名变更](docs/BRANDING.md)。旧 `.quietpaper` 工程仍可导入；数据库与加密身份保持兼容。
+
+2026-10-22 界面视觉优化已在保留平台权限的前提下完成，空状态、导航、工具栏与排版调整见 [视觉变更说明](docs/VISUAL-REFRESH.md)。
