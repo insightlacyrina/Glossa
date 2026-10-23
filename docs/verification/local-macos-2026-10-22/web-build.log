@@ -1,0 +1,15 @@
+
+> glossa@0.1.2 build
+> tsc --noEmit && vite build && node scripts/build-offline.mjs
+
+vite v6.4.4 building for production...
+transforming...
+✓ 1600 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.48 kB │ gzip:   0.33 kB
+dist/assets/index-CPymiRD4.css   41.06 kB │ gzip:   9.49 kB
+dist/assets/export-BKLx2JxG.js    7.91 kB │ gzip:   3.62 kB
+dist/assets/index-DNRhklDt.js   439.39 kB │ gzip: 135.19 kB
+✓ built in 1.60s
+Offline shell: 6 files, glossa-b8ac952ba57eec2c

@@ -44,6 +44,7 @@ public final class NativeRoundTripInstrumentation extends RendererRecoveryInstru
         if (appBridge) { NativeAppBridgeScenarios.run(this); return; }
         if (adlerProbe) { AdlerProbeScenarios.run(this); return; }
         if (runtimeDiagnostics) { RuntimeDiagnosticsScenarios.run(this); return; }
+        if ("faults".equals(safPhase)) { SafFaultScenarios.run(this); return; }
         if (safPhase != null) { SafPickerScenarios.run(this, safPhase); return; }
         if (nativeSourcePhase != null) { NativeSourceScenarios.run(this, nativeSourcePhase); return; }
         if (rendererRecovery) { super.onStart(); return; }

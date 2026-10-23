@@ -1,0 +1,20 @@
+
+PASS real packaged homepage native bridge; assertions=9; pid=2749; elapsedMs=12213
+WebView provider: com.google.android.webview version=124.0.6367.219 code=636771932
+Android sdk=35 model=sdk_gphone64_arm64
+Homepage: {"ready":true,"href":"https:\/\/appassets.quietpaper.local\/index.html","title":"笺注 · Glossa","scripts":["https:\/\/appassets.quietpaper.local\/assets\/index-C6lGpBNB.js"],"rootText":"笺注Glossa一张新纸＋所有笔记0温故0校对0文件夹最近打开未连接设置未归档笔记已存于本机ANDROID 平板从一张纸开始打开新纸"}
+PASS real packaged homepage and production JavaScript are loaded without replacement navigation
+PASS homepage JavaScript synchronously calls native getPlatform
+PASS homepage JavaScript receives the native tablet role required for writing
+PASS homepage JavaScript receives the native installation identity from getDeviceId
+Identity: {"platform":"android","role":"tablet","deviceId":"android-329fadd7-21da-4e0d-9636-915ab767e77c"}
+DOM callback: {"requestId":"app-bridge-read-8a95574b-9b02-45e8-b79c-0b9386d67307","type":"read","uri":"content:\/\/local.quietpaper.test.source\/fixture.md","ok":true,"sourceReachable":true,"text":"﻿---\r\ntitle: 笺注桥接 📝\r\n---\r\n\r\n# 推导\r\n\r\n$x+1$ % 保留中文注释与空白  \r\n","sha256":"6a133fda97602e7a6bff125d0a7fca5bf525c6e762294a6fdda7dfca1a7cba8a","name":"fixture.md"}
+PASS JavaScript readDocument reaches the real native store and returns through its matching DOM event
+PASS native read event preserves UTF-8 BOM, CRLF, Chinese, emoji, formula and trailing spaces
+DOM callback: {"requestId":"app-bridge-save-8a95574b-9b02-45e8-b79c-0b9386d67307","type":"save","uri":"content:\/\/local.quietpaper.test.source\/fixture.md","ok":true,"sourceReachable":true,"sha256":"38616f460444c93408cfe5f431b93c0684d8752d203e2a305b0edb423fc4bd69","pending":false}
+PASS JavaScript versioned save returns a confirmed native write through the matching DOM event
+PASS ContentResolver reopens the actual saved bytes with BOM and CRLF intact
+PASS both callbacks are observed once in the original real homepage session
+Last native window state: url=https://appassets.quietpaper.local/index.html progress=100 attached=true
+Scope: actual packaged homepage, JavaScript interface calls, native DOM callbacks and one real provider write. No SAF picker, persistent grant, complete source matrix or interactive editor acceptance is claimed.
+

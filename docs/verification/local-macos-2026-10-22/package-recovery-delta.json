@@ -1,0 +1,12 @@
+{
+  "priorOperations": 82,
+  "keptOperations": 83,
+  "background": [
+    {
+      "id": "android-329fadd7-21da-4e0d-9636-915ab767e77c:writer:e99b6896-7152-4060-babe-8e7d27db049b:4:8459380c-9444-4ba3-a50a-becf211b63cf",
+      "type": "setting.set",
+      "key": "source:583719e5-63de-4cfa-a762-1371978b57e5"
+    }
+  ],
+  "verified": "All prior immutable operations, full A/B notes, source records except contact timestamp, schema, metadata and epoch"
+}

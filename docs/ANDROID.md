@@ -4,6 +4,33 @@
 
 Android 平板是唯一完整创建与编辑端。Android 手机只能阅读与修改已有 B 知识块；它不能通过放宽浏览器窗口获得平板权限。原始笔迹须保留对象、坐标、压力、倾斜和图层，不能用截图替代。
 
+## 2026-10-22 本机增量结果
+
+Apple Silicon Mac 使用 API 35 ARM64、Hypervisor.Framework 硬件加速模拟器与系统 WebView 124，真实 APK 首页加载和纸张操作已通过；云端 x86 软件模拟器的旧失败继续保留，不再作为所有设备的共同结论。设备配置、原始证据索引和完整范围见 [本机增量验收](LOCAL-VALIDATION.md)。
+
+| 场景 | 本轮实际结果 | 范围 |
+| --- | --- | --- |
+| `app-bridge` | 9 项通过 | 真实打包首页的身份桥、异步原生读写与 DOM 回调，源文件重开完整字节一致 |
+| `saf-prepare` | 7 项通过 | 系统 DocumentsUI 选择 Downloads 文件、持久读写 URI 授权、首页 JS 修改与字节重开 |
+| 显式 force-stop → `saf-resume` | 8 项通过，PID 3641→4033 | 新进程沿用授权读写；resume 按设计不创建 WebView |
+| `saf-faults` | 31 项通过 | 不同 UID 测试 DocumentsProvider；取消、撤销实际授权、源暂不可用、只读写失败保留待写正文/快照，重授权后重试 |
+| Markdown/LaTeX 产品界面 | 完整文本链路通过 | 真实 React 界面经系统 SAF 选择→插入源对象到纸张→修订已有 B→写回，源重开 SHA/长度一致；源离线待写与同区域冲突预览/显式选择通过 |
+| 已保存笔迹恢复 | force-stop 后重开通过 | WebView 合成笔输入的原始采样保留；不代表实体触控笔、掌触或物理延迟 |
+
+`persistentPermission` 现在仅在实际持久 URI grant 同时含读、写时为真。这是授权掩码，不能由 `Document.FLAG_SUPPORTS_WRITE` 推算，也不保证 provider 实际接受写入；真实只读写失败必须保留待写且不能误报源离线。撤权专项由文档所有者使用 `revokeUriPermission(uri, flags)` 撤销全部机制的 grant，不能只看持久列表为空便假设 Activity 临时授权也已结束。
+
+新增 SAF 复现顺序（已安装同轮客户端与独立测试 APK）：
+
+```sh
+adb shell am instrument -w -e mode app-bridge local.quietpaper.test/local.quietpaper.NativeRoundTripInstrumentation
+adb shell am instrument -w -e mode saf-prepare local.quietpaper.test/local.quietpaper.NativeRoundTripInstrumentation
+adb shell am force-stop local.quietpaper
+adb shell am instrument -w -e mode saf-resume local.quietpaper.test/local.quietpaper.NativeRoundTripInstrumentation
+adb shell am instrument -w -e mode saf-faults local.quietpaper.test/local.quietpaper.NativeRoundTripInstrumentation
+```
+
+必须检查输出中的 `PASS`/`FAIL`，不能只看 adb 退出码。`saf-faults` 的 fixture、控制入口与 DocumentsProvider 只在测试 APK；其正文与待写保留断言不能替代上表独立的 React 产品界面链路。测试以新 Activity 任务启动，保留应用数据。未完成合成笔检查点在 force-stop 后经真实 UI 恢复，工程包经系统创建/打开选择器导出导入并保留较新当前恢复副本，均已通过，详见本机验收报告。实体平板/手机、真实压感/倾斜/掌触/延迟、可移除存储/云 provider 及断电耐久仍未验。
+
 ## 当前实现决策
 
 `android/app` 是无 AndroidX 依赖的 Java 原生容器，最低 Android 8（API 26），目标 API 35。它使用系统 WebView 加载 APK 内的 Vite 构建产物，并以受拦截的 HTTPS 本地地址 `https://appassets.quietpaper.local` 提供资源。启动、纸张和 IndexedDB 不需要服务器。禁止 `file://`、文件系统访问、混合内容和外部网页替换应用主页面；JavaScript 原生桥只交给打包的应用代码。
@@ -97,7 +124,7 @@ adb install -r android/app/build/outputs/apk/debug/app-debug.apk
 
 调试 APK 只用于本轮验收；正式发布还需要独立签名、升级迁移验证与发布渠道配置。服务端配置应使用 HTTPS。应用默认禁止明文 HTTP；局域网部署也需要设备信任的证书或受信的私有网络 HTTPS 端点。
 
-工程另含无第三方测试框架依赖的 Android instrumentation。`NativeRoundTripInstrumentation` 不带 `mode` 时启动完整 WebView/JavaScript 桥源文件场景；旧轮次的实际结果见后文。测试源提供者只存在于单独的测试 APK，不会打进客户端 APK。
+工程另含无第三方测试框架依赖的 Android instrumentation。`NativeRoundTripInstrumentation` 不带 `mode` 时使用专用测试 HTML 运行 WebView/JavaScript 桥源文件场景；真实打包首页必须使用 `mode app-bridge`，两者不能混称。旧轮次的实际结果见后文。测试源提供者只存在于单独的测试 APK，不会打进客户端 APK。
 
 ```sh
 ./android/gradlew -p android :app:assembleDebugAndroidTest
@@ -116,7 +143,7 @@ adb shell am instrument -w -e mode native-source-faults local.quietpaper.test/lo
 
 `resume` 必须消费已完成的 `prepare` 证据，不可通过重置数据绕过未确认的待写；该顺序用于复现新增场景，实际是否通过须以各阶段日志为准。测试专用 ContentProvider 不证明系统文件选择器、持久 URI 授权、各类 DocumentsProvider 或完整 JavaScript 桥已经通过验收。跨进程恢复仅针对已提交待写，不代表写回中途终止、断电或真实 A/IndexedDB 故障恢复已经验证。这里的文本修改直接验证文件层，也不等于已在 Android 验证格式对象抽取、纸张与 B 的完整往返。
 
-本环境标准 `adb` 强制创建不可写的 `~/.android`；`android/tools/adb-direct.py` 仅用于本地无认证模拟器，以 ADB 协议执行安装和测试，避免更改 `HOME` 或写入沙箱以外路径。普通开发机器和真实设备应继续使用标准 `adb`。测试源码编译成功不代表 instrumentation 已执行成功，运行结果以交付证据为准。
+此前云端环境的标准 `adb` 强制创建不可写的 `~/.android`；`android/tools/adb-direct.py` 是当时无认证模拟器的替代通道，以 ADB 协议执行安装和测试，避免更改 `HOME` 或写入沙箱以外路径。本轮 Mac 与普通开发机器、真实设备均使用标准 `adb`。测试源码编译成功不代表 instrumentation 已执行成功，运行结果以交付证据为准。
 
 ### 新增窗口诊断与桥接复现入口
 
@@ -157,7 +184,7 @@ adb shell am instrument -w -e mode adler-probe local.quietpaper.test/local.quiet
 
 随后在隔离的官方 Emulator **35.2.10** 上，使用同一 API 35 AVD 和正常 CPU 配置完成启动；实际保留 SSSE3/SSE4.1，WebView 已恢复为 124。旧模拟器下载及 SHA 与官方归档对照见[来源](verification/emulator35-provenance.json)。首个 app-bridge 尝试被冷启动的测试 provider 发布超时牵连终止，日志只报告 `Process crashed`；[系统记录](verification/webview-emulator35-provider-timeout.log)表明这是依赖死亡，不能说成此次 WebView 已发生同一 SIGTRAP。只预热该测试 provider 后，重试此前失败场景仍未在 45 秒内获得首页 ready，最后 progress 10、窗口仍挂载：[输出](verification/app-bridge-emulator35-webview124-warm.log)。没有成功桥断言，也未在此环境重新计算 Adler。
 
-`saf-prepare` / `saf-resume` 已编译，因真实首页仍未通过而未执行。它们必须经系统 DocumentsUI 选择测试文件，并验证真实文档 URI/持久读写授权与重启后的内容；不能注入假的选择结果换取通过。最后向模拟器发出 SIGTERM；宿主模拟器在退出过程中段错误，shell exit 139，不能记为干净关机：[记录](verification/webview-emulator35-shutdown.json)。没有请求清空 AVD 或应用数据。所有配置、实际运行范围和产物摘要见[本阶段上下文](verification/webview-phase-run-context.json)。
+云端阶段的 `saf-prepare` / `saf-resume` 当时已编译，但因真实首页未通过而未执行；2026-10-22 本机的新通过证据见本文开头。它们必须经系统 DocumentsUI 选择测试文件，并验证真实文档 URI/持久读写授权与重启后的内容；不能注入假的选择结果换取通过。最后向模拟器发出 SIGTERM；宿主模拟器在退出过程中段错误，shell exit 139，不能记为干净关机：[记录](verification/webview-emulator35-shutdown.json)。没有请求清空 AVD 或应用数据。所有配置、实际运行范围和产物摘要见[本阶段上下文](verification/webview-phase-run-context.json)。
 
 原生导出暂存类还可独立在 JVM 上验收，不依赖模拟器：
 
@@ -172,7 +199,7 @@ node --import tsx --test --test-isolation=none tests/native.test.ts
 
 `SourceWritePolicyTest.java` 使用 APK 中同一个 `SourceWritePolicy` 类，另有 9 项 JVM 测试通过，覆盖源/待写双版本比较、待写消失或变化拒绝写入、旧基准相同全文的幂等重试，以及不同全文不能偷换待写内容。Android instrumentation 中也加入了这些情形，但必须以其实际运行日志判断是否已在 Android 上通过。
 
-## 原生执行记录与恢复专项
+## 云端阶段原生执行记录与恢复专项
 
 此前完整 WebView/JavaScript 桥源文件往返 `NativeRoundTripInstrumentation` 的两轮实际运行均**未通过**，这两轮没有取得 Android Markdown/LaTeX 读改写重开成功的证据：
 
@@ -181,7 +208,7 @@ node --import tsx --test --test-isolation=none tests/native.test.ts
 | 首轮   | `WebView evaluation timeout`           | [首轮日志](verification/android-instrumentation-first.log)；WebView 初始化/求值未完成，不能计作文件往返通过                                                                               |
 | 第二轮 | instrumentation 报告 `Process crashed` | [第二轮日志](verification/android-instrumentation-final.log)；本轮故障定位确认渲染进程先发生原生 `SIGTRAP`，随后未接管渲染器退出导致主进程 fatal；不能以 JVM 或模拟桥测试替代这一失败结果 |
 
-上述故障促成了窗口恢复与生命周期保护补丁。渲染器 `SIGTRAP` 的底层原因仍未解决或验证；新增恢复按钮旨在控制窗口失效后的行为，不代表已经修复渲染器本身。
+上述云端故障促成了窗口恢复与生命周期保护补丁。当时渲染器 `SIGTRAP` 的底层路径尚未解决或验证；恢复按钮旨在控制窗口失效后的行为，不代表修复渲染器本身。后续 Mac ARM64 环境的首页与文件链路通过，也不能改写旧 x86 故障的结果。
 
 `RendererRecoveryInstrumentation` 提供**独立故障注入专项**，由已登记的 `NativeRoundTripInstrumentation` 通过 `mode` 参数选择，不能用它替代源文件往返测试。专项先保存一份原生私有持久文件和已完成的导出暂存，然后终止 WebView 渲染进程，检查 Activity 和原生恢复入口仍可用；再点击“重新打开”，检查 Activity 重建、安装身份、持久文件与导出暂存保留。主动终止渲染进程的路径使用 API 29+ 的 `getWebViewRenderProcess().terminate()`。
 
@@ -193,7 +220,7 @@ adb shell am instrument -w -e mode renderer-recovery local.quietpaper.test/local
 
 **2026-10-21 专项实际通过，6 项断言成功。** 环境为 Android 15/API 35 软件模拟器：Activity 在渲染器退出后保持、原生私有持久文件保留、导出暂存保留、用户点击后重建 Activity、安装身份保持，以及重开后文件与暂存仍完整。实际输出见 [专项日志](verification/android-renderer-recovery.log)。首次专项未登记成功的问题已修正，失败输出另行保留；已通过的自动、浏览器与 JVM 测试没有重复执行。
 
-这些直接断言只覆盖上述原生文件、导出暂存、安装身份及窗口重建；真实 A 笔迹、IndexedDB 在渲染器崩溃/整进程终止/断电下的完整恢复，以及各种设备的手写体验，仍须分别验收。完整 WebView/JavaScript 桥源文件往返仍未通过，不因恢复专项成功而改写结论。
+这些直接断言只覆盖上述原生文件、导出暂存、安装身份及窗口重建；真实 A 笔迹、IndexedDB 在渲染器崩溃/整进程终止/断电下的完整恢复，以及各种设备的手写体验，仍须分别验收。当时完整 WebView/JavaScript 桥源文件往返仍未通过，不能因该恢复专项成功而改写；本轮 Mac 的真实首页桥与产品界面结果另外记录在本文开头。
 
 ### 0.1.1 文件层专项实际结果
 
@@ -225,7 +252,7 @@ adb shell am instrument -w -e mode renderer-recovery local.quietpaper.test/local
 
 ## 验收界线
 
-当前容器提供实际 Android 编译工程与原生文件读写代码，但以下项目必须明确区分证据：
+本项目提供实际 Android 编译工程与原生文件读写代码，但以下项目必须明确区分证据：
 
 | 项目                             | 证据要求                                                                                |
 | -------------------------------- | --------------------------------------------------------------------------------------- |
@@ -236,4 +263,6 @@ adb shell am instrument -w -e mode renderer-recovery local.quietpaper.test/local
 | 普通故障不丢笔迹                 | 杀进程、断电、磁盘写失败、存储撤销、写回中断后对照操作日志和工程包恢复                  |
 | 平板/手机权限                    | 两类实际设备安装同一 APK，确认新建、A 编辑及结构操作边界                                |
 
-本环境无 Android 真机、没有可用 `/dev/kvm`，不将桌面浏览器测试称为上述真机测试通过。
+此前云端环境没有 Android 真机或可用 `/dev/kvm`；本轮 Mac 使用 Hypervisor.Framework 运行 ARM64 Android 模拟器，实际验证 APK/WebView/系统 SAF，但仍未连接实体设备。模拟器合成输入、Chrome 回环同步或桌面浏览器检查均不计为上述真机体验和跨网验收通过。
+
+本机后续真实 UI 检查点与工程包验收已完成：未完成合成笔检查点在 force-stop 后按原始采样恢复，真实系统选择器分块导出/导入保留 A/B、源快照及历史，较新当前工程另存恢复副本且界面可辨认。恢复摘要改为最近修改优先，最终构建与工程包专项已补验；详见 [完整本机结果](LOCAL-VALIDATION.md)。

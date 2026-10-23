@@ -1,6 +1,20 @@
 # 笺注 0.1.2 交付报告
 
-日期：2026-10-22。原工作区没有项目代码、需求旧稿或 Quiet Editorial 资源；当前项目位于 `/workspace/quiet-paper`。这是持续迭代的工程验证版，不是全部最终需求已完成的声明。下列旧版通过记录沿用其原始证据，0.1.2 新增验证单列，不冒充整套重跑。
+日期：2026-10-22。原工作区没有项目代码、需求旧稿或 Quiet Editorial 资源；云端历史工作区位于 `/workspace/quiet-paper`；本轮实际本机目录为 `/Users/zhuyongfei/Documents/ChatGPT/Glossa`。这是持续迭代的工程验证版，不是全部最终需求已完成的声明。下列旧版通过记录沿用其原始证据，0.1.2 新增验证单列，不冒充整套重跑。
+
+## 2026-10-22 本机迁移增量交付
+
+GitHub main 已更新到指定 `2522960` 基线，本轮变更位于本地 `codex/local-android-validation`。完整当前结果、设备矩阵、边界与复现命令见[本机验收](LOCAL-VALIDATION.md)。以下旧云端结果和失败证据保留为历史，不因本机环境通过而删除。
+
+- Apple Silicon + Hypervisor.Framework 的 API35 ARM64 模拟器：真实打包首页 `app-bridge` **9** 项、系统 SAF prepare **7** 项、显式停止后 resume **8** 项、SAF 故障专项 **31** 项通过。
+- 真实 React 界面的 Markdown/LaTeX 导入→对象入纸→已有 B 修订→源写回→字节重开通过；源失联保留、外部同区域改动的预览与明确决议通过。
+- 合成笔已保存笔迹和未完成检查点，在 Android force-stop 后通过真实 UI 恢复原始压力、倾斜及坐标采样。合成输入不证明硬件压感、掌触或实际延迟。
+- 工程包经真实系统创建/打开选择器导出导入通过；独立核验 589,085 字节及 SHA-256；A/B/源快照/操作历史恢复一致，较新当前工程另存为可见恢复副本。
+- Mac 独立 Node 服务、真实 Chrome/IndexedDB：普通同步、端到端加密各 **3** 组增量检查通过，包括离线并重载后合流、旧 SQLite 备份恢复与全新客户端完整重建。
+
+最小产品修正：`persistentPermission` 依据实际持久读写 grant；恢复副本摘要优先显示最近修改的三篇笔记。最终生产构建、APK 编译/签名与 Web 资产逐字节核验通过。旧独立文件层、窗口诊断和浏览器套件沿用旧证据，没有宣称整套重跑。
+
+交付位于 `releases/local-macos-20261022/`，含客户端/独立测试 APK、源码与校验表。精选原始证据见 [verification/local-macos-2026-10-22](verification/local-macos-2026-10-22/README.md)。实体平板/手机、LAN/WAN HTTPS、物理触控笔、断电与存储硬故障仍未验；仿手写、复杂原生格式和真实识别模型保持未完成。
 
 ## 已确认需求、实现决策与风险
 
@@ -16,8 +30,8 @@
 | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | 精确 A/B 映射        | 稳定笔迹/对象、页面、块、段落、B 字符身份；对象版本校验；用户确认与确定性来源；同公式不同 B 字符合流；不确定转校对                              | 自动识别真实手写字符/符号并证明其对应 A 字形/采样区间，仍未验证；B 字符 ID 不能冒充这个结果                    |
 | B→A 与独立撤销       | 原位可编辑印刷修订层；删除传播；独立撤销保留后续笔迹；依赖冲突预览；合并前不可逆确认、合并后禁止专用撤销                                        | 仿既有风格的笔迹生成尚未实现。跨页文字没有可靠逐字符落点时保原稿、显示候选并禁止合并，人工跨页定位工具仍需扩展 |
-| Android 独立原生往返 | API 35 模拟器上生产 NativeSourceStore 真实文本读改写重开、双 SHA 冲突保护、跨进程待写恢复及故障分类，共 71 项新增断言；共享格式内核另有文件证据 | 完整应用/系统 SAF 选择器、真机提供者、外部并行改写/移动/权限生命周期未验；Office/Keynote/Numbers 未实现        |
-| Mac 自托管互联网同步 | 实际 HTTP 服务、自动重连、增量确认、对象操作归档、普通/加密两模式、SQLite 一致备份恢复；Caddy/Tailscale/launchd 配置                            | 实际 Mac、互联网 HTTPS、设备休眠唤醒与网络切换未验；没有用户 Mac/域名的接入条件，不能把 Linux 测试换称公网成功 |
+| Android 独立原生往返 | API35 ARM64 硬件加速模拟器上真实主页桥、系统 SAF、真实 React Markdown/LaTeX 对象/B/写回/冲突/失联与强制停止恢复通过；既有 71 项生产文件层断言沿用 | 实体平板、复杂 DocumentsProvider 移动/改名/云存储与物理故障未验；Office/Keynote/Numbers 未实现 |
+| Mac 自托管互联网同步 | macOS 实际 Node/SQLite 和 Chrome 两种模式本机集成通过：离线、非重叠 B 合流、原始 A/源快照归档与旧备份补齐恢复；部署配置保留 | 实体平板/手机、局域网与互联网 HTTPS、休眠唤醒和网络切换未验；回环不能替代公网成功 |
 
 ## 可运行模块
 
@@ -35,16 +49,16 @@
 
 入口与命令见 [README](../README.md)。开发工作台用 `npm run dev`，生产资源用 `npm run build`，Mac 服务用配置好令牌后的 `npm run server`。生产浏览器只读 A、轻改已有 B；Android 容器才提供完整创建能力。
 
-交付目录为 `releases/`；安装包为调试验收包，不等同正式发布签名。`examples/变化与积累.glossa` 是保留可编辑对象的完整示例工程，另附独立 HTML 阅读快照。示例中的文字与图形是预先编写的对象，不作为 OCR 或仿手写生成证据。
+本机当前交付目录为 `releases/local-macos-20261022/`；安装包为调试验收包，不等同正式发布签名。`examples/变化与积累.glossa` 是保留可编辑对象的完整示例工程，另附独立 HTML 阅读快照。示例中的文字与图形是预先编写的对象，不作为 OCR 或仿手写生成证据。
 
 | 产物                                    | 用途                                                                                 |
 | --------------------------------------- | ------------------------------------------------------------------------------------ |
-| `releases/glossa-0.1.2-debug.apk`       | Android 调试安装包，内置生产 Web 资源                                                |
-| `releases/glossa-0.1.2-androidTest.apk` | 独立原生验收包，仅测试用途，不含于客户端 APK                                         |
-| `releases/glossa-0.1.2-source.zip`      | 源码、锁文件、测试、文档、示例和可直接预览的生产资源；不含 SDK、依赖缓存或用户数据库 |
-| `releases/SHA256SUMS`                   | 交付文件完整性校验                                                                   |
+| `releases/local-macos-20261022/glossa-0.1.2-local-20261022-debug.apk`       | Android 调试安装包，内置生产 Web 资源                                                |
+| `releases/local-macos-20261022/glossa-0.1.2-local-20261022-androidTest.apk` | 独立原生验收包，仅测试用途，不含于客户端 APK                                         |
+| `releases/local-macos-20261022/glossa-0.1.2-local-20261022-source.zip`      | 源码、锁文件、测试、文档、示例和可直接预览的生产资源；不含 SDK、依赖缓存或用户数据库 |
+| `releases/local-macos-20261022/SHA256SUMS`                   | 交付文件完整性校验                                                                   |
 
-0.1.2 最终主 APK 的安装标签为“笺注”、versionCode **3**，v2 签名校验通过；7 份内置 Web 资源共 **490,461 字节**，与最终 `dist` 逐字节一致。客户端 APK 不包含研究 JNI 或测试类。SHA-256：`16bef95d69fd1d048fd672ffdf31af5b050cfa8d7989e1e33078acf2df944f75`。证据：[元数据](verification/webview-phase-apk-metadata.txt)、[资源](verification/webview-phase-apk-assets.json)、[签名](verification/webview-phase-apk-signature.txt)、[打包范围](verification/webview-phase-apk-scope.json)。这些是最终交付文件的校验，不表示完整 Android 交互通过。
+云端阶段的 0.1.2 原始主 APK 安装标签为“笺注”、versionCode **3**，v2 签名校验通过；7 份内置 Web 资源共 **490,461 字节**，与最终 `dist` 逐字节一致。客户端 APK 不包含研究 JNI 或测试类。SHA-256：`16bef95d69fd1d048fd672ffdf31af5b050cfa8d7989e1e33078acf2df944f75`。证据：[元数据](verification/webview-phase-apk-metadata.txt)、[资源](verification/webview-phase-apk-assets.json)、[签名](verification/webview-phase-apk-signature.txt)、[打包范围](verification/webview-phase-apk-scope.json)。这些为云端原始文件的校验，保留其当时边界；当前本机 APK 的实际校验见 [本机资源校验](verification/local-macos-2026-10-22/apk-verification.json)，完整交互结果见本报告顶部。
 
 实际界面截图：[原稿](workspace-desktop.png)、[A/B 对照](workspace-split.png)、[手机已有 B](workspace-mobile.png)。手机截图使用 390×844 视口，没有新建纸张和书写工具。
 

@@ -1,0 +1,107 @@
+{
+  "runId": "e769f9d2-0ce3-46f0-bff5-3b503cf28a13",
+  "resumedFrom": "artifacts/local-migration/product-package/result.json",
+  "serial": "emulator-5556",
+  "noteTitle": "Glossa-product-327eada3",
+  "noteId": "66fe0585-7b2c-42ef-a1df-8d94e95390db",
+  "checks": [
+    {
+      "name": "md: system SAF import → real object insertion → idle B → selected B edit → real source write/reopen",
+      "detail": {
+        "name": "Glossa-product-3a46e78b-74d4-43d3-888c-09936257e558.md",
+        "uri": "content://local.quietpaper.test.documents/document/3a46e78b-74d4-43d3-888c-09936257e558"
+      }
+    },
+    {
+      "name": "real React UI source outage retains B intent and prior source snapshot"
+    },
+    {
+      "name": "real source conflict preview retains local B and external source; external bytes unchanged before decision"
+    },
+    {
+      "name": "explicit UI conflict choice writes only the selected owned source region"
+    },
+    {
+      "name": "tex: system SAF import → real object insertion → idle B → selected B edit → real source write/reopen",
+      "detail": {
+        "name": "Glossa-product-8fd7a2be-1cf2-4fdc-bda4-651ba7d08e96.tex",
+        "uri": "content://local.quietpaper.test.documents/document/8fd7a2be-1cf2-4fdc-bda4-651ba7d08e96"
+      }
+    },
+    {
+      "name": "Android force-stop/reopen preserves completed synthetic pen samples",
+      "detail": {
+        "samples": 4,
+        "pressure": 0.67,
+        "tiltX": 13,
+        "tiltY": -9,
+        "input": "CDP synthetic pen, not hardware"
+      }
+    },
+    {
+      "name": "force-stop mid synthetic stroke → persisted orphan checkpoint → real UI confirmation preserves exact original samples"
+    },
+    {
+      "name": "Android real UI package export through system create-document preserves operations, raw strokes and complete source associations",
+      "detail": {
+        "displayName": "Glossa-package-cc6105de-ca75-42f1-bbc3-83ef6b9c16c5.glossa.json",
+        "deviceFile": "/sdcard/Download/Glossa-package-cc6105de-ca75-42f1-bbc3-83ef6b9c16c5.glossa.json",
+        "bytes": 464393,
+        "sha256": "6aa2308b55cb68b8754d06d890a24ef5976c96019e62d98a4b85312cc4f1c574",
+        "noteId": "66fe0585-7b2c-42ef-a1df-8d94e95390db",
+        "strokes": 4,
+        "sources": 2
+      }
+    },
+    {
+      "name": "Android real UI package export through system create-document preserves operations, raw strokes and complete source associations",
+      "detail": {
+        "displayName": "Glossa-package-a6d59035-ea31-4666-b30a-eff8c365865b.glossa.json",
+        "deviceFile": "/sdcard/Download/Glossa-package-a6d59035-ea31-4666-b30a-eff8c365865b.glossa.json",
+        "bytes": 514225,
+        "sha256": "936bd5f0a97a026a5c81affd568ec21e2fb0446617f48c37a3938a8b27859a6a",
+        "noteId": "66fe0585-7b2c-42ef-a1df-8d94e95390db",
+        "strokes": 4,
+        "sources": 2
+      }
+    },
+    {
+      "name": "Android real UI import via system file picker restores exported A/B/source history and retains later current recovery copy",
+      "detail": {
+        "projectId": "6e58c4d8-0b6d-4f4a-9783-e1f2e8e7fb34",
+        "operationCount": 75,
+        "recoveryKey": "recovery:1792666174959:7fe01a5b-7dae-4f89-840d-cbb17e21a5ec",
+        "originalTitle": "Glossa-product-327eada3",
+        "preservedLaterTitle": "Glossa-product-327eada3 / after-package-export"
+      }
+    },
+    {
+      "name": "Android real UI package export through system create-document preserves operations, raw strokes and complete source associations",
+      "detail": {
+        "displayName": "Glossa-package-46082cdd-22ad-49ab-83d1-aeed79c734c1.glossa.json",
+        "deviceFile": "/sdcard/Download/Glossa-package-46082cdd-22ad-49ab-83d1-aeed79c734c1.glossa.json",
+        "bytes": 589085,
+        "sha256": "4dbaf57a3ad72d94407160998157f494e6c2c408be1e2fcbe6223f008b640f0e",
+        "noteId": "66fe0585-7b2c-42ef-a1df-8d94e95390db",
+        "strokes": 4,
+        "sources": 2
+      }
+    },
+    {
+      "name": "Android real UI import via system file picker restores exported A/B/source history and retains later current recovery copy",
+      "detail": {
+        "projectId": "6e58c4d8-0b6d-4f4a-9783-e1f2e8e7fb34",
+        "operationCount": 81,
+        "recoveryKey": "recovery:1792666333740:eb47f689-837d-4c94-a2ce-15c5c590aa92",
+        "originalTitle": "Glossa-product-327eada3",
+        "preservedLaterTitle": "Glossa-product-327eada3 / after-package-export"
+      }
+    },
+    {
+      "name": "packaged app produced no uncaught page errors"
+    }
+  ],
+  "errors": [],
+  "passed": true,
+  "scope": "Packaged Android UI in dedicated emulator; synthetic pen input; no real stylus/palm/latency, external network, Office or Apple format claim."
+}

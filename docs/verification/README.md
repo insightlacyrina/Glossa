@@ -1,5 +1,7 @@
 # 本轮执行证据
 
+2026-10-22 macOS 本机迁移的当前增量结果见 [本机证据索引](local-macos-2026-10-22/README.md)，包含真实主页桥、系统 SAF、产品文件链路、合成笔/工程包恢复及 Mac 两模式同步。以下 Linux 云端记录保留为历史，未全量重跑。
+
 日期：2026-10-21。以下完整验收表保留更名前的原始证据；笺注 / Glossa 更名后的最小检查见 [更名专项](branding.log)、[生产构建](branding-build.log)、[Android 构建](branding-android-build.log) 与 [APK 核验](branding-apk-assets.json)，未重跑完整套件。
 
 执行机为 Linux x64，Node.js 24.19.0，浏览器为本机 Chromium。日志保留实际命令的输出；单测、模拟桥、Android 模拟器和真实设备是不同的证据层次。

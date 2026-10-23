@@ -1,0 +1,20 @@
+{
+  "mode": "plain",
+  "status": "passed",
+  "originalPid": 54983,
+  "restoredPid": 54999,
+  "operationCount": 9,
+  "rawStrokeCount": 2,
+  "sourceFixture": "Production NativeDocument/NativeLink/SourceRecord with rename history, not a React source-coordinator workflow",
+  "pageErrors": [],
+  "transport": "localhost HTTP",
+  "clients": "actual isolated Chrome contexts using production modules; roles assigned by test",
+  "excluded": [
+    "physical mobile devices",
+    "LAN",
+    "WAN",
+    "UI settings workflow",
+    "physical stylus"
+  ],
+  "cryptoArchiveCheck": "plain operation payloads"
+}

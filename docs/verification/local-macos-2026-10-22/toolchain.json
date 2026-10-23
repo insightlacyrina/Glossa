@@ -1,0 +1,22 @@
+{
+  "baseline": "2522960",
+  "platform": "macOS 27.0.1 arm64",
+  "jdk": "17.0.20.1",
+  "node": "24.14.0",
+  "gradle": "8.13",
+  "emulator": "37.1.11",
+  "acceleration": "Hypervisor.Framework",
+  "avd": "Glossa_API35_ARM64",
+  "serial": "emulator-5556",
+  "ramMiB": 2048,
+  "cores": 2,
+  "display": "2560x1600 320dpi; tablet role",
+  "webview": "com.google.android.webview 124.0.6367.219",
+  "officialArchives": [
+    {"url":"https://dl.google.com/android/repository/platform-35_r02.zip","sha1":"0bb560a90a7a2cbd0dd8348224d518b638fe7949"},
+    {"url":"https://dl.google.com/android/repository/build-tools_r35_macosx.zip","sha1":"93ab8ce91230e067b5add4bfa79919c52b27f072"},
+    {"url":"https://dl.google.com/android/repository/sys-img/google_apis/arm64-v8a-35_r09.zip","sha1":"16f5bceca236b2737008977c4aaf826e46a8de7d"}
+  ],
+  "network": "Dedicated emulator wifi and mobile data explicitly disabled before product UI acceptance",
+  "excluded": ["physical devices", "hardware stylus", "LAN/WAN HTTPS"]
+}

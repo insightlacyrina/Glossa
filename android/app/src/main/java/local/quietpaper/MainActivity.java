@@ -321,7 +321,7 @@ public final class MainActivity extends Activity {
                 boolean retained = false;
                 try {
                     for (android.content.UriPermission grant : getContentResolver().getPersistedUriPermissions()) {
-                        if (grant.getUri().equals(uri) && grant.isReadPermission()) retained = true;
+                        if (grant.getUri().equals(uri) && grant.isReadPermission() && grant.isWritePermission()) retained = true;
                     }
                 } catch (SecurityException unavailableGrantList) {
                     // A temporary grant can still permit the read; report its actual retained state.

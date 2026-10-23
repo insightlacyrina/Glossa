@@ -1,0 +1,22 @@
+RESUME recovery/package only; source checks retained from artifacts/local-migration/product-attempt5/result.json
+PASS Android force-stop/reopen preserves completed synthetic pen samples {
+  samples: 4,
+  pressure: 0.67,
+  tiltX: 13,
+  tiltY: -9,
+  input: 'CDP synthetic pen, not hardware'
+}
+PASS force-stop mid synthetic stroke → persisted orphan checkpoint → real UI confirmation preserves exact original samples 
+/sdcard/Download/Glossa-package-cc6105de-ca75-42f1-bbc3-83ef6b9c16c5.glossa.json: 1 file pulled, 0 skipped. 82.3 MB/s (464393 bytes in 0.005s)
+PASS Android real UI package export through system create-document preserves operations, raw strokes and complete source associations {
+  displayName: 'Glossa-package-cc6105de-ca75-42f1-bbc3-83ef6b9c16c5.glossa.json',
+  deviceFile: '/sdcard/Download/Glossa-package-cc6105de-ca75-42f1-bbc3-83ef6b9c16c5.glossa.json',
+  bytes: 464393,
+  sha256: '6aa2308b55cb68b8754d06d890a24ef5976c96019e62d98a4b85312cc4f1c574',
+  noteId: '66fe0585-7b2c-42ef-a1df-8d94e95390db',
+  strokes: 4,
+  sources: 2
+}
+FAIL AssertionError [ERR_ASSERTION]: Prior current was not preserved as a new complete before-restore snapshot
+    at verifyProjectPackage (file:///Users/zhuyongfei/Documents/ChatGPT/Glossa/tests/android-project-package.mjs:366:12)
+    at async file:///Users/zhuyongfei/Documents/ChatGPT/Glossa/tests/android-product.mjs:486:3

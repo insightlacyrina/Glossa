@@ -1,0 +1,113 @@
+
+FAIL system SAF faults
+java.lang.AssertionError: revoked document fails actual ContentResolver read even after provider returns online
+	at local.quietpaper.SafFaultScenarios.require(SafFaultScenarios.java:442)
+	at local.quietpaper.SafFaultScenarios.faults(SafFaultScenarios.java:147)
+	at local.quietpaper.SafFaultScenarios.run(SafFaultScenarios.java:80)
+	at local.quietpaper.NativeRoundTripInstrumentation.onStart(NativeRoundTripInstrumentation.java:47)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2594)
+
+PASS test document belongs to a different UID; target has no owner MediaStore bypass
+WebView provider: com.google.android.webview 124.0.6367.219
+DOM reply requestId=7621d87a-0a04-41f4-b89d-f769cf8bb676-1 type=read ok=false error=source-unavailable
+PASS external-UID source is inaccessible before any system selection grants permission
+System picker observed: com.google.android.documentsui
+Initial picker nodes:
+0 com.google.android.documentsui null android.widget.FrameLayout text= desc= click=false visible=true bounds=Rect(0, 0 - 2560, 1600)
+1 com.google.android.documentsui null android.widget.LinearLayout text= desc= click=false visible=true bounds=Rect(0, 0 - 2560, 1600)
+2 com.google.android.documentsui null android.widget.FrameLayout text= desc= click=false visible=true bounds=Rect(0, 0 - 2560, 1600)
+3 com.google.android.documentsui com.google.android.documentsui:id/action_bar_root android.widget.FrameLayout text= desc= click=false visible=true bounds=Rect(0, 0 - 2560, 1600)
+4 com.google.android.documentsui android:id/content android.widget.FrameLayout text= desc= click=false visible=true bounds=Rect(0, 0 - 2560, 1600)
+5 com.google.android.documentsui com.google.android.documentsui:id/coordinator_layout android.view.ViewGroup text= desc= click=false visible=true bounds=Rect(0, 0 - 2560, 1600)
+6 com.google.android.documentsui com.google.android.documentsui:id/drawer_layout androidx.drawerlayout.widget.DrawerLayout text= desc= click=false visible=true bounds=Rect(0, 48 - 2560, 1600)
+7 com.google.android.documentsui null android.view.ViewGroup text= desc= click=false visible=true bounds=Rect(0, 48 - 2560, 1600)
+8 com.google.android.documentsui com.google.android.documentsui:id/app_bar android.widget.LinearLayout text= desc= click=false visible=true bounds=Rect(0, 48 - 2560, 749)
+9 com.google.android.documentsui com.google.android.documentsui:id/toolbar android.view.ViewGroup text= desc= click=false visible=true bounds=Rect(16, 64 - 2544, 160)
+10 com.google.android.documentsui null androidx.appcompat.widget.LinearLayoutCompat text= desc= click=false visible=false bounds=Rect(16, 64 - 16, 64)
+11 com.google.android.documentsui null android.widget.ImageView text= desc=More options click=true visible=false bounds=Rect(16, 64 - 16, 64)
+11 com.google.android.documentsui com.google.android.documentsui:id/option_menu_search android.widget.Button text= desc=Search click=true visible=false bounds=Rect(16, 64 - 16, 64)
+10 com.google.android.documentsui null android.widget.ImageButton text= desc=Show roots click=true visible=true bounds=Rect(32, 64 - 144, 160)
+10 com.google.android.documentsui null android.widget.TextView text=Recent desc= click=false visible=true bounds=Rect(176, 85 - 299, 139)
+9 com.google.android.documentsui com.google.android.documentsui:id/directory_header android.widget.LinearLayout text= desc= click=false visible=true bounds=Rect(0, 176 - 2560, 749)
+10 com.google.android.documentsui com.google.android.documentsui:id/horizontal_breadcrumb androidx.recyclerview.widget.RecyclerView text= desc= click=false visible=false bounds=Rect(0, 176 - 2560, 176)
+10 com.google.android.documentsui null android.widget.HorizontalScrollView text= desc= click=false visible=true bounds=Rect(0, 176 - 2560, 272)
+11 com.google.android.documentsui null android.widget.FrameLayout text= desc= click=false visible=true bounds=Rect(0, 176 - 1452, 272)
+12 com.google.android.documentsui com.google.android.documentsui:id/search_chip_group android.widget.LinearLayout text= desc= click=false visible=true bounds=Rect(40, 176 - 1412, 272)
+13 com.google.android.documentsui null android.widget.Button text=Images desc= click=true visible=true bounds=Rect(48, 176 - 244, 272)
+13 com.google.android.documentsui null android.widget.Button text=Audio desc= click=true visible=true bounds=Rect(260, 176 - 438, 272)
+13 com.google.android.documentsui null android.widget.Button text=Videos desc= click=true visible=true bounds=Rect(454, 176 - 644, 272)
+13 com.google.android.documentsui null android.widget.Button text=Documents desc= click=true visible=true bounds=Rect(660, 176 - 907, 272)
+13 com.google.android.documentsui null android.widget.Button text=Large files desc= click=true visible=true bounds=Rect(923, 176 - 1157, 272)
+13 com.google.android.documentsui null android.widget.Button text=This week desc= click=true visible=true bounds=Rect(1173, 176 - 1404, 272)
+10 com.google.android.documentsui com.google.android.documentsui:id/apps_row android.widget.LinearLayout text= desc= click=false visible=true bounds=Rect(0, 272 - 2560, 509)
+11 com.google.android.documentsui null android.widget.TextView text=BROWSE FILES IN OTHER APPS desc= click=false visible=true bounds=Rect(0, 272 - 365, 368)
+11 com.google.android.documentsui null android.widget.HorizontalScrollView text= desc= click=false visible=true bounds=Rect(0, 368 - 2560, 509)
+12 com.google.android.documentsui com.google.android.documentsui:id/apps_group android.widget.LinearLayout text= desc= click=false visible=true bounds=Rect(0, 368 - 2560, 509)
+13 com.google.android.documentsui null android.widget.LinearLayout text= desc= click=true visible=true bounds=Rect(0, 368 - 2560, 509)
+14 com.google.android.documentsui com.google.android.documentsui:id/app_icon android.widget.ImageView text= desc= click=false visible=true bounds=Rect(1248, 380 - 1312, 444)
+14 com.google.android.documentsui android:id/title android.widget.TextView text=Glossa test files desc=Glossa test files click=false visible=true bounds=Rect(1195, 464 - 1365, 497)
+10 com.google.android.documentsui com.google.android.documentsui:id/header_container android.widget.LinearLayout text= desc= click=false visible=true bounds=Rect(48, 509 - 2512, 629)
+11 com.google.android.documentsui com.google.android.documentsui:id/header_title android.widget.TextView text= desc= click=false visible=true bounds=Rect(48, 509 - 2512, 629)
+11 com.google.android.documentsui com.google.android.documentsui:id/sub_menu androidx.appcompat.widget.LinearLayoutCompat text= desc= click=false visible=false bounds=Rect(2512, 569 - 2512, 569)
+12 com.google.android.documentsui com.google.android.documentsui:id/sub_menu_grid android.widget.Button text= desc=Grid view click=true visible=false bounds=Rect(2512, 569 - 2512, 569)
+10 com.google.android.documentsui com.google.android.documentsui:id/table_header android.widget.LinearLayout text= desc= click=false visible=true bounds=Rect(0, 629 - 2560, 749)
+11 com.google.android.documentsui null android.widget.LinearLayout text= desc= click=false visible=true bounds=Rect(0, 629 - 2560, 749)
+12 com.google.android.documentsui null android.view.View text= desc= click=false visible=true bounds=Rect(48, 649 - 128, 729)
+12 com.google.android.documentsui null android.widget.LinearLayout text= desc= click=false visible=true bounds=Rect(160, 629 - 2400, 749)
+13 com.google.android.documentsui android:id/title android.widget.LinearLayout text= desc= click=true visible=true bounds=Rect(160, 629 - 1017, 749)
+14 com.google.android.documentsui com.google.android.documentsui:id/label android.widget.TextView text=Name desc= click=false visible=true bounds=Rect(160, 667 - 245, 710)
+13 com.google.android.documentsui com.google.android.documentsui:id/file_type android.widget.LinearLayout text= desc= click=true visible=true bounds=Rect(1041, 629 - 1469, 749)
+14 com.google.android.documentsui com.google.android.documentsui:id/label android.widget.TextView text=Type desc= click=false visible=true bounds=Rect(1041, 667 - 1109, 710)
+13 com.google.android.documentsui com.google.android.documentsui:id/size android.widget.LinearLayout text= desc= click=true visible=true bounds=Rect(1493, 629 - 1922, 749)
+14 com.google.android.documentsui com.google.android.documentsui:id/label android.widget.TextView text=Size desc= click=false visible=true bounds=Rect(1862, 667 - 1922, 710)
+13 com.google.android.documentsui com.google.android.documentsui:id/date android.widget.LinearLayout text= desc= click=true visible=true bounds=Rect(1946, 629 - 2375, 749)
+14 com.google.android.documentsui com.google.android.documentsui:id/label android.widget.TextView text=Modified desc= click=false visible=true bounds=Rect(2212, 667 - 2337, 710)
+14 com.google.android.documentsui com.google.android.documentsui:id/sort_arrow android.widget.ImageView text= desc=Descending click=false visible=true bounds=Rect(2343, 673 - 2375, 705)
+8 com.google.android.documentsui null android.widget.FrameLayout text= desc= click=false visible=true bounds=Rect(0, 749 - 2560, 1600)
+9 com.google.android.documentsui com.google.android.documentsui:id/container_search_fragment android.widget.FrameLayout text= desc= click=false visible=true bounds=Rect(0, 749 - 2560, 1600)
+9 com.google.android.documentsui com.google.android.documentsui:id/container_directory android.widget.FrameLayout text= desc= click=false visible=true bounds=Rect(0, 749 - 2560, 1600)
+10 com.google.android.documentsui null android.widget.LinearLayout text= desc= click=false visible=true bounds=Rect(0, 749 - 2560, 1600)
+11 com.google.android.documentsui com.google.android.documentsui:id/refresh_layout android.view.ViewGroup text= desc= click=false visible=true bounds=Rect(0, 749 - 2560, 1600)
+12 com.google.android.documentsui com.google.android.documentsui:id/dir_list android.widget.GridView text= desc= click=false visible=true bounds=Rect(0, 749 - 2560, 1600)
+13 com.google.android.documentsui null android.widget.LinearLayout text= desc= click=true visible=true bounds=Rect(0, 749 - 2560, 877)
+14 com.google.android.documentsui null android.widget.LinearLayout text= desc= click=false visible=true bounds=Rect(0, 749 - 2560, 877)
+15 com.google.android.documentsui android:id/icon android.widget.FrameLayout text= desc= click=false visible=true bounds=Rect(0, 749 - 160, 877)
+16 com.google.android.documentsui null androidx.cardview.widget.CardView text= desc= click=false visible=true bounds=Rect(48, 773 - 128, 853)
+15 com.google.android.documentsui null android.widget.LinearLayout text= desc= click=false visible=true bounds=Rect(160, 791 - 2400, 834)
+16 com.google.android.documentsui null android.widget.LinearLayout text= desc= click=false visible=true bounds=Rect(160, 791 - 1017, 834)
+16 com.google.android.documentsui com.google.android.documentsui:id/file_type android.widget.TextView text=MD document desc= click=false visible=true bounds=Rect(1041, 791 - 1469, 829)
+16 com.google.android.documentsui com.google.android.documentsui:id/size android.widget.TextView text=167 B desc= click=false visible=true bounds=Rect(1493, 791 - 1922, 829)
+16 com.google.android.documentsui com.google.android.documentsui:id/date android.widget.TextView text=3:00 AM desc= click=false visible=true bounds=Rect(1946, 791 - 2375, 829)
+15 com.google.android.documentsui null android.widget.FrameLayout text= desc= click=false visible=true bounds=Rect(2400, 749 - 2560, 877)
+16 com.google.android.documentsui com.google.android.documentsui:id/preview_icon android.widget.FrameLayout text= desc=Preview the file Glossa-SAF-bcbf98e8-029e-4ee0-acba-b588ffda9ce0.md click=false visible=true bounds=Rect(2400, 749 - 2560, 877)
+9 com.google.android.documentsui com.google.android.documentsui:id/drawer_edge android.view.View text= desc= click=false visible=true bounds=Rect(0, 749 - 24, 1600)
+8 com.google.android.documentsui com.google.android.documentsui:id/container_save android.view.ViewGroup text= desc= click=false visible=true bounds=Rect(0, 1536 - 2560, 1600)
+Accessibility click: Show roots
+Accessibility click: test DocumentsProvider root
+Accessibility click: unique external UID test document
+System picker returned to application after file selection
+DOM reply requestId=7621d87a-0a04-41f4-b89d-f769cf8bb676-2 type=open ok=true error=
+PASS real system picker returns exact original document bytes through homepage DOM callback
+PASS selected external-UID document has real persisted read/write URI grant
+DOM reply requestId=7621d87a-0a04-41f4-b89d-f769cf8bb676-3 type=read ok=false error=source-unavailable
+PASS temporarily offline DocumentsProvider reports source unavailable through real JavaScript bridge
+DOM reply requestId=7621d87a-0a04-41f4-b89d-f769cf8bb676-4 type=save ok=false error=source-unavailable
+PASS offline write stages exact local content before provider access fails
+DOM reply requestId=7621d87a-0a04-41f4-b89d-f769cf8bb676-5 type=source-pending ok=true error=
+DOM reply requestId=7621d87a-0a04-41f4-b89d-f769cf8bb676-6 type=snapshot ok=true error=
+PASS offline failure retains exact pending body, content SHA and original base
+PASS offline failure preserves local recoverable source snapshot body
+PASS offline failure leaves externally owned original source bytes intact
+PASS system picker receives actual Back cancellation
+DOM reply requestId=7621d87a-0a04-41f4-b89d-f769cf8bb676-7 type=open ok=false error=cancelled
+PASS system picker cancellation reaches matching original homepage request
+DOM reply requestId=7621d87a-0a04-41f4-b89d-f769cf8bb676-8 type=source-pending ok=true error=
+DOM reply requestId=7621d87a-0a04-41f4-b89d-f769cf8bb676-9 type=snapshot ok=true error=
+PASS picker cancellation retains exact pending body, content SHA and original base
+PASS picker cancellation preserves local recoverable source snapshot body
+PASS picker cancellation leaves externally owned original source bytes intact
+PASS document owner revokes actual persisted URI permission
+DOM reply requestId=7621d87a-0a04-41f4-b89d-f769cf8bb676-10 type=read ok=true error=
+Last native window: url=https://appassets.quietpaper.local/index.html progress=100
+Scope: real system picker and real packaged-homepage JavaScript/native file callbacks; test-APK DocumentsProvider owns the file under a different UID. Retention assertions cover native pending journals and source snapshots, not React editor state or physical device behavior.
+

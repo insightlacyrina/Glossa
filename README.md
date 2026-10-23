@@ -39,9 +39,11 @@ adb install -r android/app/build/outputs/apk/debug/app-debug.apk
 
 Android 使用系统 WebView 的 Pointer Events 保存真实采样，并通过 SAF 独立读写 Markdown/LaTeX。SAF、原生历史、待写回及编译细节见 [Android 文档](docs/ANDROID.md)。APK 编译、模拟器运行和真实触控笔验证是不同证据，最终结果见 [交付报告](docs/DELIVERY.md)。
 
-0.1.1 的 Android 生产文件层已在 API 35 模拟器通过 71 项新增断言，覆盖文本往返、双版本冲突保护、强制停止后的待写恢复与错误分类。测试使用真实 ContentResolver 和专用文件提供者，不代表系统文件选择器、持久授权或真实触控笔已验。当前安装包为 `releases/glossa-0.1.2-debug.apk`。
+0.1.1 的 Android 生产文件层已在 API 35 模拟器通过 71 项新增断言，覆盖文本往返、双版本冲突保护、强制停止后的待写恢复与错误分类。测试使用真实 ContentResolver 和专用文件提供者，不代表系统文件选择器、持久授权或真实触控笔已验。当前本机验收安装包为 [glossa-0.1.2-local-20261022-debug.apk](releases/local-macos-20261022/glossa-0.1.2-local-20261022-debug.apk)。
 
-0.1.2 新增“运行状态 → 窗口记录”：Android 持久保存最近 8 次可捕获的渲染器退出元数据，不记录笔记正文、文件 URI 或令牌。新增原生持久化 4 项、模拟桥界面 2 项及后续 1 项协议检查各通过一次，旧通过测试未重跑。原模拟器的 WebView 124 故障已缩小到快照校验所用优化计算路径；另用官方旧版模拟器、正常 CPU 配置启动后，完整主页仍未在时限内就绪。主页 JS 桥和系统 SAF 链路仍未通过验收，详见 [本阶段交付与限制](docs/DELIVERY.md) 和 [Android 诊断](docs/ANDROID-WEBVIEW-DIAGNOSIS.md)。
+0.1.2 新增“运行状态 → 窗口记录”：Android 持久保存最近 8 次可捕获的渲染器退出元数据，不记录笔记正文、文件 URI 或令牌。原生持久化 4 项、模拟桥界面 2 项及后续 1 项协议检查的既有证据沿用。云端 x86 软件模拟器阶段曾因 WebView 快照校验及首页超时未通过主页桥与 SAF；原失败日志与 [Android 诊断](docs/ANDROID-WEBVIEW-DIAGNOSIS.md) 保留。
+
+2026-10-22 迁移到 Apple Silicon Mac 后，API 35 ARM64 硬件加速模拟器通过真实打包首页 `app-bridge` 9 项、系统 SAF `prepare` 7 项、显式停止后 `resume` 8 项及取消/撤权/源离线/只读失败专项 31 项。真实 React 界面已完成 Markdown/LaTeX 经系统 SAF 导入、对象插入纸张、修订已有 B、写回并按 SHA/长度核对，以及源冲突预览和离线待写保留；已保存及未完成检查点的合成笔迹均在 force-stop 后经真实 UI 恢复；工程包真实系统导出/导入保留 A/B、源快照与历史，较新当前另存为可见恢复副本。未连接实体平板或触控笔，真实笔感、掌触与物理延迟仍未验。详细设备矩阵、恢复范围与证据见 [本机增量验收](docs/LOCAL-VALIDATION.md)。
 
 ## Mac 自托管服务
 
@@ -55,7 +57,7 @@ npm run server
 
 默认仅监听 `127.0.0.1:8787`，数据库在 `server-data/`。真实客户端在“设置 → Mac 同步”填写 HTTPS 地址、令牌及相同工程标识。空阅读端可以通过工程标识拉取既有工程；已有不同工程须先导入正确工程。端到端加密口令只保留当前客户端会话，重启需解锁；服务器拒绝混合模式与错误密钥。
 
-局域网、互联网 HTTPS、Tailscale、Caddy、launchd、SQLite 一致性备份与恢复的完整步骤见 [同步文档](docs/SYNC.md)。这里提供的是可运行服务及部署配置；没有用户 Mac/域名访问条件时，不会把 Linux 的 HTTP 测试称作真实 Mac 公网验证。Mac 临时解密 AI 代理尚未开放。
+局域网、互联网 HTTPS、Tailscale、Caddy、launchd、SQLite 一致性备份与恢复的完整步骤见 [同步文档](docs/SYNC.md)。本轮已在 Mac 独立 Node/SQLite 服务和真实 Chrome 隔离上下文验证普通同步、端到端加密各 3 组：离线重载、非重叠编辑合并、旧备份恢复及新客户端完整重建。该证据仅覆盖本机回环，实体移动端、局域网和公网 HTTPS 仍未验。Mac 临时解密 AI 代理尚未开放。
 
 ## 当前操作闭环
 

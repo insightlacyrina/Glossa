@@ -1,0 +1,14 @@
+
+PASS system SAF resume; assertions=8; pid=4033
+PASS completed SAF prepare proof exists
+PASS SAF resume runs in a different Android process: 3641 -> 4033
+PASS durable proof and actual document still identify only the marked test fixture
+PASS actual persisted read/write document grant survives process replacement
+PASS new process reopens the exact previously written document without opening a picker or WebView
+PASS production NativeSourceStore reads the retained SAF URI in the new process
+PASS production native store writes one further character using the retained grant
+PASS new-process SAF write reopens with all other original bytes preserved
+Retained document: content://com.android.providers.media.documents/document/document%3A1000000016; no Activity or WebView created in resume
+Last native window: not observed
+Scope: system DocumentsUI selection of one owned Downloads fixture and its persisted read/write grant. The owner UID may also have MediaStore access; persisted-grant flags are checked independently. No cloud provider, rename/move compatibility, general format coverage or power-loss proof is claimed.
+

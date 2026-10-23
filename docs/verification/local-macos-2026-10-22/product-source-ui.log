@@ -1,0 +1,19 @@
+PASS md: system SAF import → real object insertion → idle B → selected B edit → real source write/reopen {
+  name: 'Glossa-product-3a46e78b-74d4-43d3-888c-09936257e558.md',
+  uri: 'content://local.quietpaper.test.documents/document/3a46e78b-74d4-43d3-888c-09936257e558'
+}
+PASS real React UI source outage retains B intent and prior source snapshot 
+PASS real source conflict preview retains local B and external source; external bytes unchanged before decision 
+PASS explicit UI conflict choice writes only the selected owned source region 
+PASS tex: system SAF import → real object insertion → idle B → selected B edit → real source write/reopen {
+  name: 'Glossa-product-8fd7a2be-1cf2-4fdc-bda4-651ba7d08e96.tex',
+  uri: 'content://local.quietpaper.test.documents/document/8fd7a2be-1cf2-4fdc-bda4-651ba7d08e96'
+}
+FAIL locator.waitFor: Target page, context or browser has been closed
+Call log:
+[2m  - waiting for locator('.app-shell') to be visible[22m
+
+    at connect (/Users/zhuyongfei/Documents/ChatGPT/Glossa/tests/android-product.mjs:58:36)
+    at async restart (/Users/zhuyongfei/Documents/ChatGPT/Glossa/tests/android-product.mjs:236:3)
+    at async recovery (/Users/zhuyongfei/Documents/ChatGPT/Glossa/tests/android-product.mjs:244:3)
+    at async file:///Users/zhuyongfei/Documents/ChatGPT/Glossa/tests/android-product.mjs:273:3

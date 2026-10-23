@@ -27,6 +27,8 @@ function summary(entry: Entry) {
       valid: true,
       titles:
         engine.state.notes
+          .slice()
+          .sort((a, b) => b.modifiedAt - a.modifiedAt)
           .slice(0, 3)
           .map((n) => n.title)
           .join(' / ') || '空白工程',

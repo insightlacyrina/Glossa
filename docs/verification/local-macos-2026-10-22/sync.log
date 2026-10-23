@@ -1,0 +1,9 @@
+(node:54936) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS plain: two isolated Chrome contexts received A, B and complete source snapshot through separate Node server
+PASS plain: offline edits survived IndexedDB reload; reconnect merged disjoint B characters and preserved both raw A strokes
+PASS plain: new server process restored older SQLite snapshot, clients repaired archive; fresh Chrome context reconstructed complete A/B/history
+PASS e2ee: two isolated Chrome contexts received A, B and complete source snapshot through separate Node server
+PASS e2ee: offline edits survived IndexedDB reload; reconnect merged disjoint B characters and preserved both raw A strokes
+PASS e2ee: new server process restored older SQLite snapshot, clients repaired archive; fresh Chrome context reconstructed complete A/B/history
+Evidence: /Users/zhuyongfei/Documents/ChatGPT/Glossa/artifacts/local-migration/sync/2026-10-23T01-07-43-417Z

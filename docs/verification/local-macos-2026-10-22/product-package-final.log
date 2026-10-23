@@ -1,0 +1,19 @@
+RESUME recovery/package only; source checks retained from artifacts/local-migration/product-package/result.json
+/sdcard/Download/Glossa-package-46082cdd-22ad-49ab-83d1-aeed79c734c1.glossa.json: 1 file pulled, 0 skipped. 61.0 MB/s (589085 bytes in 0.009s)
+PASS Android real UI package export through system create-document preserves operations, raw strokes and complete source associations {
+  displayName: 'Glossa-package-46082cdd-22ad-49ab-83d1-aeed79c734c1.glossa.json',
+  deviceFile: '/sdcard/Download/Glossa-package-46082cdd-22ad-49ab-83d1-aeed79c734c1.glossa.json',
+  bytes: 589085,
+  sha256: '4dbaf57a3ad72d94407160998157f494e6c2c408be1e2fcbe6223f008b640f0e',
+  noteId: '66fe0585-7b2c-42ef-a1df-8d94e95390db',
+  strokes: 4,
+  sources: 2
+}
+PASS Android real UI import via system file picker restores exported A/B/source history and retains later current recovery copy {
+  projectId: '6e58c4d8-0b6d-4f4a-9783-e1f2e8e7fb34',
+  operationCount: 81,
+  recoveryKey: 'recovery:1792666333740:eb47f689-837d-4c94-a2ce-15c5c590aa92',
+  originalTitle: 'Glossa-product-327eada3',
+  preservedLaterTitle: 'Glossa-product-327eada3 / after-package-export'
+}
+PASS packaged app produced no uncaught page errors 
