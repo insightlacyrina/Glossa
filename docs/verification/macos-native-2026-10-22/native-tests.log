@@ -1,0 +1,59 @@
+
+> glossa@0.1.2 test:swift
+> bash scripts/test-swift.sh
+
+Swift JavaScriptCore resource built from shared data kernel.
+Building for debugging...
+[4 / 6] GlossaCoreTests-product
+[6 / 8] GlossaCoreTests-product
+/Users/zhuyongfei/Documents/ChatGPT/Glossa/swift/Package.swift: GlossaCoreTests-product: ld: warning: search path '/Library/Developer/CommandLineTools/Developer/usr/lib' not found
+/Users/zhuyongfei/Documents/ChatGPT/Glossa/swift/Package.swift: GlossaCoreTests-product: ld: warning: search path '/Library/Developer/CommandLineTools/Developer/Library/Frameworks' not found
+[12 / 13] GlossaCoreTests-product
+[17 / 21] Glossa-product
+[23 / 27] Glossa-product
+[24 / 27] Glossa-product
+[26 / 29] Glossa-product
+/Users/zhuyongfei/Documents/ChatGPT/Glossa/swift/Package.swift: Glossa-product: ld: warning: search path '/Library/Developer/CommandLineTools/Developer/usr/lib' not found
+/Users/zhuyongfei/Documents/ChatGPT/Glossa/swift/Package.swift: Glossa-product: ld: warning: search path '/Library/Developer/CommandLineTools/Developer/Library/Frameworks' not found
+[28 / 29] Glossa-product
+Build complete! (5.68秒)
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite LocalWorkspaceTests started.
+◇ Suite CoreTests started.
+◇ Suite SyncTests started.
+◇ Test testCorruptionIsReportedWithoutReplacement() started.
+◇ Test testReviewPersistsImmutableAssessmentAndSchedule() started.
+◇ Test testTransportValidationRejectsRemoteHTTPAndCredentials() started.
+◇ Test testExclusiveOwnershipAndAtomicRecovery() started.
+◇ Test testPlainHTTPInteropPaginationBisectionAndServerRestore() started.
+◇ Test testEncryptedAuthenticationBindsProjectIdentityAndRejectsTampering() started.
+◇ Test testCompatibleRoundTripPreservesFullProject() started.
+◇ Test testEncryptedHTTPInteropPaginationBisectionAndServerRestore() started.
+◇ Test testBRevisionUsesNativeSelectedRangeAndCreatesPrintedLayer() started.
+◇ Test testStaleEditAndFailedBatchLeaveAllOperationsUnchanged() started.
+◇ Test testMacCannotCreateNotesPagesOrBlocks() started.
+◇ Test testConcreteBatchChecksFinalTextAndRollsBackUncapturedInput() started.
+◇ Test testMergeAndOfflineReadingExportsUseSharedKernel() started.
+✔ Test testTransportValidationRejectsRemoteHTTPAndCredentials() passed after 0.268 seconds.
+✔ Test testCorruptionIsReportedWithoutReplacement() passed after 0.269 seconds.
+✔ Test testExclusiveOwnershipAndAtomicRecovery() passed after 0.269 seconds.
+✔ Test testMacCannotCreateNotesPagesOrBlocks() passed after 0.269 seconds.
+✔ Test testStaleEditAndFailedBatchLeaveAllOperationsUnchanged() passed after 0.269 seconds.
+✔ Test testCompatibleRoundTripPreservesFullProject() passed after 0.269 seconds.
+✔ Suite LocalWorkspaceTests passed after 0.270 seconds.
+✔ Test testReviewPersistsImmutableAssessmentAndSchedule() passed after 0.291 seconds.
+✔ Test testBRevisionUsesNativeSelectedRangeAndCreatesPrintedLayer() passed after 0.362 seconds.
+✔ Test testConcreteBatchChecksFinalTextAndRollsBackUncapturedInput() passed after 0.367 seconds.
+✔ Test testMergeAndOfflineReadingExportsUseSharedKernel() passed after 0.423 seconds.
+✔ Suite CoreTests passed after 0.424 seconds.
+✔ Test testEncryptedAuthenticationBindsProjectIdentityAndRejectsTampering() passed after 0.526 seconds.
+(node:66245) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66244) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Test testPlainHTTPInteropPaginationBisectionAndServerRestore() passed after 0.832 seconds.
+✔ Test testEncryptedHTTPInteropPaginationBisectionAndServerRestore() passed after 1.463 seconds.
+✔ Suite SyncTests passed after 1.463 seconds.
+✔ Test run with 13 tests in 3 suites passed after 1.463 seconds.

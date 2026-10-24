@@ -13,6 +13,9 @@ releases/
 __pycache__/
 *.pyc
 artifacts/
+swift/.build/
+swift/.build-*/
+swift/.swiftpm/
 .env
 .env.*
 !.env.example

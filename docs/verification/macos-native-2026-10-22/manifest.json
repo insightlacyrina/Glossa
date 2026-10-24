@@ -1,0 +1,11 @@
+{
+  "app": "Glossa.app",
+  "archive": "Glossa-macOS-arm64.zip",
+  "bytes": 700363,
+  "sha256": "b24c225ecbd3cd3d15ba2e19c290ea80763379c88ad1e71b01c0098d7335f7b3",
+  "architecture": "arm64",
+  "minimumMacOS": "14.0",
+  "signing": "ad-hoc",
+  "nativeTestsPassed": 13,
+  "existingTestsPassed": 145
+}

@@ -1,0 +1,44 @@
+{
+  "architecture": "arm64",
+  "bundledRuntime": {
+    "nodeVersion": "v24.14.0",
+    "architecture": "arm64",
+    "license": "Node-LICENSE"
+  },
+  "serverSourceMatchesBundle": true,
+  "serverFiles": [
+    {
+      "name": "ai-proxy.mjs",
+      "sha256": "f2a87e72a8bef95da58cebc0e9bd5ecf13196192e6f075a1c700b348d5b10307"
+    },
+    {
+      "name": "app.mjs",
+      "sha256": "48b3a697e82d8d9a4f3f55d398d28619cc6e247dded36d1485303a7ea1c2852d"
+    },
+    {
+      "name": "backup.mjs",
+      "sha256": "b2a9223215acc3695ab2158d45809f43dcddc0f66b593089487afd97e42a2f02"
+    },
+    {
+      "name": "index.mjs",
+      "sha256": "7b679b6b6cdc26eb3b844ad13653c23d77c55567c4657cabee843da46b0d7fde"
+    },
+    {
+      "name": "managed.mjs",
+      "sha256": "e4b13f40a6200fb4d959435db747452dc2ea6c40186d5c564797fab8df173633"
+    },
+    {
+      "name": "management.mjs",
+      "sha256": "846b59bd131e5df7dd7c10e464a1467315d6092ac2ada5146289fbb094c51357"
+    }
+  ],
+  "archive": {
+    "path": "releases/macos/Glossa-macOS-arm64.zip",
+    "bytes": 38878912,
+    "sha256": "d3c06aa74358ca7ba35ec09a77f1e514572ddcce9ac9b5363b71b5eb1c2ee40d"
+  },
+  "desktopLauncher": {
+    "path": "/Users/zhuyongfei/Desktop/启动笺注.command",
+    "mode": "755"
+  }
+}

@@ -17,6 +17,8 @@ for file in project.rglob('*'):
     if not file.is_file() or file.is_symlink():
         continue
     relative = file.relative_to(project)
+    if relative.parts[0] == 'swift' and any(part.startswith('.build') or part == '.swiftpm' for part in relative.parts):
+        continue
     if any(part in excluded for part in relative.parts):
         continue
     if relative.parts[0] == 'android' and ('build' in relative.parts or relative.as_posix().startswith('android/app/src/main/assets/web/') or file.name == 'local.properties'):

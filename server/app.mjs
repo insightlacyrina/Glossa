@@ -3,6 +3,14 @@ import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync, readFileSync, statSync, realpathSync } from 'node:fs';
 import { resolve, extname, sep } from 'node:path';
 import { timingSafeEqual, createHash, randomUUID } from 'node:crypto';
+import {
+  acquireDatabaseLease,
+  ArchiveManager,
+  archiveProjects,
+  listBackups,
+  verifyBackup,
+} from './management.mjs';
+import { createAIProxy } from './ai-proxy.mjs';
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -25,6 +33,10 @@ export function createSyncServer({
   allowedOrigins = [],
   maxBodyBytes = 32 * 1024 * 1024,
   maxPullBytes = 24 * 1024 * 1024,
+  lease: suppliedLease,
+  management: managementConfig,
+  aiProxy: suppliedAIProxy,
+  ai,
 } = {}) {
   if (typeof token !== 'string' || token.length < 24)
     throw new Error('GLOSSA_TOKEN must contain at least 24 characters');
@@ -37,11 +49,22 @@ export function createSyncServer({
   )
     throw new Error('Sync byte limits must be positive safe integers');
   mkdirSync(dataDir, { recursive: true, mode: 0o700 });
-  const db = new DatabaseSync(resolve(dataDir, 'quiet-paper.sqlite'));
-  db.exec(`PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; PRAGMA foreign_keys=ON;
+  const lease = suppliedLease ?? acquireDatabaseLease(dataDir);
+  let db;
+  try {
+    db = new DatabaseSync(resolve(dataDir, 'quiet-paper.sqlite'));
+    db.exec(`PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; PRAGMA foreign_keys=ON;
     CREATE TABLE IF NOT EXISTS projects (id TEXT PRIMARY KEY, mode TEXT NOT NULL, key_id TEXT);
     CREATE TABLE IF NOT EXISTS operations (seq INTEGER PRIMARY KEY AUTOINCREMENT, project_id TEXT NOT NULL REFERENCES projects(id), id TEXT NOT NULL, envelope TEXT NOT NULL, received_at TEXT NOT NULL, UNIQUE(project_id,id));
     CREATE INDEX IF NOT EXISTS project_seq ON operations(project_id,seq);`);
+  } catch (error) {
+    try {
+      db?.close();
+    } finally {
+      lease.release();
+    }
+    throw error;
+  }
   const getProject = db.prepare('SELECT mode,key_id FROM projects WHERE id = ?');
   const createProject = db.prepare('INSERT INTO projects(id,mode,key_id) VALUES (?,?,?)');
   const getOp = db.prepare('SELECT envelope FROM operations WHERE project_id = ? AND id = ?');
@@ -58,6 +81,70 @@ export function createSyncServer({
   const staticRoot = staticDir ? resolve(staticDir) : null;
   // Deliberately not restored from SQLite: a restart must invalidate acknowledgements of an older archive.
   const generation = randomUUID();
+  let aiProxy;
+  try {
+    aiProxy = suppliedAIProxy ?? createAIProxy(ai ?? {});
+  } catch (error) {
+    db.close();
+    lease.release();
+    throw error;
+  }
+  const startedAt = new Date().toISOString();
+  let manager = null;
+  let adminHash = null;
+  if (managementConfig) {
+    if (
+      typeof managementConfig.adminToken !== 'string' ||
+      managementConfig.adminToken.length < 24 ||
+      managementConfig.adminToken === token
+    ) {
+      db.close();
+      lease.release();
+      throw new Error('A separate admin token is required');
+    }
+    try {
+      manager = new ArchiveManager({ db, dataDir, ...managementConfig });
+    } catch (error) {
+      aiProxy.close();
+      db.close();
+      lease.release();
+      throw error;
+    }
+    adminHash = createHash('sha256').update(managementConfig.adminToken).digest();
+  }
+  let managerReady = manager ? manager.start() : Promise.resolve();
+  managerReady = managerReady.catch(() => {
+    if (manager) manager.lastError = '无法读取备份目录；自动备份尚未启动';
+  });
+  function isLoopback(req) {
+    return ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress);
+  }
+  function authorized(req, expectedHash) {
+    const auth = req.headers.authorization ?? '';
+    return timingSafeEqual(
+      expectedHash,
+      createHash('sha256')
+        .update(auth.startsWith('Bearer ') ? auth.slice(7) : '')
+        .digest(),
+    );
+  }
+  function managementStatus() {
+    return {
+      running: true,
+      instanceId: managementConfig.instanceId,
+      pid: process.pid,
+      startedAt,
+      generation,
+      url: managementConfig.url,
+      projects: db.prepare('SELECT count(*) AS n FROM projects').get().n,
+      operations: db.prepare('SELECT count(*) AS n FROM operations').get().n,
+      backup: manager.status(),
+      ai: {
+        enabled: aiProxy.status().aiProxyAvailable,
+        configured: aiProxy.status().aiProxyAvailable,
+      },
+    };
+  }
 
   function send(res, status, body) {
     res.writeHead(status, {
@@ -94,6 +181,45 @@ export function createSyncServer({
 
   const server = createServer(async (req, res) => {
     try {
+      // Admin access uses the actual peer address and a separate credential.
+      // Browser requests, including Origin:null, cannot enter this branch.
+      if (req.url?.startsWith('/api/admin/')) {
+        if (!manager) return send(res, 404, { error: 'NOT_FOUND' });
+        if (!isLoopback(req) || req.headers.origin !== undefined)
+          return send(res, 403, { error: 'ADMIN_LOCAL_ONLY' });
+        if (!authorized(req, adminHash)) return send(res, 401, { error: 'UNAUTHORIZED' });
+        await managerReady;
+        if (req.method === 'GET' && req.url === '/api/admin/status')
+          return send(res, 200, { ok: true, ...managementStatus() });
+        if (req.method === 'GET' && req.url === '/api/admin/projects')
+          return send(res, 200, { ok: true, projects: archiveProjects(db) });
+        if (req.method === 'GET' && req.url === '/api/admin/backups')
+          return send(res, 200, { ok: true, backups: await listBackups(manager.backupDir) });
+        if (req.method === 'POST' && req.url === '/api/admin/backup')
+          return send(res, 200, { ok: true, backup: await manager.create() });
+        if (req.method === 'POST' && req.url === '/api/admin/backups/verify') {
+          if (!req.headers['content-type']?.startsWith('application/json'))
+            return send(res, 415, { error: 'JSON_REQUIRED' });
+          let bytes = 0;
+          const chunks = [];
+          for await (const chunk of req) {
+            bytes += chunk.length;
+            if (bytes > 4096) return send(res, 413, { error: 'PAYLOAD_TOO_LARGE' });
+            chunks.push(chunk);
+          }
+          let body;
+          try {
+            body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+          } catch {
+            return send(res, 400, { error: 'INVALID_JSON' });
+          }
+          return send(res, 200, {
+            ok: true,
+            backup: await verifyBackup(manager.backupDir, body?.id),
+          });
+        }
+        return send(res, 404, { error: 'NOT_FOUND' });
+      }
       const origin = req.headers.origin;
       const sameOrigin =
         origin && origin === `${req.socket.encrypted ? 'https' : 'http'}://${req.headers.host}`;
@@ -131,8 +257,13 @@ export function createSyncServer({
             persistence: 'sqlite-wal-full',
             serverCanReadPlain: true,
             serverCanDecryptE2EE: false,
-            aiProxyAvailable: false,
+            aiProxyAvailable: aiProxy.status().aiProxyAvailable,
+            aiTemporaryPlaintextAccess: aiProxy.status().aiProxyAvailable,
           });
+        }
+        if (req.url?.startsWith('/api/ai/')) {
+          await aiProxy.handle(req, res, { tokenAuthenticated: true });
+          return;
         }
         if (req.url !== '/api/sync' || req.method !== 'POST')
           return send(res, 404, { error: 'NOT_FOUND' });
@@ -278,22 +409,41 @@ export function createSyncServer({
         }
       }
       return send(res, 404, { error: 'NOT_FOUND' });
-    } catch {
+    } catch (error) {
+      if (req.url?.startsWith('/api/admin/') && error?.code) {
+        if (!res.headersSent) send(res, 400, { error: error.code, message: error.message });
+        else res.end();
+        return;
+      }
       if (!res.headersSent) send(res, 500, { error: 'INTERNAL_ERROR' });
       else res.end();
     }
   });
   server.requestTimeout = 30_000;
   server.headersTimeout = 15_000;
+  let closing;
   return {
     server,
     db,
+    generation,
+    management: manager,
     close: () =>
-      new Promise((accept, reject) =>
-        server.close((error) => {
+      (closing ??= (async () => {
+        aiProxy.close();
+        const serverClosed = new Promise((accept, reject) => {
+          server.close((error) =>
+            error && error.code !== 'ERR_SERVER_NOT_RUNNING' ? reject(error) : accept(),
+          );
+          server.closeIdleConnections();
+        });
+        await managerReady;
+        await manager?.close();
+        await serverClosed;
+        try {
           db.close();
-          error ? reject(error) : accept();
-        }),
-      ),
+        } finally {
+          lease.release();
+        }
+      })()),
   };
 }

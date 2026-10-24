@@ -1,0 +1,22 @@
+
+> glossa@0.1.2 build:macos
+> bash scripts/build-macos.sh
+
+macOS SDK: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
+Swift JavaScriptCore resource built from shared data kernel.
+Building for production...
+[1 / 1]
+[3 / 6] Glossa-product
+[4 / 7] Glossa-product
+/Users/zhuyongfei/Documents/ChatGPT/Glossa/swift/Package.swift: Glossa-product: ld: warning: search path '/Library/Developer/CommandLineTools/Developer/usr/lib' not found
+/Users/zhuyongfei/Documents/ChatGPT/Glossa/swift/Package.swift: Glossa-product: ld: warning: search path '/Library/Developer/CommandLineTools/Developer/Library/Frameworks' not found
+[6 / 7] Glossa-product
+Build complete! (7.77秒)
+/Users/zhuyongfei/Documents/ChatGPT/Glossa/releases/macos/Glossa.app/Contents/Info.plist: OK
+/Users/zhuyongfei/Documents/ChatGPT/Glossa/releases/macos/Glossa.app: replacing existing signature
+--prepared:/Users/zhuyongfei/Documents/ChatGPT/Glossa/releases/macos/Glossa.app/Contents/MacOS/Glossa_GlossaCore.bundle
+--validated:/Users/zhuyongfei/Documents/ChatGPT/Glossa/releases/macos/Glossa.app/Contents/MacOS/Glossa_GlossaCore.bundle
+/Users/zhuyongfei/Documents/ChatGPT/Glossa/releases/macos/Glossa.app: valid on disk
+/Users/zhuyongfei/Documents/ChatGPT/Glossa/releases/macos/Glossa.app: satisfies its Designated Requirement
+Built: /Users/zhuyongfei/Documents/ChatGPT/Glossa/releases/macos/Glossa.app
+Archive: /Users/zhuyongfei/Documents/ChatGPT/Glossa/releases/macos/Glossa-macOS-arm64.zip

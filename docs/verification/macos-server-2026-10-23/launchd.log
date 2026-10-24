@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "platform": "darwin",
+  "architecture": "arm64",
+  "checks": [
+    "bundled runtime copied outside repo starts with real launchd",
+    "server survives launching client process exit",
+    "real HTTP archive, online snapshot and active restore refusal",
+    "stopped restore preserves newer safety archive; fresh generation replenishes operations"
+  ]
+}

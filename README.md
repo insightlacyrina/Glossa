@@ -45,9 +45,27 @@ Android 使用系统 WebView 的 Pointer Events 保存真实采样，并通过 S
 
 2026-10-22 迁移到 Apple Silicon Mac 后，API 35 ARM64 硬件加速模拟器通过真实打包首页 `app-bridge` 9 项、系统 SAF `prepare` 7 项、显式停止后 `resume` 8 项及取消/撤权/源离线/只读失败专项 31 项。真实 React 界面已完成 Markdown/LaTeX 经系统 SAF 导入、对象插入纸张、修订已有 B、写回并按 SHA/长度核对，以及源冲突预览和离线待写保留；已保存及未完成检查点的合成笔迹均在 force-stop 后经真实 UI 恢复；工程包真实系统导出/导入保留 A/B、源快照与历史，较新当前另存为可见恢复副本。未连接实体平板或触控笔，真实笔感、掌触与物理延迟仍未验。详细设备矩阵、恢复范围与证据见 [本机增量验收](docs/LOCAL-VALIDATION.md)。
 
+## Swift 原生 Mac 客户端
+
+`swift/` 提供 macOS 14+ 的 SwiftUI/AppKit 客户端：A/B 对照阅读、修订已有 B 文字和公式、管理笔记与文件夹、离线复习、冲突预览、工程导入/导出、恢复副本及普通/E2EE 自托管同步。遵循现有 Mac 权限，不创建笔记、页或知识块。
+
+```sh
+npm run build:macos
+open releases/macos/Glossa.app
+npm run test:swift
+```
+
+本机桌面已放置 `启动笺注.command`，双击即可打开上述应用。仓库中的通用启动入口为 `scripts/launch-macos.sh`。
+
+界面、纸张绘制、编辑器、文件与网络均使用原生 API；JavaScriptCore 只复用已有数据规则，不加载 WebView。原生自动测试覆盖工程兼容、权限、实际范围编辑、修订层、复习、耐久恢复与真实 HTTP 普通/E2EE 互通。安装包为 [Glossa.app](releases/macos/Glossa.app)，构建与验证边界见 [Mac 文档](docs/MACOS.md)。本机 ad-hoc 签名尚未做 Developer ID 公证；跨公网与另一台实体设备仍待验。
+
 ## Mac 自托管服务
 
 客户端与服务器是两个职责：阅读客户端可关闭，服务端仍可作为后台进程运行。
+
+**原生入口：设置 → 管理这台 Mac 上的服务器。** 安装包内置独立 Node/SQLite 运行时，可初始化、启停、查看工程、配置登录启动、自动/手动备份、校验并恢复。新服务保存在 `~/Library/Application Support/GlossaServer/`，不会接管旧 `server-data/`。使用步骤和临时 AI 授权见 [Mac 服务器管理](docs/MACOS-SERVER.md)。
+
+开发者也可沿用命令行服务：
 
 ```sh
 npm run build
@@ -57,7 +75,7 @@ npm run server
 
 默认仅监听 `127.0.0.1:8787`，数据库在 `server-data/`。真实客户端在“设置 → Mac 同步”填写 HTTPS 地址、令牌及相同工程标识。空阅读端可以通过工程标识拉取既有工程；已有不同工程须先导入正确工程。端到端加密口令只保留当前客户端会话，重启需解锁；服务器拒绝混合模式与错误密钥。
 
-局域网、互联网 HTTPS、Tailscale、Caddy、launchd、SQLite 一致性备份与恢复的完整步骤见 [同步文档](docs/SYNC.md)。本轮已在 Mac 独立 Node/SQLite 服务和真实 Chrome 隔离上下文验证普通同步、端到端加密各 3 组：离线重载、非重叠编辑合并、旧备份恢复及新客户端完整重建。该证据仅覆盖本机回环，实体移动端、局域网和公网 HTTPS 仍未验。Mac 临时解密 AI 代理尚未开放。
+局域网、互联网 HTTPS、Tailscale、Caddy 与旧式命令行部署见 [同步文档](docs/SYNC.md)。已在 Mac 独立 Node/SQLite 服务和真实 Chrome 隔离上下文验证普通同步、端到端加密各 3 组：离线重载、非重叠编辑合并、旧备份恢复及新客户端完整重建。新增原生临时 AI 代理仅在选择对象并逐次明确授权后发送，支持短期密钥、撤销、到期和候选预览；模型调用已用真实 HTTP mock 验证，真实模型准确性未验。实体移动端、局域网和公网 HTTPS 仍未验。
 
 ## 当前操作闭环
 

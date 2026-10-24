@@ -1,0 +1,85 @@
+
+> glossa@0.1.2 test:swift
+> bash scripts/test-swift.sh
+
+Swift JavaScriptCore resource built from shared data kernel.
+Building for debugging...
+[Computing dependencies]
+[3 / 16] Glossa_GlossaCore
+[4 / 16]
+[5 / 17] GlossaCore
+[14 / 26] GlossaCore
+[18 / 31] GlossaCore
+[25 / 40] Glossa-product
+[26 / 40] Glossa-product
+[27 / 40] Glossa-product
+[29 / 40] Glossa-product
+[29 / 40] GlossaCore
+/Users/zhuyongfei/Documents/ChatGPT/Glossa/swift/Package.swift: GlossaCore: ld: warning: search path '/Library/Developer/CommandLineTools/Developer/Library/Frameworks' not found
+[33 / 46] GlossaCoreTests-product
+[40 / 53] GlossaCoreTests-product
+[44 / 52] Glossa-product
+[46 / 52] GlossaCoreTests-product
+[48 / 52] GlossaCoreTests-product
+/Users/zhuyongfei/Documents/ChatGPT/Glossa/swift/Package.swift: GlossaCoreTests-product: ld: warning: search path '/Library/Developer/CommandLineTools/Developer/usr/lib' not found
+/Users/zhuyongfei/Documents/ChatGPT/Glossa/swift/Package.swift: GlossaCoreTests-product: ld: warning: search path '/Library/Developer/CommandLineTools/Developer/Library/Frameworks' not found
+/Users/zhuyongfei/Documents/ChatGPT/Glossa/swift/Package.swift: Glossa-product: ld: warning: search path '/Library/Developer/CommandLineTools/Developer/usr/lib' not found
+/Users/zhuyongfei/Documents/ChatGPT/Glossa/swift/Package.swift: Glossa-product: ld: warning: search path '/Library/Developer/CommandLineTools/Developer/Library/Frameworks' not found
+[51 / 52] Glossa-product
+Build complete! (20.93秒)
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite LocalServerTests started.
+◇ Suite CoreTests started.
+◇ Suite AIProxyTests started.
+◇ Suite SyncTests started.
+◇ Test initializationCanRetryAfterPostCopyFilesystemFailure() started.
+◇ Test initializationRefusesExistingServerDataWithoutOverwritingIt() started.
+◇ Test restoreStopsOnlyOwnedJobAndResumesOriginalRunningStateOnFailure() started.
+◇ Test runningConfigurationNeedsExplicitRestartAndProxySecretsStayLocal() started.
+◇ Test initializationUsesPrivateSeparateDirectoryAndNeverEnablesLoginImplicitly() started.
+◇ Test testCompatibleRoundTripPreservesFullProject() started.
+◇ Test testEncryptedAuthenticationBindsProjectIdentityAndRejectsTampering() started.
+◇ Suite LocalWorkspaceTests started.
+◇ Test testEncryptedHTTPInteropPaginationBisectionAndServerRestore() started.
+◇ Test testMacCannotCreateNotesPagesOrBlocks() started.
+◇ Test testPlainHTTPInteropPaginationBisectionAndServerRestore() started.
+◇ Test testReviewPersistsImmutableAssessmentAndSchedule() started.
+◇ Test testMergeAndOfflineReadingExportsUseSharedKernel() started.
+◇ Test testBRevisionUsesNativeSelectedRangeAndCreatesPrintedLayer() started.
+◇ Test testStaleEditAndFailedBatchLeaveAllOperationsUnchanged() started.
+◇ Test testSwiftCryptoKitObjectsInteroperateWithNodeProxyAndRevocation() started.
+◇ Test testTransportValidationRejectsRemoteHTTPAndCredentials() started.
+◇ Test testConcreteBatchChecksFinalTextAndRollsBackUncapturedInput() started.
+◇ Test testExclusiveOwnershipAndAtomicRecovery() started.
+◇ Test testCorruptionIsReportedWithoutReplacement() started.
+✔ Test testMacCannotCreateNotesPagesOrBlocks() passed after 0.233 seconds.
+✔ Test testCompatibleRoundTripPreservesFullProject() passed after 0.296 seconds.
+✔ Test testReviewPersistsImmutableAssessmentAndSchedule() passed after 0.296 seconds.
+✔ Test testMergeAndOfflineReadingExportsUseSharedKernel() passed after 0.296 seconds.
+✔ Test testTransportValidationRejectsRemoteHTTPAndCredentials() passed after 0.296 seconds.
+✔ Test testExclusiveOwnershipAndAtomicRecovery() passed after 0.106 seconds.
+✔ Test testCorruptionIsReportedWithoutReplacement() passed after 0.107 seconds.
+✔ Test initializationRefusesExistingServerDataWithoutOverwritingIt() passed after 0.298 seconds.
+✔ Suite LocalWorkspaceTests passed after 0.298 seconds.
+✔ Test testBRevisionUsesNativeSelectedRangeAndCreatesPrintedLayer() passed after 0.319 seconds.
+✔ Test testStaleEditAndFailedBatchLeaveAllOperationsUnchanged() passed after 0.335 seconds.
+✔ Test initializationCanRetryAfterPostCopyFilesystemFailure() passed after 0.336 seconds.
+✔ Test initializationUsesPrivateSeparateDirectoryAndNeverEnablesLoginImplicitly() passed after 0.349 seconds.
+✔ Test testConcreteBatchChecksFinalTextAndRollsBackUncapturedInput() passed after 0.358 seconds.
+✔ Suite CoreTests passed after 0.358 seconds.
+(node:74150) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Test restoreStopsOnlyOwnedJobAndResumesOriginalRunningStateOnFailure() passed after 0.367 seconds.
+✔ Test runningConfigurationNeedsExplicitRestartAndProxySecretsStayLocal() passed after 0.371 seconds.
+✔ Suite LocalServerTests passed after 0.371 seconds.
+(node:74149) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Test testEncryptedAuthenticationBindsProjectIdentityAndRejectsTampering() passed after 0.460 seconds.
+✔ Test testSwiftCryptoKitObjectsInteroperateWithNodeProxyAndRevocation() passed after 0.536 seconds.
+✔ Suite AIProxyTests passed after 0.536 seconds.
+✔ Test testPlainHTTPInteropPaginationBisectionAndServerRestore() passed after 0.596 seconds.
+✔ Test testEncryptedHTTPInteropPaginationBisectionAndServerRestore() passed after 1.363 seconds.
+✔ Suite SyncTests passed after 1.364 seconds.
+✔ Test run with 19 tests in 5 suites passed after 1.364 seconds.

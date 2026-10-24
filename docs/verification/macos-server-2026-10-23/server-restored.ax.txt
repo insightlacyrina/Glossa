@@ -1,0 +1,37 @@
+Window: "", App: 笺注.
+0 表单 Secondary Actions: Raise
+	1 container
+		2 文本 YOUR MAC, YOUR ARCHIVE
+		3 图像 Description: 连接到下方线条的外置驱动器, ID: externaldrive.connected.to.line.below
+		4 text 运行中 本机服务器 独立保存与同步。关闭笺注窗口，服务仍可继续运行。
+		5 服务器管理
+			6 单选按钮 Description: 服务与工程, Value: 0
+			7 单选按钮 Description: 备份与恢复, Value: 1
+			8 单选按钮 Description: 服务器配置, Value: 0
+		9 text 每 24 小时自动备份 · 保留 14 份 上次：2026-10-23T16:45:57.151Z
+下次：2026-10-24T16:45:57.151Z
+		10 按钮 Description: 立即备份, ID: backup-local-server
+		11 文本 已恢复 glossa-2026-10-23T16-45-31-932Z-84aed98c-99c2-4784-8a7d-d2c02f83ef75.sqlite；恢复前数据库另存为安全备份。
+		12 滚动区
+			13 图像 (selected) Description: 盾牌中的勾号, ID: checkmark.shield
+			14 文本 glossa-2026-10-23T16-45-57-151Z-4b531f99-a5e1-483a-baab-188915ab1663.sqlite
+			15 按钮 校验
+			16 按钮 恢复…
+			17 文本 2026-10-23T16:45:57.151Z · 106 KB
+			18 图像 (selected) Description: 盾牌中的勾号, ID: checkmark.shield
+			19 文本 glossa-2026-10-23T16-45-31-932Z-84aed98c-99c2-4784-8a7d-d2c02f83ef75.sqlite
+			20 按钮 校验
+			21 按钮 恢复…
+			22 文本 2026-10-23T16:45:31.932Z · 106 KB
+		23 text 备份包含整个服务器归档。恢复前自动保留当前数据库；端到端加密内容仍需要原口令才能在客户端解锁。 服务器正在运行 · PID 74468
+		24 按钮 刷新
+		25 按钮 完成
+26 menu bar
+	27 Glossa
+	28 文件
+	29 编辑
+	30 显示
+	31 窗口
+	32 帮助
+
+The focused UI element is 0 表单 Secondary Actions: Raise

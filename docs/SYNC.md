@@ -12,7 +12,9 @@
 
 ## 启动
 
-要求 Node.js 24.19 或兼容的 24.x（使用内置 `node:sqlite`），客户端已 `npm ci && npm run build`。
+原生 Mac 安装包已内置 Node 24 和管理界面，日常使用优先见 [Mac 服务器管理](MACOS-SERVER.md)。下列保留旧式开发部署方法，原生面板不会接管它的数据目录或进程。
+
+要求兼容的 Node.js 24.x（本机使用 24.14.0，内置 `node:sqlite`），客户端已 `npm ci && npm run build`。
 
 ```bash
 cd /path/to/Glossa
@@ -81,11 +83,13 @@ launchctl kickstart -k gui/$(id -u)/com.glossa.sync
 
 工程首次同步后锁定模式及密钥标识。错误口令、尝试将加密工程降级为普通模式均被拒绝。当前更换模式/口令需导出本地完整工程，再建立新的同步工程身份；原位密钥轮换尚未实现。口令丢失时服务端不能恢复内容，必须保留本地原生工程包及自己的口令恢复手段。
 
-**Mac 临时解密代理外部 AI 尚未实现，也没有默认授权。** `/api/status` 明确返回 `aiProxyAvailable:false`、`serverCanDecryptE2EE:false`。未来必须增加明确授权与撤销、最小必要数据范围、过期清理，并清楚说明 Mac 在授权处理期间拥有相关明文访问权限。不要将当前未提供的代理称为“服务器始终无法解密且可代理明文 AI”。
+原生 Mac 已提供逐次明确授权的临时 AI 转录代理。默认关闭；所有者配置模型后仍需用户选择具体对象及版本并授权，服务器在短期授权内能读取选中明文。P-256 ECDH/HKDF 派生的临时 AES-GCM 密钥加密输入与候选响应，撤销/到期中止任务并清理临时状态；长期工程口令不发送。`serverCanDecryptE2EE:false` 指长期同步档案，不能解读为授权代理期间也无法读明文；启用时另返回 `aiTemporaryPlaintextAccess:true`。候选只预览/复制，不自动修改 A/B。配置、限制和协议验证边界见 [Mac 服务器管理](MACOS-SERVER.md)。
 
 ## 备份与恢复
 
 操作归档不删除旧对象或旧版本，因此平板 A、B 等随操作提交持续备份至 Mac。服务端归档不替代客户端持久化；尚未收到服务器确认的离线笔迹仍只存在对应设备。
+
+原生托管服务内置自动快照（默认每 24 小时、保留 14 份有效快照）、SHA-256/SQLite 校验、停服恢复和恢复前安全快照，详见 [管理流程](MACOS-SERVER.md)。以下命令是旧式环境变量部署的手动备份入口：
 
 ```bash
 node server/backup.mjs /path/to/backup-directory
