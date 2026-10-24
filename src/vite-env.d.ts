@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
 interface Window {
+  glossaNavigateBack?: () => boolean;
   QuietPaperNative?: {
     getRole(): 'tablet' | 'phone';
     getDeviceId(): string;

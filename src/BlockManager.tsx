@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, Check, Combine, GitBranch, RefreshCw, Scissors, X } from 'lucide-react';
 import { NotebookEngine, type KnowledgeBlock, type Note, type Page, type Segment } from './domain';
 import { PaperPreview } from './Paper';
+import { useBackHandler } from './ui-navigation';
 import './block-manager.css';
 
 export type BlockManagerProps = {
@@ -153,8 +154,26 @@ function TabletBlockManager({ engine, note, onChange, onClose }: BlockManagerPro
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const dialog = useRef<HTMLElement>(null);
-  const close = useRef(onClose);
-  close.current = onClose;
+  const committedTitles = useRef({ split: '新的知识块', merge: '合并后的知识块' });
+  const hasPendingChanges = !!(
+    splitIds.length ||
+    mergeIds.length ||
+    targetId ||
+    splitTitle !== committedTitles.current.split ||
+    mergeTitle !== committedTitles.current.merge
+  );
+  function safeClose() {
+    if (hasPendingChanges && !window.confirm('放弃尚未应用的知识块名称和选择？')) return;
+    onClose();
+  }
+  const isTopLayer = useBackHandler(
+    true,
+    () => {
+      safeClose();
+      return true;
+    },
+    80,
+  );
   const localBlocks = snapshots.filter((snapshot) => snapshot.noteId === note.id);
   const source = localBlocks.find((snapshot) => snapshot.block.id === sourceId);
   const sourceSegments = activeSegments(source);
@@ -173,12 +192,7 @@ function TabletBlockManager({ engine, note, onChange, onClose }: BlockManagerPro
     const initial = dialog.current?.querySelector<HTMLElement>('button');
     initial?.focus();
     const keydown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        event.stopPropagation();
-        close.current();
-      }
-      if (event.key !== 'Tab') return;
+      if (event.key !== 'Tab' || !isTopLayer()) return;
       const controls = [
         ...(dialog.current?.querySelectorAll<HTMLElement>(
           'button:not(:disabled),input:not(:disabled),select:not(:disabled),[tabindex="0"]',
@@ -249,6 +263,8 @@ function TabletBlockManager({ engine, note, onChange, onClose }: BlockManagerPro
         setError(failure || '保存未完成，当前选择已保留');
         return;
       }
+      if (mode === 'split') committedTitles.current.split = splitTitle;
+      if (mode === 'merge') committedTitles.current.merge = mergeTitle;
       setSnapshots(capture(engine));
       setSplitIds([]);
       setMergeIds([]);
@@ -314,7 +330,7 @@ function TabletBlockManager({ engine, note, onChange, onClose }: BlockManagerPro
     <div
       className="bm-backdrop"
       onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
+        if (event.target === event.currentTarget) safeClose();
       }}
     >
       <section
@@ -339,7 +355,12 @@ function TabletBlockManager({ engine, note, onChange, onClose }: BlockManagerPro
             >
               <RefreshCw size={18} />
             </button>
-            <button className="bm-icon" type="button" aria-label="关闭知识块管理" onClick={onClose}>
+            <button
+              className="bm-icon"
+              type="button"
+              aria-label="关闭知识块管理"
+              onClick={safeClose}
+            >
               <X size={20} />
             </button>
           </div>
@@ -387,7 +408,7 @@ function TabletBlockManager({ engine, note, onChange, onClose }: BlockManagerPro
           <div className="bm-empty">
             <GitBranch size={30} />
             <h3>尚无知识块</h3>
-            <button className="bm-button" type="button" onClick={onClose}>
+            <button className="bm-button" type="button" onClick={safeClose}>
               回到纸张
               <ArrowRight size={16} />
             </button>

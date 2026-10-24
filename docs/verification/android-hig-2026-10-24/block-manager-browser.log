@@ -1,0 +1,7 @@
+PASS: real tablet split moves only chosen stable segments across pages and leaves every A object unchanged.
+PASS: real merge preserves segment identities/order and outgoing cross-note relation without moving paper objects.
+PASS: cross-note logical link is independent from both notes’ A geometry.
+PASS: stale B preview blocks structural commit, retains selection/name, and succeeds after explicit refreshed preview.
+PASS: a changed A source version cannot be silently accepted from an old structural preview.
+PASS: unrelated later handwriting neither blocks a valid structural edit nor disappears.
+PASS: phone/Mac render no structural manager; Escape closes the tablet dialog; no browser runtime errors.

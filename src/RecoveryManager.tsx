@@ -3,6 +3,7 @@ import { ArrowDownToLine, FileInput, History, X } from 'lucide-react';
 import { NotebookEngine } from './domain';
 import { downloadText, nativeRequest } from './native';
 import type { useWorkspace } from './useWorkspace';
+import { useBackHandler } from './ui-navigation';
 
 type Props = {
   workspace: ReturnType<typeof useWorkspace>;
@@ -45,6 +46,16 @@ export function RecoveryManager({ workspace: w, onClose, onRestored }: Props) {
     [busy, setBusy] = useState(false);
   const [exports, setExports] = useState<PendingExport[]>([]);
   const container = useRef<HTMLElement>(null);
+  const isTopLayer = useBackHandler(
+    true,
+    () => {
+      if (busy) return true;
+      if (selected) setSelected(undefined);
+      else onClose();
+      return true;
+    },
+    80,
+  );
   async function refreshExports() {
     if (window.QuietPaperNative?.getPendingExports) {
       const result = (await nativeRequest('getPendingExports')) as Awaited<
@@ -61,13 +72,12 @@ export function RecoveryManager({ workspace: w, onClose, onRestored }: Props) {
       .listRecoverySnapshots()
       .then(setItems)
       .catch((e) => setError(String(e)));
+  }, []);
+  useEffect(() => {
+    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     container.current?.querySelector<HTMLButtonElement>('button')?.focus();
     const key = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !busy) {
-        event.preventDefault();
-        onClose();
-      }
-      if (event.key === 'Tab') {
+      if (event.key === 'Tab' && isTopLayer()) {
         const buttons = Array.from(
           container.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? [],
         );
@@ -82,8 +92,11 @@ export function RecoveryManager({ workspace: w, onClose, onRestored }: Props) {
       }
     };
     window.addEventListener('keydown', key);
-    return () => window.removeEventListener('keydown', key);
-  }, [busy]);
+    return () => {
+      window.removeEventListener('keydown', key);
+      if (previous?.isConnected) previous.focus();
+    };
+  }, []);
   return (
     <div className="modal-backdrop">
       <section

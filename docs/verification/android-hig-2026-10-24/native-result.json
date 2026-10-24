@@ -1,0 +1,25 @@
+{
+  "title": "Android-HIG-1eafc2de",
+  "ownId": "026891a1-79b6-49a6-9232-550dff1cca10",
+  "checks": [
+    {
+      "name": "system-back-closes-clean-modal"
+    },
+    {
+      "name": "ime-back-precedes-application-back"
+    },
+    {
+      "name": "system-back-cancel-preserves-unsubmitted-input"
+    },
+    {
+      "name": "back-during-synthetic-pen-keeps-page-and-samples"
+    },
+    {
+      "name": "system-file-picker-back-cancels-without-leaving-note"
+    },
+    {
+      "name": "root-back-uses-platform-exit-and-reopen-retains-ink"
+    }
+  ],
+  "errors": []
+}

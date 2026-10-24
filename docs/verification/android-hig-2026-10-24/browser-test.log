@@ -1,0 +1,4 @@
+PASS Android Back preserves folder and search context
+PASS unsaved settings survive rejected Back and tab changes; clean modal closes
+PASS equal assessment targets and reduced-motion styles
+PASS phone keeps read/light-edit permissions, drawer focus and 320px layout

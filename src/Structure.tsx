@@ -3,6 +3,7 @@ import { ArrowUpRight, Check, ChevronDown, Ellipsis, History, Pencil, X } from '
 import { NotebookEngine, type Note, type Segment } from './domain';
 import { PaperPreview } from './Paper';
 import { codepointOffset, inputRange, replacedValue, type EditRange } from './structure-edit';
+import { useBackHandler } from './ui-navigation';
 import './structure.css';
 
 export type StructureProps = {
@@ -50,6 +51,16 @@ function SegmentEditor({ engine, noteId, segment, onChange, onDone }: EditorProp
   changeCallback.current = onChange;
   const doneCallback = useRef(onDone);
   doneCallback.current = onDone;
+
+  useBackHandler(
+    true,
+    () => {
+      if (composition.current || blocked.current) return true;
+      discard();
+      return true;
+    },
+    70,
+  );
 
   function begin() {
     if (!branch.current)
@@ -332,10 +343,6 @@ function SegmentEditor({ engine, noteId, segment, onChange, onDone }: EditorProp
             event.preventDefault();
             undo(true);
           }
-          if (event.key === 'Escape') {
-            event.preventDefault();
-            discard();
-          }
         }}
       />
       {error && (
@@ -409,6 +416,15 @@ export function Structure(props: StructureProps) {
   const [editing, setEditing] = useState<string | null>(null);
   const [menu, setMenu] = useState<string | null>(null);
   const [history, setHistory] = useState<string | null>(null);
+  useBackHandler(
+    !!menu || !!history,
+    () => {
+      if (menu) setMenu(null);
+      else setHistory(null);
+      return true;
+    },
+    60,
+  );
   const press = useRef<{ timer: ReturnType<typeof setTimeout>; x: number; y: number } | null>(null);
   const valid = new Map(
     engine.validateMappings().map((result) => [result.segmentId, result.valid]),
@@ -420,9 +436,10 @@ export function Structure(props: StructureProps) {
   }, [note.id]);
   useEffect(() => {
     if (activeBlockId)
-      document
-        .getElementById(`structure-block-${activeBlockId}`)
-        ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      document.getElementById(`structure-block-${activeBlockId}`)?.scrollIntoView({
+        behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+        block: 'nearest',
+      });
   }, [activeBlockId]);
   useEffect(
     () => () => {

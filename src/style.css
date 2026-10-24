@@ -2236,3 +2236,583 @@ nav {
     min-height: 180px;
   }
 }
+
+/* Android keeps the paper's own geometry; these rules size only the surrounding UI. */
+.app-shell.platform-android {
+  --muted: #746462;
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100dvh;
+}
+.app-shell.platform-android button {
+  min-width: 48px;
+  min-height: 48px;
+  transition:
+    background-color 150ms ease-out,
+    border-color 150ms ease-out,
+    color 150ms ease-out,
+    opacity 150ms ease-out;
+}
+.app-shell.platform-android button:active:not(:disabled) {
+  opacity: 0.76;
+}
+.app-shell.platform-android
+  :is(input:not([type='checkbox']):not([type='radio']), select, textarea) {
+  min-width: 0;
+  min-height: 48px;
+  font-size: 16px;
+  line-height: 1.5;
+  scroll-margin-block: 72px;
+}
+.app-shell.platform-android :is(input[type='checkbox'], input[type='radio']) {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--plum);
+}
+.app-shell.platform-android
+  :is(.check-row, .stage-switches label, .bm-block-option, .bm-segment-selection > label) {
+  min-height: 48px;
+}
+.app-shell.platform-android :is(.icon-button, .bm-icon, .pen-width) {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+}
+.app-shell.platform-android
+  :is(
+    .button,
+    .new-paper,
+    .new-note-card,
+    .nav-item,
+    .folder-item,
+    .recent-note,
+    .text-button,
+    .review-tabs button,
+    .settings-tabs button,
+    .bm-button,
+    .structure-context-menu button,
+    .structure-editor-actions button
+  ) {
+  font-size: 14px;
+}
+.app-shell.platform-android
+  :is(
+    .eyebrow,
+    .brand-wordmark small,
+    .sidebar-section,
+    .recent-empty,
+    .sync-copy small,
+    .sidebar-tools button,
+    .nav-item > span,
+    .folder-item > span:last-child,
+    .breadcrumb,
+    .context-caption,
+    .save-status,
+    .device-label,
+    .note-meta,
+    .tag,
+    .paper-spec,
+    .representation-switch > button > span,
+    .paper-overline,
+    .structure-heading,
+    .count-badge,
+    .note-card-preview > span,
+    .note-card-body > div,
+    .review-list button > span:last-child,
+    .review-tabs b,
+    .proof-card > div > span,
+    .conflict-sides span,
+    .status-card > div,
+    .status-card > span,
+    .activity-row > span:last-child,
+    .source-status span,
+    .status-line,
+    .object-meta,
+    .version-row span,
+    .empty-note,
+    .structure-page-range,
+    .structure-reference figcaption,
+    .structure-history-version time,
+    .bm-kicker
+  ) {
+  font-size: 12px;
+  color: #746462;
+}
+.app-shell.platform-android
+  :is(
+    .empty-copy,
+    .empty.hero .empty-copy,
+    .empty.compact,
+    .proof-card p,
+    .status-card p,
+    .activity-row,
+    .activity-row > .text-button,
+    .error-banner,
+    .dialog-form > label,
+    .dialog-form label.check-row,
+    .form-grid label,
+    .stage-switches label,
+    .layer-row,
+    .dialog-stack summary,
+    .version-row p,
+    .revision-card del,
+    .structure-history > p,
+    .conflict-object-missing,
+    .draft-recovery-banner,
+    .toast
+  ) {
+  font-size: 14px;
+}
+.app-shell.platform-android
+  :is(
+    .empty-copy,
+    .proof-card p,
+    .dialog-form > label,
+    .form-grid label,
+    .version-row p,
+    .source-status span
+  ) {
+  color: #746462;
+}
+.app-shell.platform-android .nav-item .accent {
+  background: #77615f;
+  color: #fffbf4;
+}
+.app-shell.platform-android .save-status.bad {
+  color: #914f41;
+}
+.app-shell.platform-android .status-card p {
+  color: #915848;
+}
+.app-shell.platform-android .sidebar {
+  padding-top: 24px;
+  overscroll-behavior-y: contain;
+}
+.app-shell.platform-android .brand {
+  padding-bottom: 24px;
+}
+.app-shell.platform-android .new-paper {
+  margin-bottom: 24px;
+}
+.app-shell.platform-android .sidebar-section {
+  margin-top: 24px;
+  margin-bottom: 8px;
+  letter-spacing: 0.06em;
+}
+.app-shell.platform-android .sidebar-section:has(.icon-button) {
+  margin-right: 0;
+}
+.app-shell.platform-android .sidebar-tools button {
+  min-height: 64px;
+  padding-inline: 0;
+}
+.app-shell.platform-android .sync-copy strong {
+  font-size: 14px;
+}
+.app-shell.platform-android .sync-copy {
+  gap: 2px;
+}
+.app-shell.platform-android .topbar {
+  min-height: 64px;
+  height: auto;
+  padding-block: 8px;
+  gap: 12px;
+}
+.app-shell.platform-android .breadcrumb {
+  overflow: hidden;
+  gap: 8px;
+}
+.breadcrumb-folder {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.app-shell.platform-android .breadcrumb > .icon-button {
+  flex: 0 0 48px;
+  min-width: 48px;
+}
+@media (max-width: 760px) {
+  .app-shell.platform-android[data-view='paper'] .breadcrumb > .breadcrumb-link,
+  .app-shell.platform-android[data-view='paper'] .breadcrumb > .breadcrumb-folder,
+  .app-shell.platform-android[data-view='paper'] .breadcrumb > svg {
+    display: none;
+  }
+}
+.app-shell.platform-android .context-title {
+  font-size: 14px;
+}
+.app-shell.platform-android .topbar-right {
+  gap: 12px;
+}
+.app-shell.platform-android :is(.note-heading, .content-page) {
+  padding-top: 28px;
+}
+.app-shell.platform-android .note-heading {
+  padding-bottom: 24px;
+}
+.app-shell.platform-android :is(.note-heading h1, .section-heading h1, .empty.hero h1) {
+  font-size: 28px;
+  line-height: 1.4;
+  margin-top: 8px;
+}
+.app-shell.platform-android .note-meta {
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.app-shell.platform-android .heading-actions {
+  margin-top: 8px;
+  gap: 8px;
+}
+.app-shell.platform-android .section-heading {
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.app-shell.platform-android .section-meta {
+  gap: 12px;
+}
+.app-shell.platform-android .eyebrow {
+  letter-spacing: 0.1em;
+}
+.app-shell.platform-android .workspace-bar {
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-bottom: 12px;
+}
+.app-shell.platform-android .representation-switch {
+  padding: 3px;
+  gap: 2px;
+}
+.app-shell.platform-android
+  :is(.representation-switch > button, .representation-switch.small button) {
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #796b72;
+}
+.app-shell.platform-android .representation-switch > button.active {
+  color: #604c59;
+}
+.app-shell.platform-android .paper-spec {
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.app-shell.platform-android .page-nav {
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-block: 16px 24px;
+}
+.app-shell.platform-android .page-nav button {
+  width: 48px;
+  height: 48px;
+  font-size: 14px;
+  color: #806e77;
+}
+.app-shell.platform-android .writing-dock {
+  gap: 4px;
+  padding: 6px;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  overflow-x: auto;
+  max-width: calc(100% - var(--sidebar) - 32px);
+  scrollbar-width: thin;
+}
+.app-shell.platform-android .writing-dock > *,
+.app-shell.platform-android .dock-tools > * {
+  flex-shrink: 0;
+}
+.app-shell.platform-android .dock-tools {
+  gap: 4px;
+}
+.app-shell.platform-android .ink-colors {
+  display: flex;
+  gap: 0;
+  padding: 0;
+}
+.app-shell.platform-android .ink-colors button {
+  width: 48px;
+  height: 48px;
+  padding: 17px;
+  /* The color is inline; clip it to the original dot inside the touch target. */
+  background-clip: content-box !important;
+}
+.app-shell.platform-android .ink-colors button.active::after {
+  inset: 12px;
+}
+.app-shell.platform-android .dock-divider {
+  flex: 0 0 1px;
+  margin-inline: 4px;
+}
+.app-shell.platform-android .button {
+  padding: 11px 16px;
+  gap: 12px;
+}
+.app-shell.platform-android .note-card {
+  transition:
+    background-color 150ms ease-out,
+    border-color 150ms ease-out,
+    opacity 150ms ease-out;
+}
+.app-shell.platform-android .note-card:hover {
+  transform: none;
+}
+.app-shell.platform-android .library-search {
+  min-height: 48px;
+}
+.app-shell.platform-android .library-search input {
+  font-size: 16px;
+}
+.app-shell.platform-android :is(.review-tabs, .settings-tabs, .bm-tabs) {
+  gap: 20px;
+  overflow-x: auto;
+}
+.app-shell.platform-android :is(.review-tabs button, .settings-tabs button, .bm-tabs button) {
+  align-items: center;
+  padding-block: 10px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.app-shell.platform-android .review-list button {
+  padding: 14px;
+  gap: 6px;
+}
+.app-shell.platform-android .review-list button.active {
+  border-color: #a68d9b;
+  background: #eee4e7;
+  color: #5e4958;
+}
+.app-shell.platform-android .review-sheet {
+  padding: 24px;
+}
+.app-shell.platform-android .review-sheet-top {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.app-shell.platform-android .review-sheet h2 {
+  font-size: 24px;
+  line-height: 1.5;
+  margin-block: 24px;
+}
+.app-shell.platform-android .self-rating {
+  gap: 16px;
+  margin-top: 24px;
+  padding-top: 24px;
+}
+.app-shell.platform-android .self-rating .button {
+  width: 144px;
+  min-width: 120px;
+  min-height: 48px;
+  justify-content: center;
+}
+.app-shell.platform-android .empty.hero {
+  padding-block: 48px 64px;
+}
+.app-shell.platform-android .empty.hero .empty-actions {
+  margin-top: 24px;
+}
+.app-shell.platform-android .status-card h3 {
+  font-size: 17px;
+}
+.app-shell.platform-android .structure-view {
+  --structure-muted: #746462;
+}
+.app-shell.platform-android :is(.structure-mapping, .structure-review-button) {
+  font-size: 12px !important;
+  color: #806c79;
+}
+.app-shell.platform-android .structure-segment-tools {
+  opacity: 1;
+}
+.app-shell.platform-android .structure-segment-meta {
+  flex-wrap: wrap;
+}
+.app-shell.platform-android .structure-context-menu {
+  top: 48px;
+  max-width: 100%;
+}
+.app-shell.platform-android :is(.modal-backdrop, .bm-backdrop) {
+  padding: 20px;
+  max-height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+}
+.app-shell.platform-android :is(.modal, .block-manager) {
+  max-height: calc(100dvh - 40px);
+  min-width: 0;
+  overscroll-behavior-y: contain;
+  overflow-wrap: anywhere;
+  animation: android-ui-fade 150ms ease-out;
+}
+.app-shell.platform-android .modal {
+  padding: 24px;
+  scroll-padding-block: 24px;
+}
+.app-shell.platform-android :is(.modal h2, .bm-header h2) {
+  font-size: 24px;
+  line-height: 1.4;
+}
+.app-shell.platform-android .modal > header {
+  margin-bottom: 24px;
+  gap: 12px;
+}
+.app-shell.platform-android :is(.dialog-form, .dialog-stack) {
+  gap: 20px;
+  min-width: 0;
+}
+.app-shell.platform-android :is(.dialog-form > *, .dialog-stack > *, .bm-header > div:first-child) {
+  min-width: 0;
+}
+.app-shell.platform-android :is(.dialog-stack summary, .structure-history-heading) {
+  min-height: 48px;
+}
+.app-shell.platform-android .toast {
+  animation: android-ui-fade 150ms ease-out;
+  line-height: 1.6;
+  bottom: calc(96px + env(safe-area-inset-bottom));
+}
+@keyframes android-ui-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (max-width: 1100px) {
+  .app-shell.platform-android .sidebar {
+    padding-inline: 14px;
+  }
+  .app-shell.platform-android :is(.note-heading, .content-page) {
+    padding-inline: 24px;
+  }
+  .app-shell.platform-android .workspace-bar {
+    margin-inline: 24px;
+  }
+  .app-shell.platform-android .workspace {
+    padding-inline: 24px;
+  }
+  .app-shell.platform-android .review-layout {
+    gap: 16px;
+  }
+}
+@media (max-width: 760px) {
+  .app-shell.platform-android .sidebar {
+    width: min(320px, calc(100vw - 56px));
+    height: 100dvh;
+    padding: 24px 20px max(20px, env(safe-area-inset-bottom));
+    transition: transform 160ms ease-out;
+  }
+  .app-shell.platform-android .sidebar-scrim {
+    animation: android-ui-fade 160ms ease-out;
+  }
+  .app-shell.platform-android .topbar {
+    padding-inline: 12px;
+    gap: 8px;
+  }
+  .app-shell.platform-android .topbar-right {
+    gap: 8px;
+  }
+  .app-shell.platform-android .breadcrumb {
+    gap: 6px;
+  }
+  .app-shell.platform-android :is(.note-heading, .content-page) {
+    padding-inline: 20px;
+    padding-top: 24px;
+  }
+  .app-shell.platform-android :is(.note-heading h1, .section-heading h1, .empty.hero h1) {
+    font-size: 26px;
+  }
+  .app-shell.platform-android .note-heading {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .app-shell.platform-android .heading-actions {
+    margin-top: 0;
+  }
+  .app-shell.platform-android .section-meta {
+    justify-content: flex-start;
+  }
+  .app-shell.platform-android .workspace-bar {
+    margin-inline: 20px;
+  }
+  .app-shell.platform-android .workspace {
+    padding-inline: 16px;
+  }
+  .app-shell.platform-android .writing-dock {
+    max-width: calc(100% - 24px);
+  }
+  .app-shell.platform-android .empty.hero {
+    min-height: calc(100svh - 164px);
+    padding: 40px 24px 56px;
+  }
+  .app-shell.platform-android .empty.hero .empty-copy {
+    max-width: 320px;
+  }
+  .app-shell.platform-android .review-sheet {
+    padding: 20px;
+  }
+  .app-shell.platform-android .self-rating {
+    gap: 12px;
+  }
+  .app-shell.platform-android .self-rating .button {
+    flex: 1;
+    width: auto;
+    max-width: 180px;
+    min-width: 0;
+  }
+  .app-shell.platform-android :is(.modal-backdrop, .bm-backdrop) {
+    padding: 12px;
+  }
+  .app-shell.platform-android :is(.modal, .block-manager) {
+    max-height: calc(100dvh - 24px);
+  }
+  .app-shell.platform-android .modal {
+    padding: 20px;
+  }
+  .app-shell.platform-android :is(.form-grid, .conflict-sides, .status-grid) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .app-shell.platform-android .runtime-records dl {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .app-shell.platform-android .runtime-records dd:not(:last-child) {
+    margin-bottom: 12px;
+  }
+  .app-shell.platform-android .activity-row {
+    flex-wrap: wrap;
+  }
+  .app-shell.platform-android :is(.bm-header, .bm-tabs) {
+    padding-inline: 20px;
+  }
+  .app-shell.platform-android .bm-tabs {
+    gap: 16px;
+  }
+}
+@media (max-width: 480px) {
+  .app-shell.platform-android .note-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .app-shell.platform-android .bm-header {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .app-shell.platform-android .bm-header > div:last-child {
+    margin-left: auto;
+  }
+}
+@media (max-height: 540px) {
+  .app-shell.platform-android :is(.modal-backdrop, .bm-backdrop) {
+    align-items: flex-start;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-shell.platform-android *,
+  .app-shell.platform-android *::before,
+  .app-shell.platform-android *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

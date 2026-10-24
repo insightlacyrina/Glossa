@@ -1,0 +1,4 @@
+PASS real beforeinput selection preserves repeated-symbol identity and disjoint concurrent edits; jump selects active A revision; B reference shows editable-source vector preview
+PASS actual editor branch preserves both candidates when the same repeated symbol is concurrently changed
+PASS concrete repeated-character deletion with session undo/redo
+PASS simulated IME composition verifies original selected range before creating a character operation

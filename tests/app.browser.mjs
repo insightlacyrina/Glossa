@@ -307,7 +307,10 @@ try {
     'PASS manual B5 landscape grid paper and selection → proofreading → explicit source confirmation',
   );
 
-  await page.getByRole('button', { name: /^所有笔记/ }).click();
+  await page
+    .locator('nav')
+    .getByRole('button', { name: /^所有笔记/ })
+    .click();
   await page.getByPlaceholder('搜索文字、公式与标签').fill('验收标签');
   assert.equal(await page.locator('.note-card:not(.new-note-card)').count(), 1);
   assert.match(await page.locator('.note-card:not(.new-note-card)').innerText(), /验收 · 笺注/);
@@ -325,7 +328,7 @@ try {
     .filter(([key]) => key.startsWith('review:'))
     .reduce((sum, [, card]) => sum + card.reviews, 0);
   await context.setOffline(true);
-  await page.getByRole('button', { name: '会了', exact: true }).click();
+  await page.getByRole('button', { name: '已掌握', exact: true }).click();
   await until(
     async () =>
       Object.entries((await snapshot()).settings)
@@ -333,7 +336,7 @@ try {
         .reduce((sum, [, card]) => sum + card.reviews, 0) > reviewBefore,
     'offline self-rating did not commit',
   );
-  await page.getByRole('button', { name: '还不会', exact: true }).click();
+  await page.getByRole('button', { name: '未掌握', exact: true }).click();
   await until(
     async () =>
       Object.entries((await snapshot()).settings)

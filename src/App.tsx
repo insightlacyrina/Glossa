@@ -54,6 +54,8 @@ import { Paper, PaperPreview, visibleObjects, type Tool } from './Paper';
 import { Structure } from './Structure';
 import { BlockManager } from './BlockManager';
 import { RecoveryManager } from './RecoveryManager';
+import { DialogShell, inputState } from './DialogShell';
+import { dispatchBackHandlers, useBackHandler } from './ui-navigation';
 import { readLocal } from './storage';
 import {
   PIPELINE_STAGES,
@@ -139,6 +141,7 @@ function IconButton({
       className={`icon-button ${active ? 'active' : ''}`}
       title={title}
       aria-label={title}
+      aria-pressed={active}
       onClick={onClick}
       disabled={disabled}
     >
@@ -155,9 +158,22 @@ function FormModal({
   onSubmit: (data: FormData) => void;
   button?: string;
 }) {
+  const form = useRef<HTMLFormElement>(null);
+  const initial = useRef('');
+  useEffect(() => {
+    if (form.current) initial.current = inputState(form.current);
+  }, []);
+  function trackInput() {
+    if (form.current)
+      form.current.dataset.dirty = String(inputState(form.current) !== initial.current);
+  }
   return (
     <form
+      ref={form}
+      data-dirty="false"
       className="dialog-form"
+      onInput={trackInput}
+      onChange={trackInput}
       onSubmit={(e) => {
         e.preventDefault();
         onSubmit(new FormData(e.currentTarget));
@@ -248,18 +264,26 @@ function App() {
   const [search, setSearch] = useState('');
   const [folderFilter, setFolderFilter] = useState<string | null>(null);
   const [sidebar, setSidebar] = useState(false);
+  const [compactNavigation, setCompactNavigation] = useState(
+    () => matchMedia('(max-width: 760px)').matches,
+  );
+  const sidebarElement = useRef<HTMLElement>(null);
+  const mainElement = useRef<HTMLElement>(null);
   const [notice, setNotice] = useState('');
   const [showBlocks, setShowBlocks] = useState(false);
   const [showRecovery, setShowRecovery] = useState(false);
   const [reviewId, setReviewId] = useState('');
   const [reviewMode, setReviewMode] = useState<'a' | 'b' | 'split'>('b');
   const [reviewAll, setReviewAll] = useState(false);
+  const writing = useRef(false);
+  const sectionOrigin = useRef<View>('paper');
+  const searchInput = useRef<HTMLInputElement>(null);
   const fileInput = useRef<HTMLInputElement>(null),
     imageInput = useRef<HTMLInputElement>(null),
     projectInput = useRef<HTMLInputElement>(null);
   const currentSources = useRef<SourceRecord[]>([]);
   const sourceBusy = useRef(new Set<string>());
-  const note = e?.state.notes.find((n) => n.id === selectedNote) ?? e?.state.notes[0];
+  const note = selectedNote ? e?.state.notes.find((n) => n.id === selectedNote) : e?.state.notes[0];
   const page = note?.pages[Math.min(pageIndex, note.pages.length - 1)];
   const editable = w.role === 'tablet';
   const settings = e?.state.settings ?? {};
@@ -327,12 +351,100 @@ function App() {
           : BookOpen;
   const showSaveStatus =
     (view === 'paper' && !!note) || !['已存于本机', '正在打开'].includes(w.saveState);
+  function canNavigate() {
+    if (writing.current) {
+      setNotice('请先抬笔，当前笔迹会保留');
+      return false;
+    }
+    if (view === 'paper' && note) void w.closeNote();
+    return true;
+  }
+  function returnToLibrary() {
+    if (!canNavigate()) return;
+    setView('library');
+    setSidebar(false);
+  }
+  function navigateSection(next: View) {
+    if (!canNavigate()) return;
+    if (view === 'paper' || view === 'library') sectionOrigin.current = view;
+    setView(next);
+    setSidebar(false);
+  }
   function showLibrary() {
+    if (!canNavigate()) return;
     setView('library');
     setFolderFilter(null);
     setSearch('');
     setSidebar(false);
   }
+  function resetNavigation() {
+    setSelectedNote('');
+    setView('paper');
+    setPageIndex(0);
+    setSelected([]);
+    setHighlighted([]);
+    setActiveBlock('');
+    setFolderFilter(null);
+    setSearch('');
+    setReviewId('');
+    setSidebar(false);
+    sectionOrigin.current = 'paper';
+  }
+  function navigateBack() {
+    if (writing.current) {
+      setNotice('请先抬笔，当前笔迹会保留');
+      return true;
+    }
+    if (sidebar) {
+      setSidebar(false);
+      return true;
+    }
+    if (view === 'paper' && note) {
+      returnToLibrary();
+      return true;
+    }
+    if (view !== 'paper' && view !== 'library') {
+      setView(sectionOrigin.current === 'paper' && note ? 'paper' : 'library');
+      return true;
+    }
+    return false;
+  }
+  useBackHandler(w.ready, navigateBack, 0);
+  const isDrawerTop = useBackHandler(compactNavigation && sidebar, () => setSidebar(false), 90);
+  useEffect(() => {
+    const media = matchMedia('(max-width: 760px)');
+    const change = () => {
+      setCompactNavigation(media.matches);
+      if (!media.matches) setSidebar(false);
+    };
+    media.addEventListener('change', change);
+    return () => media.removeEventListener('change', change);
+  }, []);
+  useEffect(() => {
+    if (!compactNavigation || !sidebar) return;
+    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const main = mainElement.current;
+    if (main) main.inert = true;
+    sidebarElement.current
+      ?.querySelector<HTMLButtonElement>('button')
+      ?.focus({ preventScroll: true });
+    return () => {
+      if (main) main.inert = false;
+      if (previous?.isConnected) previous.focus({ preventScroll: true });
+    };
+  }, [compactNavigation, sidebar]);
+  useEffect(() => {
+    const back = () => dispatchBackHandlers();
+    window.glossaNavigateBack = back;
+    return () => {
+      if (window.glossaNavigateBack === back) delete window.glossaNavigateBack;
+    };
+  }, []);
+  useEffect(() => {
+    if (!w.ready || !e || !selectedNote || note) return;
+    resetNavigation();
+    setView('library');
+  }, [w.ready, e, selectedNote, note?.id]);
   function entryAction() {
     return notes.length ? (
       <button className="button" onClick={showLibrary}>
@@ -367,15 +479,17 @@ function App() {
     return () => clearTimeout(timer);
   }, [notice]);
   function openNote(n: Note) {
-    void w.closeNote();
+    if (!canNavigate()) return;
     setSelectedNote(n.id);
     setPageIndex(0);
     setView('paper');
     setSelected([]);
     setHighlighted([]);
+    setActiveBlock('');
     setSidebar(false);
   }
   function newNote(spec: PaperSpec = {}) {
+    if (!canNavigate()) return;
     w.transact((engine) => {
       const id = engine.createNote('未命名笔记', spec);
       setSelectedNote(id);
@@ -384,6 +498,10 @@ function App() {
       setMode('a');
       setTool('pen');
       setSelected([]);
+      setHighlighted([]);
+      setActiveBlock('');
+      setFolderFilter(null);
+      setSearch('');
       setSidebar(false);
     });
   }
@@ -1904,6 +2022,8 @@ function App() {
     });
   }
   function reviewBlock(blockId: string) {
+    if (!canNavigate()) return;
+    sectionOrigin.current = view;
     setReviewId(blockId);
     setReviewAll(true);
     setView('review');
@@ -1956,8 +2076,37 @@ function App() {
       </div>
     );
   return (
-    <div className="app-shell">
-      <aside className={`sidebar ${sidebar ? 'open' : ''}`}>
+    <div
+      className={`app-shell ${window.QuietPaperNative ? 'platform-android' : ''}`}
+      data-device-role={w.role}
+      data-view={view}
+    >
+      <aside
+        className={`sidebar ${sidebar ? 'open' : ''}`}
+        id="app-sidebar"
+        aria-label="主导航"
+        ref={sidebarElement}
+        inert={compactNavigation && !sidebar}
+        role={compactNavigation ? 'dialog' : undefined}
+        aria-modal={compactNavigation && sidebar ? true : undefined}
+        aria-hidden={compactNavigation && !sidebar ? true : undefined}
+        onKeyDown={(event) => {
+          if (event.key !== 'Tab' || !isDrawerTop()) return;
+          const controls = Array.from(
+            sidebarElement.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ??
+              [],
+          );
+          const first = controls[0],
+            last = controls.at(-1);
+          if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last?.focus();
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first?.focus();
+          }
+        }}
+      >
         <div className="brand">
           <div className="brand-symbol" aria-hidden="true">
             <i />
@@ -1976,38 +2125,33 @@ function App() {
             <span className="shortcut">＋</span>
           </button>
         )}
-        <nav>
+        <nav aria-label="笔记与整理">
           <button
             className={
-              view === 'paper' || (view === 'library' && !folderFilter)
+              (view === 'paper' || view === 'library') && !folderFilter
                 ? 'nav-item active'
                 : 'nav-item'
             }
-            onClick={() => {
-              setView('library');
-              setFolderFilter(null);
-              setSidebar(false);
-            }}
+            aria-current={
+              (view === 'paper' || view === 'library') && !folderFilter ? 'page' : undefined
+            }
+            onClick={showLibrary}
           >
             <BookOpen size={18} />
             所有笔记<span>{e?.state.notes.length ?? 0}</span>
           </button>
           <button
             className={view === 'review' ? 'nav-item active' : 'nav-item'}
-            onClick={() => {
-              setView('review');
-              setSidebar(false);
-            }}
+            aria-current={view === 'review' ? 'page' : undefined}
+            onClick={() => navigateSection('review')}
           >
             <History size={18} />
             温故<span className={due.length ? 'count accent' : 'count'}>{due.length}</span>
           </button>
           <button
             className={view === 'proof' ? 'nav-item active' : 'nav-item'}
-            onClick={() => {
-              setView('proof');
-              setSidebar(false);
-            }}
+            aria-current={view === 'proof' ? 'page' : undefined}
+            onClick={() => navigateSection('proof')}
           >
             <ScanLine size={18} />
             校对<span>{proofCount}</span>
@@ -2024,12 +2168,21 @@ function App() {
             <button
               key={f.id}
               onClick={() => {
+                if (!canNavigate()) return;
                 setFolderFilter(f.id);
+                setSearch('');
                 setView('library');
                 setSidebar(false);
               }}
               className={
-                folderFilter === f.id && view === 'library' ? 'folder-item active' : 'folder-item'
+                folderFilter === f.id && (view === 'paper' || view === 'library')
+                  ? 'folder-item active'
+                  : 'folder-item'
+              }
+              aria-current={
+                folderFilter === f.id && (view === 'paper' || view === 'library')
+                  ? 'page'
+                  : undefined
               }
             >
               <span className={`folder-dot dot-${i % 3}`} />
@@ -2084,10 +2237,7 @@ function App() {
               <span>设置</span>
             </button>
             <button
-              onClick={() => {
-                setView('activity');
-                setSidebar(false);
-              }}
+              onClick={() => navigateSection('activity')}
               aria-current={view === 'activity' ? 'page' : undefined}
             >
               <GitBranch size={17} />
@@ -2100,21 +2250,47 @@ function App() {
           </div>
         </div>
       </aside>
-      {sidebar && <div className="sidebar-scrim" onClick={() => setSidebar(false)} />}
-      <main className="main">
+      {sidebar && (
+        <button
+          type="button"
+          className="sidebar-scrim"
+          aria-label="关闭导航"
+          onClick={() => setSidebar(false)}
+        />
+      )}
+      <main className="main" ref={mainElement}>
         <header className="topbar">
-          <IconButton title="导航" onClick={() => setSidebar(!sidebar)}>
+          <button
+            className="icon-button"
+            title="导航"
+            aria-label="导航"
+            aria-controls="app-sidebar"
+            aria-expanded={sidebar}
+            onClick={() => {
+              if (writing.current) {
+                setNotice('请先抬笔，当前笔迹会保留');
+                return;
+              }
+              setSidebar(!sidebar);
+            }}
+          >
             <Menu size={18} />
-          </IconButton>
+          </button>
           <div className="breadcrumb" aria-label="当前位置">
-            <ViewIcon size={15} />
+            {view === 'paper' && note ? (
+              <IconButton title="返回笔记列表" onClick={returnToLibrary}>
+                <ArrowLeft size={18} />
+              </IconButton>
+            ) : (
+              <ViewIcon size={15} />
+            )}
             {view === 'paper' && note ? (
               <>
                 <button className="breadcrumb-link" onClick={showLibrary}>
                   所有笔记
                 </button>
                 {folderName && (
-                  <>
+                  <span className="breadcrumb-folder">
                     <ChevronRight size={13} />
                     <button
                       className="breadcrumb-link"
@@ -2125,7 +2301,7 @@ function App() {
                     >
                       {folderName}
                     </button>
-                  </>
+                  </span>
                 )}
                 <ChevronRight size={13} />
                 <span title={note.title}>{note.title}</span>
@@ -2171,11 +2347,10 @@ function App() {
             <IconButton
               title="搜索笔记"
               onClick={() => {
+                if (!canNavigate()) return;
                 setView('library');
-                setTimeout(
-                  () => document.querySelector<HTMLInputElement>('.search-input')?.focus(),
-                  20,
-                );
+                setSidebar(false);
+                requestAnimationFrame(() => searchInput.current?.focus());
               }}
             >
               <Search size={18} />
@@ -2233,15 +2408,24 @@ function App() {
               </div>
             </div>
             <div className="workspace-bar">
-              <div className="representation-switch">
-                <button className={mode === 'a' ? 'active' : ''} onClick={() => setMode('a')}>
+              <div className="representation-switch" role="group" aria-label="阅读方式">
+                <button
+                  className={mode === 'a' ? 'active' : ''}
+                  aria-pressed={mode === 'a'}
+                  onClick={() => setMode('a')}
+                >
                   原稿 <span>A</span>
                 </button>
-                <button className={mode === 'b' ? 'active' : ''} onClick={() => setMode('b')}>
+                <button
+                  className={mode === 'b' ? 'active' : ''}
+                  aria-pressed={mode === 'b'}
+                  onClick={() => setMode('b')}
+                >
                   结构 <span>B</span>
                 </button>
                 <button
                   className={mode === 'split' ? 'active' : ''}
+                  aria-pressed={mode === 'split'}
                   onClick={() => setMode('split')}
                 >
                   <ArrowLeftRight size={14} />
@@ -2321,14 +2505,16 @@ function App() {
                       selected={selected}
                       highlighted={highlighted}
                       onSelect={setSelected}
-                      onStroke={(points) =>
+                      onStroke={(points) => {
+                        writing.current = false;
                         w.stroke(note.id, page.id, points, {
                           color,
                           width: penWidth,
                           layerId: layer,
-                        })
-                      }
-                      onDraft={(points) =>
+                        });
+                      }}
+                      onDraft={(points) => {
+                        writing.current = !!points;
                         w.checkpoint(
                           points
                             ? {
@@ -2340,15 +2526,15 @@ function App() {
                                 layerId: layer,
                               }
                             : null,
-                        )
-                      }
+                        );
+                      }}
                       onErase={erase}
                       onMove={moveObjects}
                       onInsert={addText}
                       onContext={counterpart}
                     />
                   </div>
-                  <div className="page-nav">
+                  <div className="page-nav" role="group" aria-label="纸张导航">
                     <button
                       disabled={pageIndex === 0}
                       aria-label="上一页"
@@ -2362,6 +2548,8 @@ function App() {
                     {note.pages.map((p, i) => (
                       <button
                         className={i === pageIndex ? 'active' : ''}
+                        aria-current={i === pageIndex ? 'page' : undefined}
+                        aria-label={`第 ${i + 1} 页`}
                         key={p.id}
                         onClick={() => {
                           setPageIndex(i);
@@ -2497,7 +2685,9 @@ function App() {
               <div className="library-search">
                 <Search size={17} />
                 <input
+                  ref={searchInput}
                   className="search-input"
+                  aria-label="搜索文字、公式与标签"
                   placeholder="搜索文字、公式与标签"
                   value={search}
                   onChange={(ev) => setSearch(ev.target.value)}
@@ -2659,6 +2849,7 @@ function App() {
             <div className="review-tabs">
               <button
                 className={!reviewAll ? 'active' : ''}
+                aria-pressed={!reviewAll}
                 onClick={() => {
                   setReviewAll(false);
                   setReviewId('');
@@ -2666,7 +2857,11 @@ function App() {
               >
                 今日待复习 <b>{due.length}</b>
               </button>
-              <button className={reviewAll ? 'active' : ''} onClick={() => setReviewAll(true)}>
+              <button
+                className={reviewAll ? 'active' : ''}
+                aria-pressed={reviewAll}
+                onClick={() => setReviewAll(true)}
+              >
                 全部复习内容 <b>{cards.length}</b>
               </button>
             </div>
@@ -2683,6 +2878,7 @@ function App() {
                         <button
                           key={c.blockId}
                           className={c.blockId === card?.blockId ? 'active' : ''}
+                          aria-current={c.blockId === card?.blockId ? 'true' : undefined}
                           onClick={() => setReviewId(c.blockId)}
                         >
                           <span>
@@ -2703,21 +2899,28 @@ function App() {
                     <section className="review-sheet">
                       <div className="review-sheet-top">
                         <span className="eyebrow">{n.title}</span>
-                        <div className="representation-switch small">
+                        <div
+                          className="representation-switch small"
+                          role="group"
+                          aria-label="复习阅读方式"
+                        >
                           <button
                             className={reviewMode === 'a' ? 'active' : ''}
+                            aria-pressed={reviewMode === 'a'}
                             onClick={() => setReviewMode('a')}
                           >
                             A
                           </button>
                           <button
                             className={reviewMode === 'b' ? 'active' : ''}
+                            aria-pressed={reviewMode === 'b'}
                             onClick={() => setReviewMode('b')}
                           >
                             B
                           </button>
                           <button
                             className={reviewMode === 'split' ? 'active' : ''}
+                            aria-pressed={reviewMode === 'split'}
                             onClick={() => setReviewMode('split')}
                           >
                             A / B
@@ -2792,7 +2995,7 @@ function App() {
                             setNotice('已调整下次复习');
                           }}
                         >
-                          还不会
+                          未掌握
                           <RotateCcw size={17} />
                         </button>
                         <button
@@ -2815,7 +3018,7 @@ function App() {
                             setNotice('已记住，留待下一次相见');
                           }}
                         >
-                          会了
+                          已掌握
                           <Check size={17} />
                         </button>
                       </div>
@@ -3191,8 +3394,7 @@ function App() {
                         void w
                           .importProject(text)
                           .then(() => {
-                            setSelectedNote('');
-                            setView('paper');
+                            resetNavigation();
                             setModal(null);
                             setNotice('工程恢复完成');
                           })
@@ -3218,11 +3420,7 @@ function App() {
           onClose={() => setShowRecovery(false)}
           onRestored={() => {
             setShowRecovery(false);
-            setSelectedNote('');
-            setPageIndex(0);
-            setView('paper');
-            setSelected([]);
-            setHighlighted([]);
+            resetNavigation();
             setNotice('工程已恢复');
           }}
         />
@@ -3236,32 +3434,15 @@ function App() {
         />
       )}
       {modal && (
-        <div
-          className="modal-backdrop"
-          onMouseDown={(ev) => {
-            if (ev.target === ev.currentTarget) setModal(null);
-          }}
+        <DialogShell
+          key={modal.title}
+          title={modal.title}
+          wide={modal.wide}
+          error={w.error}
+          onClose={() => setModal(null)}
         >
-          <section
-            role="dialog"
-            aria-modal="true"
-            aria-label={modal.title}
-            className={`modal ${modal.wide ? 'wide' : ''}`}
-          >
-            <header>
-              <h2>{modal.title}</h2>
-              <IconButton title="关闭" onClick={() => setModal(null)}>
-                <X size={21} />
-              </IconButton>
-            </header>
-            {w.error && (
-              <div className="inline-error" role="alert">
-                {w.error}
-              </div>
-            )}
-            {modal.content}
-          </section>
-        </div>
+          {modal.content}
+        </DialogShell>
       )}
       {notice && (
         <div className="toast" role="status">
@@ -3316,7 +3497,19 @@ function SettingsPanel({
           ['sync', 'Mac 同步'],
           ['ai', '外部识别'],
         ].map(([id, label]) => (
-          <button className={tab === id ? 'active' : ''} key={id} onClick={() => setTab(id)}>
+          <button
+            className={tab === id ? 'active' : ''}
+            key={id}
+            aria-pressed={tab === id}
+            onClick={(event) => {
+              if (tab === id) return;
+              const dirty = event.currentTarget
+                .closest('.settings-panel')
+                ?.querySelector('form[data-dirty="true"]');
+              if (dirty && !window.confirm('当前偏好尚未保存，放弃输入并切换？')) return;
+              setTab(id);
+            }}
+          >
             {label}
           </button>
         ))}

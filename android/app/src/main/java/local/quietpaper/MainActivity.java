@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.DisplayMetrics;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
@@ -54,6 +56,11 @@ public final class MainActivity extends Activity {
     private NativeRuntimeDiagnostics runtimeDiagnostics;
     private String role, deviceId, openRequest, exportRequest, exportText, exportSession;
     private ValueCallback<Uri[]> fileCallback;
+    private android.window.OnBackInvokedCallback systemBackCallback;
+    private final Handler backHandler = new Handler(Looper.getMainLooper());
+    private Runnable backTimeout;
+    private boolean backPending;
+    private int backRequest;
 
     @Override public void onCreate(Bundle saved) {
         super.onCreate(saved);
@@ -139,6 +146,61 @@ public final class MainActivity extends Activity {
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
         setContentView(frame);
         web.loadUrl(ORIGIN + "/index.html");
+        if (Build.VERSION.SDK_INT >= 33) {
+            systemBackCallback = this::navigateBack;
+            // Default priority leaves the IME's own Back handling ahead of app navigation.
+            // A separate system DocumentsUI Activity likewise owns its own Back events.
+            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+                android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT, systemBackCallback);
+        }
+    }
+
+    @Override public void onBackPressed() {
+        // Pre-33 dispatch reaches Activity only after the IME has handled Back.
+        navigateBack();
+    }
+
+    private void navigateBack() {
+        if (isFinishing() || isDestroyed() || !hasWindowFocus() || backPending) return;
+        WebView target = web;
+        if (!canUseWeb()) { leaveActivity(); return; }
+        int request = ++backRequest;
+        backPending = true;
+        backTimeout = () -> {
+            if (request != backRequest) return;
+            // A slow or stopped renderer is not permission to close a writing window.
+            invalidateBackRequest();
+            Log.w("GlossaNative", "Back navigation callback timed out; window retained");
+        };
+        backHandler.postDelayed(backTimeout, 1500);
+        try {
+            target.evaluateJavascript("(function(){try{"
+                + "if(typeof window.glossaNavigateBack!=='function')return false;"
+                + "return window.glossaNavigateBack()===true;"
+                + "}catch(error){console.error('Glossa back navigation failed',error);return null;}})()", result -> {
+                if (request != backRequest) return;
+                invalidateBackRequest();
+                if (target != web || !canUseWeb() || !hasWindowFocus()) return;
+                if ("false".equals(result)) leaveActivity();
+                else if (!"true".equals(result))
+                    Log.w("GlossaNative", "Back navigation failed; window retained");
+            });
+        } catch (IllegalStateException unavailableView) {
+            invalidateBackRequest();
+            Log.w("GlossaNative", "Back navigation unavailable; window retained");
+        }
+    }
+
+    private void invalidateBackRequest() {
+        ++backRequest; backPending = false;
+        if (backTimeout != null) backHandler.removeCallbacks(backTimeout);
+        backTimeout = null;
+    }
+
+    @SuppressWarnings("deprecation")
+    private void leaveActivity() {
+        // Preserve platform root-task behavior; asset pages have no WebView back stack.
+        super.onBackPressed();
     }
 
     private void showRendererRecovery() {
@@ -377,9 +439,14 @@ public final class MainActivity extends Activity {
         });
     }
 
-    @Override protected void onPause() { super.onPause(); if (web != null) web.onPause(); }
+    @Override protected void onPause() { invalidateBackRequest(); super.onPause(); if (web != null) web.onPause(); }
     @Override protected void onResume() { super.onResume(); if (web != null) web.onResume(); }
     @Override protected void onDestroy() {
+        invalidateBackRequest();
+        if (Build.VERSION.SDK_INT >= 33 && systemBackCallback != null) {
+            getOnBackInvokedDispatcher().unregisterOnBackInvokedCallback(systemBackCallback);
+            systemBackCallback = null;
+        }
         cancelFileChooser();
         WebView previous = web; web = null;
         if (previous != null) { previous.removeJavascriptInterface("QuietPaperNative"); previous.destroy(); }
