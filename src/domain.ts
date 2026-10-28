@@ -1,4 +1,10 @@
 /** Durable, deterministic A/B model. Paper is never flattened into an image. */
+import {
+  captureHandwritingGlyph,
+  composeHandwriting,
+  validateHandwritingGlyph,
+  type HandwritingGlyph,
+} from './handwriting';
 export type Role = 'tablet' | 'phone' | 'mac';
 export type Point = {
   x: number;
@@ -114,7 +120,10 @@ export type Correction = {
   objectId: string;
   before: string;
   after: string;
-  mode: 'printed';
+  mode: 'printed' | 'handwriting';
+  handwritingTarget?: { pageId: string; bounds: Bounds; replacesObjectIds: string[] };
+  sampleIds?: string[];
+  handwritingVersion?: string;
   status: 'pending';
   reason: string;
   needsPlacement?: boolean;
@@ -141,6 +150,7 @@ export type NotebookState = {
   notes: Note[];
   conflicts: Conflict[];
   corrections: Correction[];
+  handwritingGlyphs: HandwritingGlyph[];
   mergedRevisionIds: string[];
   undoneRevisionIds: string[];
   events: Operation[];
@@ -208,6 +218,9 @@ const tabletOnly = new Set([
   'segment.delete',
   'revision.merge',
   'revision.undo',
+  'handwriting.learn',
+  'revision.handwriting',
+  'revision.stroke.split',
 ]);
 const allowed = new Set([
   ...tabletOnly,
@@ -251,6 +264,39 @@ function checkOperation(op: Operation) {
   if (tabletOnly.has(op.type) && op.role !== 'tablet')
     throw new Error('This operation requires the Android tablet');
   const p = op.payload;
+  if (op.type === 'handwriting.learn') validateHandwritingGlyph(p.glyph);
+  if (
+    op.type === 'revision.handwriting' &&
+    (typeof p.revisionId !== 'string' || typeof p.fingerprint !== 'string')
+  )
+    throw new Error('Invalid handwriting retry');
+  if (
+    op.type === 'revision.stroke.split' &&
+    (typeof p.objectId !== 'string' ||
+      typeof p.revisionId !== 'string' ||
+      typeof p.baseVersion !== 'string' ||
+      !Array.isArray(p.fragments) ||
+      p.fragments.length > 128 ||
+      p.fragments.some(
+        (part: any, i: number) =>
+          !part ||
+          typeof part.id !== 'string' ||
+          !part.id ||
+          (i === 0 && part.id !== p.objectId) ||
+          !Array.isArray(part.points) ||
+          !part.points.length ||
+          part.points.some(
+            (point: Point) =>
+              !point ||
+              !['x', 'y', 'pressure', 'tiltX', 'tiltY', 'time'].every(
+                (k) => typeof (point as any)[k] === 'number' && Number.isFinite((point as any)[k]),
+              ),
+          ),
+      ) ||
+      new Set(p.fragments.map((part: any) => part.id)).size !== p.fragments.length ||
+      p.fragments.reduce((n: number, part: any) => n + part.points.length, 0) > 150000)
+  )
+    throw new Error('Invalid revision stroke fragments');
   if (op.type === 'object.create') {
     const obj = p.object;
     if (
@@ -425,6 +471,7 @@ function projectState(project: Project): NotebookState {
     notes: [],
     conflicts: [],
     corrections: [],
+    handwritingGlyphs: [],
     mergedRevisionIds: [],
     undoneRevisionIds: [],
     events: [],
@@ -590,6 +637,152 @@ function projectState(project: Project): NotebookState {
     note.modifiedAt = Math.max(note.modifiedAt, operation.at);
     return true;
   };
+  const applyStrokeSplit = (operation: Operation, force = false) => {
+    const payload = operation.payload,
+      note = state.notes.find((n) => n.id === payload.noteId)!;
+    const source = objects(note).find((o) => o.id === payload.objectId);
+    const correction = state.corrections.find(
+      (c) => c.id === payload.revisionId && c.noteId === note.id,
+    );
+    if (
+      !source ||
+      source.deleted ||
+      source.kind !== 'stroke' ||
+      source.revisionId !== payload.revisionId ||
+      !correction
+    ) {
+      addConflict({
+        id: operation.id,
+        kind: 'object',
+        noteId: note.id,
+        objectId: payload.objectId,
+        current: '修订已被更新、删除或合并，请在当前笔迹重新擦除',
+        incoming: '保留局部擦除候选',
+        currentEventId: source?.version ?? operation.id,
+        incomingEventId: operation.id,
+      });
+      return false;
+    }
+    if (!force && source.version !== payload.baseVersion) {
+      addConflict({
+        id: operation.id,
+        kind: 'object',
+        noteId: note.id,
+        objectId: source.id,
+        current: '笔迹在擦除期间发生其他修改',
+        incoming: '局部擦除后的笔迹',
+        currentEventId: source.version,
+        incomingEventId: operation.id,
+      });
+      return false;
+    }
+    const template = clone(source),
+      page = note.pages.find((p) => p.id === source.pageId)!;
+    const fragments = payload.fragments as { id: string; points: Point[] }[];
+    source.deleted = true;
+    for (const part of fragments) {
+      let left = Infinity,
+        top = Infinity,
+        right = -Infinity,
+        bottom = -Infinity;
+      for (const p of part.points) {
+        left = Math.min(left, p.x);
+        top = Math.min(top, p.y);
+        right = Math.max(right, p.x);
+        bottom = Math.max(bottom, p.y);
+      }
+      const fragment: PaperObject = {
+        ...clone(template),
+        id: part.id,
+        points: clone(part.points),
+        bounds: {
+          x: left,
+          y: top,
+          width: Math.max(1, right - left),
+          height: Math.max(1, bottom - top),
+        },
+        deleted: false,
+        version: operation.id,
+      };
+      if (part.id === source.id) Object.assign(source, fragment);
+      else {
+        if (objects(note).some((o) => o.id === part.id))
+          throw new Error('Duplicate stroke fragment identity');
+        page.objects.push(fragment);
+      }
+    }
+    const active = objects(note).filter((o) => o.revisionId === correction.id && !o.deleted);
+    correction.objectIds = active.map((o) => o.id);
+    correction.objectId = active[0]?.id ?? correction.objectId;
+    correction.reason = '修订笔迹已局部擦除；剩余笔迹保留独立修订身份';
+    return true;
+  };
+  const renderHandwriting = (note: Note, correction: Correction, text: string, version: string) => {
+    const target = correction.handwritingTarget;
+    if (!target || correction.needsPlacement) return;
+    const page = note.pages.find((p) => p.id === target.pageId);
+    if (!page) return;
+    const seg = lookup(state, note.id, correction.segmentId).segment;
+    if (!seg || seg.kind !== 'text') return;
+    const result = composeHandwriting(text, target.bounds, state.handwritingGlyphs);
+    const baseId = correction.objectId;
+    for (const old of objects(note).filter((o) => o.revisionId === correction.id))
+      old.deleted = true;
+    const put = (object: PaperObject) => {
+      const existing = page.objects.find((o) => o.id === object.id);
+      if (existing) {
+        for (const key of Object.keys(existing)) delete (existing as any)[key];
+        Object.assign(existing, object);
+      } else page.objects.push(object);
+    };
+    const generated: PaperObject[] = result.strokes.length
+      ? result.strokes.map((stroke, index) => {
+          let x = Infinity,
+            y = Infinity,
+            right = -Infinity,
+            bottom = -Infinity;
+          for (const p of stroke.points) {
+            x = Math.min(x, p.x);
+            y = Math.min(y, p.y);
+            right = Math.max(right, p.x);
+            bottom = Math.max(bottom, p.y);
+          }
+          return {
+            id: index === 0 ? baseId : `${baseId}:stroke${index}`,
+            pageId: page.id,
+            kind: 'stroke',
+            layerId: `revision:${correction.id}`,
+            points: stroke.points,
+            bounds: { x, y, width: Math.max(1, right - x), height: Math.max(1, bottom - y) },
+            width: stroke.width,
+            color: stroke.color,
+            revisionId: correction.id,
+            replacesObjectIds: [...target.replacesObjectIds],
+            version,
+          };
+        })
+      : [
+          {
+            id: baseId,
+            pageId: page.id,
+            kind: 'text',
+            text,
+            bounds: clone(target.bounds),
+            layerId: `revision:${correction.id}`,
+            revisionId: correction.id,
+            replacesObjectIds: [...target.replacesObjectIds],
+            version,
+          },
+        ];
+    for (const object of generated) put(object);
+    correction.objectIds = generated.map((o) => o.id);
+    correction.mode = result.strokes.length ? 'handwriting' : 'printed';
+    correction.sampleIds = result.sampleIds;
+    correction.handwritingVersion = version;
+    correction.after = text;
+    correction.reason =
+      result.reason ?? '由已确认的真实字形笔迹生成；保留压力与倾斜，可独立编辑或撤销';
+  };
   const finishUndo = (note: Note, seg: Segment, revisionId: string) => {
     const correction = state.corrections.find((c) => c.id === revisionId),
       layers = objects(note).filter((o) => o.revisionId === revisionId),
@@ -644,6 +837,12 @@ function projectState(project: Project): NotebookState {
           after: seg.text,
           reason: '已撤销先前修订；保留后续人工内容修改',
         });
+        renderHandwriting(
+          note,
+          state.corrections[state.corrections.length - 1],
+          seg.text,
+          residual.id,
+        );
         state.undoneRevisionIds.push(revisionId);
         return;
       }
@@ -688,6 +887,83 @@ function projectState(project: Project): NotebookState {
       if (!page) throw new Error('Page not found');
       if (!objects(note).some((x) => x.id === p.object.id))
         page.objects.push({ ...clone(p.object), pageId: page.id, version: op.id });
+    } else if (op.type === 'handwriting.learn') {
+      const glyph = clone(p.glyph) as Omit<HandwritingGlyph, 'id'>;
+      // Verify imported snapshots against their declared original vectors. Concurrent
+      // edits can move the current object, so follow the immutable source-version chain.
+      const sourceAtVersion = (id: string, version: string): PaperObject | undefined => {
+        const current = objects(note).find(
+          (o) => o.id === id && o.version === version && !o.deleted,
+        );
+        if (current) return current;
+        let historical: PaperObject | undefined;
+        for (const event of events) {
+          if (
+            event.clock >= op.clock ||
+            event.payload.noteId !== note.id ||
+            (op.seen?.[event.deviceId] ?? 0) < event.seq
+          )
+            continue;
+          if (event.type === 'object.create' && event.payload.object.id === id)
+            historical = {
+              ...clone(event.payload.object),
+              pageId: event.payload.pageId,
+              version: event.id,
+            };
+          else if (historical && event.type === 'object.update' && event.payload.objectId === id) {
+            const changes = event.payload.changes,
+              base = event.payload.baseValues;
+            if (
+              historical.version === event.payload.baseVersion ||
+              (base &&
+                Object.keys(changes).every(
+                  (k) =>
+                    canonical((historical as any)[k]) === canonical(base[k]) ||
+                    canonical((historical as any)[k]) === canonical(changes[k]),
+                ))
+            )
+              Object.assign(historical, clone(changes), { version: event.id });
+          } else if (historical && event.type === 'object.delete' && event.payload.objectId === id)
+            historical.deleted = true;
+        }
+        return historical?.version === version && !historical.deleted ? historical : undefined;
+      };
+      const sources = Object.entries(glyph.sourceVersions).map(([id, version]) =>
+        sourceAtVersion(id, version),
+      );
+      if (glyph.noteId !== note.id || sources.some((o) => !o))
+        throw new Error('字形样本来源版本无效');
+      const verified = captureHandwritingGlyph(glyph.character, note.id, sources as PaperObject[]);
+      if (canonical(verified) !== canonical(glyph)) throw new Error('字形快照与声明的原始笔迹不符');
+      state.handwritingGlyphs.push({ ...glyph, id: op.id });
+      // A newly confirmed missing character can complete an existing printed fallback.
+      for (const n of state.notes)
+        for (const correction of state.corrections.filter(
+          (c) => c.noteId === n.id && c.mode === 'printed',
+        )) {
+          const seg = lookup(state, n.id, correction.segmentId).segment;
+          const live = objects(n).filter((o) => o.revisionId === correction.id && !o.deleted);
+          if (
+            seg?.source.status === 'exact' &&
+            live.length &&
+            live.every((o) => o.version === correction.handwritingVersion)
+          )
+            renderHandwriting(n, correction, seg.text, op.id);
+        }
+    } else if (op.type === 'revision.stroke.split') {
+      applyStrokeSplit(op);
+    } else if (op.type === 'revision.handwriting') {
+      const correction = state.corrections.find((c) => c.id === p.revisionId);
+      if (!correction || correction.needsPlacement) continue;
+      const seg = lookup(state, note.id, correction.segmentId).segment;
+      const live = objects(note).filter((o) => o.revisionId === correction.id && !o.deleted);
+      const fingerprint = canonical({
+        text: seg?.text,
+        source: seg?.source,
+        objects: live.map((o) => [o.id, o.version]),
+      });
+      if (!seg || fingerprint !== p.fingerprint || seg.source.status !== 'exact') continue;
+      renderHandwriting(note, correction, seg.text, op.id);
     } else if (op.type === 'object.update') {
       const obj = objects(note).find((x) => x.id === p.objectId);
       if (!obj) throw new Error('Object not found');
@@ -739,6 +1015,14 @@ function projectState(project: Project): NotebookState {
                 seg.source.status = 'unmapped';
                 seg.source.precision = 'none';
                 seg.source.reason = '源对象内容已修改，等待重新识别与校对';
+                for (const correction of state.corrections.filter((c) => c.segmentId === seg.id)) {
+                  correction.needsPlacement = true;
+                  correction.reason = '原稿已改变，保留 B 文字并等待重新校对；旧修订不再遮盖原稿';
+                  for (const revision of objects(note).filter(
+                    (o) => o.revisionId === correction.id,
+                  ))
+                    revision.deleted = true;
+                }
               }
             }
       }
@@ -1047,12 +1331,13 @@ function projectState(project: Project): NotebookState {
               rev.text = seg.text;
               rev.version = op.id;
               c.after = seg.text;
+              renderHandwriting(note, c, seg.text, op.id);
             }
           }
         } else if (seg.source.status === 'exact' && obs.length) {
           for (const old of state.corrections.filter((c) => c.segmentId === seg.id)) {
-            const obj = objects(note).find((o) => o.id === old.objectId);
-            if (obj) obj.deleted = true;
+            for (const obj of objects(note).filter((o) => o.revisionId === old.id))
+              obj.deleted = true;
           }
           const sourcePages = [...new Set(obs.map((o) => o.pageId))],
             needsPlacement =
@@ -1112,7 +1397,7 @@ function projectState(project: Project): NotebookState {
               });
               createdIds.push(id);
             }
-          state.corrections.push({
+          const correction: Correction = {
             id: revisionId,
             eventId: op.id,
             noteId: note.id,
@@ -1126,8 +1411,19 @@ function projectState(project: Project): NotebookState {
             needsPlacement,
             reason: needsPlacement
               ? '跨页字符位置未确认；保留原稿与可编辑候选，须先校对定位'
-              : '笔迹风格生成尚未通过验证，保留可编辑印刷文字',
-          });
+              : '尚无已确认字形，保留可编辑印刷文字',
+            ...(!needsPlacement && sourcePages.length === 1 && seg.kind === 'text'
+              ? {
+                  handwritingTarget: {
+                    pageId: page.id,
+                    bounds: unionBounds(obs),
+                    replacesObjectIds: obs.map((o) => o.id),
+                  },
+                }
+              : {}),
+          };
+          state.corrections.push(correction);
+          renderHandwriting(note, correction, seg.text, op.id);
         }
         revisionChanges.set(op.id, {
           segmentId: seg.id,
@@ -1228,6 +1524,7 @@ function projectState(project: Project): NotebookState {
         if (obj) {
           obj.text = seg.text;
           c.after = seg.text;
+          renderHandwriting(note, c, seg.text, op.id);
         }
       }
       if (!dependencies) finishUndo(note, seg, p.revisionId);
@@ -1313,8 +1610,11 @@ function projectState(project: Project): NotebookState {
             state.corrections = state.corrections.filter((c) => c.segmentId !== s.id);
           }
         } else if (obj && p.choice === 'incoming') {
-          const change = events.find((e) => e.id === conflict.incomingEventId)?.payload.changes;
-          Object.assign(obj, clone(change ?? {}), { version: op.id });
+          const incoming = events.find((e) => e.id === conflict.incomingEventId);
+          if (incoming?.type === 'revision.stroke.split') {
+            if (!applyStrokeSplit({ ...incoming, id: op.id }, true))
+              throw new Error('此修订已更新或合并，请在当前笔迹重新擦除');
+          } else Object.assign(obj, clone(incoming?.payload.changes ?? {}), { version: op.id });
         }
       } else if (ch && seg) {
         const value = p.choice === 'incoming' ? conflict.incoming : conflict.current;
@@ -1327,6 +1627,7 @@ function projectState(project: Project): NotebookState {
           pending.after = seg.text;
           const rev = objects(note).find((o) => o.id === pending.objectId);
           if (rev) rev.text = seg.text;
+          renderHandwriting(note, pending, seg.text, op.id);
         }
       }
       conflict.resolved = true;
@@ -1487,6 +1788,37 @@ export class NotebookEngine {
       },
     });
     return objectId;
+  }
+  /** Atomically split a generated stroke while keeping every residual in its revision. */
+  splitRevisionStroke(
+    noteId: string,
+    objectId: string,
+    keptFragments: Point[][],
+    expectedVersion?: string,
+  ): string[] {
+    if (this.role !== 'tablet') throw new Error('此操作仅限 Android 平板');
+    const source = objects(this.getNote(noteId)).find((o) => o.id === objectId && !o.deleted);
+    if (
+      !source ||
+      source.kind !== 'stroke' ||
+      !source.revisionId ||
+      !this.state.corrections.some((c) => c.id === source.revisionId)
+    )
+      throw new Error('Active revision stroke not found');
+    if (expectedVersion !== undefined && expectedVersion !== source.version)
+      throw new Error('修订笔迹已改变，请刷新后重试');
+    const fragments = keptFragments.map((points, index) => ({
+      id: index === 0 ? source.id : uid(),
+      points,
+    }));
+    this.append('revision.stroke.split', {
+      noteId,
+      objectId,
+      revisionId: source.revisionId,
+      baseVersion: source.version,
+      fragments,
+    });
+    return fragments.map((part) => part.id);
   }
   addText(
     noteId: string,
@@ -1922,6 +2254,51 @@ export class NotebookEngine {
   }
   deleteSegment(noteId: string, segmentId: string): void {
     this.append('segment.delete', { noteId, segmentId });
+  }
+  /** Register only a character explicitly confirmed by the writer. Source vectors are snapshotted. */
+  learnHandwritingGlyph(
+    noteId: string,
+    objectIds: string[],
+    character: string,
+    expectedVersions?: Record<string, string>,
+  ): string {
+    if (this.role !== 'tablet') throw new Error('此操作仅限 Android 平板');
+    const source = objectIds.map((id) =>
+      objects(this.getNote(noteId)).find((o) => o.id === id && !o.deleted),
+    );
+    if (source.some((o) => !o)) throw new Error('字形来源已删除');
+    if (expectedVersions && source.some((o) => expectedVersions[o!.id] !== o!.version))
+      throw new Error('字形来源已改变，请重新核对');
+    const glyph = captureHandwritingGlyph(character, noteId, source as PaperObject[]);
+    return this.append('handwriting.learn', { noteId, glyph }).id;
+  }
+  /** Capture this token when opening a retry preview; a stale token cannot replace newer ink. */
+  handwritingRevisionFingerprint(revisionId: string): string {
+    const correction = this.state.corrections.find((c) => c.id === revisionId);
+    if (!correction) throw new Error('Revision not found');
+    const note = this.getNote(correction.noteId),
+      seg = lookup(this.state, note.id, correction.segmentId).segment;
+    const live = objects(note).filter((o) => o.revisionId === correction.id && !o.deleted);
+    return canonical({
+      text: seg?.text,
+      source: seg?.source,
+      objects: live.map((o) => [o.id, o.version]),
+    });
+  }
+  retryHandwritingRevision(revisionId: string, expectedFingerprint?: string): void {
+    const correction = this.state.corrections.find((c) => c.id === revisionId);
+    if (!correction) throw new Error('Revision not found');
+    const seg = lookup(this.state, correction.noteId, correction.segmentId).segment;
+    if (
+      correction.needsPlacement ||
+      !correction.handwritingTarget ||
+      seg?.source.status !== 'exact'
+    )
+      throw new Error('来源或落点未确认，不能生成仿手写');
+    const fingerprint = this.handwritingRevisionFingerprint(revisionId);
+    if (expectedFingerprint !== undefined && expectedFingerprint !== fingerprint)
+      throw new Error('修订已改变，请刷新后重试');
+    this.append('revision.handwriting', { noteId: correction.noteId, revisionId, fingerprint });
   }
   undoRevision(revisionId: string): void {
     if (this.state.mergedRevisionIds.includes(revisionId))

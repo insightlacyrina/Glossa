@@ -1,0 +1,8 @@
+Port 5173 is in use, trying another one...
+Port 5174 is in use, trying another one...
+PASS native adapter groups multiple strokes, leaves uncertain OCR unmapped, and real proofreading confirms all sources together.
+PASS real selection learns confirmed glyph; editing B creates editable pressure-preserving vector strokes that survive reload.
+PASS real partial eraser preserves all split fragments in their revision; independent undo restores raw ink without leaked fragments.
+PASS explicit re-recognition of an already confirmed line offers a new candidate while preserving the existing B text.
+PASS appending to a confirmed line produces a versioned review candidate and updates the same B segment without duplicate blocks.
+PASS new strokes between multiple confirmed B segments are recognized separately and cannot duplicate both existing segments.

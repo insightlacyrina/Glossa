@@ -26,6 +26,8 @@ import {
 import { createReviewCard, touchReviewCard, type ReviewCard } from './review';
 import { startAutoSync, type SyncConfig, type SyncOperation } from './sync';
 import { atomicAction, blockContentModifiedAt, SyncSessionGuard } from './workspaceSafety';
+import { nativeRequest } from './native';
+import { groupRecognitionObjects } from './recognition';
 
 export const role: Role =
   window.QuietPaperNative?.getRole() ??
@@ -77,6 +79,7 @@ export function useWorkspace() {
     syncHandle = useRef<ReturnType<typeof startAutoSync> | null>(null),
     processor = useRef<IncrementalProcessor | null>(null);
   const syncGuard = useRef(new SyncSessionGuard());
+  const forcedRecognition = useRef(new Map<string, string>());
   const redraw = () => setVersion((v) => v + 1);
   const connectionIdentity = (config: SyncConfig | null) =>
     config ? `${config.url}|${config.projectId}|${config.mode}` : '';
@@ -177,27 +180,60 @@ export function useWorkspace() {
   function dirtyObjects(engine: NotebookEngine) {
     if (role !== 'tablet' || stale.current) return;
     const known = engine.state.settings;
-    const dirty = engine.state.notes.flatMap((n) =>
-      n.pages.flatMap((p) =>
-        p.objects
-          .filter((o) => !o.deleted && !o.revisionId && known[`processed:${o.id}`] !== o.version)
-          .map((o) => ({
-            id: o.id,
-            revision: o.version,
-            kind:
-              o.kind === 'formula'
-                ? ('formula' as const)
-                : o.kind === 'stroke'
-                  ? ('stroke' as const)
-                  : o.kind === 'image'
-                    ? ('image' as const)
-                    : ('text' as const),
-            text: o.text,
-            points: o.points,
-            noteId: n.id,
-          })),
-      ),
+    const objects = engine.state.notes.flatMap((n) =>
+      n.pages
+        .filter((p) =>
+          p.objects.some(
+            (o) => !o.deleted && !o.revisionId && known[`processed:${o.id}`] !== o.version,
+          ),
+        )
+        .flatMap((p) =>
+          p.objects
+            .filter((o) => !o.deleted && !o.revisionId)
+            .map((o) => ({
+              id: o.id,
+              revision: o.version,
+              kind:
+                o.kind === 'formula'
+                  ? ('formula' as const)
+                  : o.kind === 'stroke'
+                    ? ('stroke' as const)
+                    : o.kind === 'image'
+                      ? ('image' as const)
+                      : ('text' as const),
+              text: o.text,
+              points: o.points,
+              noteId: n.id,
+              pageId: p.id,
+              bounds: o.bounds,
+              color: o.color,
+              width: o.width,
+              data: o.data,
+            })),
+        ),
     );
+    const scopedObjects = groupRecognitionObjects(objects).flatMap((group) => {
+      const note = engine.state.notes.find((n) => n.id === group.objects[0].noteId);
+      const linked =
+        note?.blocks
+          .flatMap((b) => b.segments)
+          .filter(
+            (s) => !s.deleted && s.source.objectIds.some((id) => group.objectIds.includes(id)),
+          ) ?? [];
+      if (linked.length <= 1) return group.objects;
+      return group.objects.map((o) => ({
+        ...o,
+        recognitionScope:
+          linked
+            .filter((s) => s.source.objectIds.includes(o.id))
+            .map((s) => s.id)
+            .sort()
+            .join('|') || 'new-content',
+      }));
+    });
+    const dirty = groupRecognitionObjects(scopedObjects)
+      .filter((group) => group.objects.some((o) => known[`processed:${o.id}`] !== o.revision))
+      .flatMap((group) => group.objects);
     if (dirty.length) processor.current?.markDirty(dirty);
   }
   const transact = (
@@ -310,10 +346,35 @@ export function useWorkspace() {
     if (!ready || !engineRef.current || stale.current) return;
     const projectId = engineRef.current.project.id,
       epoch = epochRef.current;
+    forcedRecognition.current.clear();
     const instance = new IncrementalProcessor({
       idleMs: Number(engineRef.current.state.settings.idleMs ?? 1400),
       stages: engineRef.current.state.settings.stages as never,
       provider,
+      localRecognizer: window.QuietPaperNative?.recognizeInk
+        ? async (group, signal) => {
+            const language = String(
+              engineRef.current?.state.settings.recognitionLanguage ?? 'zh-Hans',
+            );
+            const image = group.objects.find((o) => o.kind === 'image');
+            const reply = await nativeRequest(
+              image ? 'recognizeImage' : 'recognizeInk',
+              [JSON.stringify(image ? { data: image.data } : { language, objects: group.objects })],
+              signal,
+            ).catch((error) => {
+              if (error instanceof Error && error.message === 'recognition-model-not-downloaded')
+                throw Object.assign(new Error('请在设置 → 识别与仿手写中下载所选语言的手写模型'), {
+                  code: 'MODEL_NOT_DOWNLOADED',
+                });
+              throw error;
+            });
+            return {
+              text: reply.text ?? '',
+              candidates: reply.candidates?.map((c) => (typeof c === 'string' ? c : c.text)),
+              engine: reply.engine,
+            };
+          }
+        : undefined,
       onStatus: setStatuses,
       onResults: (results: RecognitionResult[]) => {
         const engine = engineRef.current;
@@ -333,17 +394,37 @@ export function useWorkspace() {
             grouped.set(r.objectId, list);
           }
           for (const [id, rs] of grouped) {
+            const candidate = rs.find((r) => ['ocr', 'formula'].includes(r.stage));
+            const sourceIds = candidate?.sourceObjectIds ?? [id];
+            const sourceRevisions = candidate?.sourceRevisions ?? { [id]: rs[0].revision };
             const note = current.state.notes.find((n) =>
-              n.pages.some((p) =>
-                p.objects.some((o) => o.id === id && !o.deleted && o.version === rs[0].revision),
+              sourceIds.every((sourceId) =>
+                n.pages.some((p) =>
+                  p.objects.some(
+                    (o) =>
+                      o.id === sourceId && !o.deleted && o.version === sourceRevisions[sourceId],
+                  ),
+                ),
               ),
             );
             if (!note) continue;
-            const obj = note.pages.flatMap((p) => p.objects).find((o) => o.id === id)!,
-              candidate = rs.find((r) => ['ocr', 'formula'].includes(r.stage));
+            const obj = note.pages.flatMap((p) => p.objects).find((o) => o.id === id)!;
             if (candidate) {
-              const already = note.blocks.some((b) =>
-                b.segments.some((s) => !s.deleted && s.source.objectIds.includes(id)),
+              const linked = note.blocks
+                .flatMap((b) => b.segments)
+                .filter(
+                  (s) =>
+                    !s.deleted &&
+                    s.source.objectIds.some((sourceId) => sourceIds.includes(sourceId)),
+                );
+              const already = linked.length > 0;
+              const fullyConfirmed = sourceIds.every((sourceId) =>
+                linked.some(
+                  (s) =>
+                    s.source.status === 'exact' &&
+                    s.source.objectIds.includes(sourceId) &&
+                    s.source.objectVersions[sourceId] === sourceRevisions[sourceId],
+                ),
               );
               if (
                 candidate.mapping === 'exact-object' &&
@@ -361,10 +442,35 @@ export function useWorkspace() {
                   deterministic: true,
                   confidence: 1,
                 });
-              } else if (candidate.mapping === 'unmapped' && !already)
-                current.setSetting(`candidate:${id}`, { ...candidate, noteId: note.id });
+              } else if (
+                candidate.mapping === 'unmapped' &&
+                (!fullyConfirmed ||
+                  sourceIds.some(
+                    (sourceId) =>
+                      forcedRecognition.current.get(sourceId) === String(sourceRevisions[sourceId]),
+                  ))
+              ) {
+                for (const [key, value] of Object.entries(current.state.settings)) {
+                  if (!key.startsWith('candidate:') || !value) continue;
+                  const prior = value as RecognitionResult;
+                  if (
+                    (prior.sourceObjectIds ?? [prior.objectId]).some((sourceId) =>
+                      sourceIds.includes(sourceId),
+                    )
+                  )
+                    current.setSetting(key, null);
+                }
+                current.setSetting(`candidate:${id}`, {
+                  ...candidate,
+                  noteId: note.id,
+                  ...(linked.length === 1 ? { segmentId: linked[0].id } : {}),
+                });
+              }
             }
-            current.setSetting(`processed:${id}`, rs[0].revision);
+            for (const sourceId of sourceIds) {
+              current.setSetting(`processed:${sourceId}`, sourceRevisions[sourceId]);
+              forcedRecognition.current.delete(sourceId);
+            }
           }
         });
       },
@@ -636,6 +742,20 @@ export function useWorkspace() {
     statuses,
     configureProcessor: (options: Parameters<IncrementalProcessor['configure']>[0]) =>
       processor.current?.configure(options),
+    retryRecognition: async () => {
+      if (role !== 'tablet') return;
+      processor.current?.configure({});
+      transact((engine) => {
+        for (const n of engine.state.notes)
+          for (const p of n.pages)
+            for (const o of p.objects)
+              if (!o.deleted && !o.revisionId && ['stroke', 'image'].includes(o.kind)) {
+                forcedRecognition.current.set(o.id, o.version);
+                engine.setSetting(`processed:${o.id}`, null);
+              }
+      });
+      return processor.current?.flush('manual');
+    },
     provider,
     setProvider,
     syncState,

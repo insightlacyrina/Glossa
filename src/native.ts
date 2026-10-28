@@ -29,6 +29,12 @@ export type NativeReply = {
   sequence?: number;
   pending?: boolean;
   runtime?: RuntimeDiagnostic[];
+  available?: boolean;
+  downloaded?: boolean;
+  language?: string;
+  engine?: string;
+  candidates?: (string | { text: string })[];
+  objectIds?: string[];
 };
 type NativeMethod =
   | 'openDocument'
@@ -46,35 +52,52 @@ type NativeMethod =
   | 'getPendingWrites'
   | 'getRuntimeDiagnostics'
   | 'getSourceSnapshot'
-  | 'retryPendingWrite';
-export function nativeRequest(method: NativeMethod, args: string[] = []): Promise<NativeReply> {
+  | 'retryPendingWrite'
+  | 'getRecognitionStatus'
+  | 'downloadRecognitionModel'
+  | 'recognizeInk'
+  | 'recognizeImage';
+export function nativeRequest(
+  method: NativeMethod,
+  args: string[] = [],
+  signal?: AbortSignal,
+): Promise<NativeReply> {
   const bridge = window.QuietPaperNative as unknown as
     | Record<string, (...args: string[]) => void>
     | undefined;
   if (!bridge?.[method]) return Promise.reject(new Error('此操作需要 Android 原生文件访问'));
   const id = crypto.randomUUID();
   return new Promise((resolve, reject) => {
+    if (signal?.aborted) return reject(signal.reason ?? new Error('操作已取消'));
+    const cleanup = () => {
+      clearTimeout(timer);
+      window.removeEventListener('quietpaper-native', listener);
+      signal?.removeEventListener('abort', abort);
+    };
+    const abort = () => {
+      cleanup();
+      reject(signal?.reason ?? new Error('操作已取消'));
+    };
     const listener = (event: Event) => {
       const result = (event as CustomEvent<NativeReply>).detail;
       if (result.requestId !== id) return;
-      clearTimeout(timer);
-      window.removeEventListener('quietpaper-native', listener);
+      cleanup();
       if (result.ok) resolve(result);
       else reject(Object.assign(new Error(result.error ?? '原生文件操作失败'), { reply: result }));
     };
     const timer = setTimeout(
       () => {
-        window.removeEventListener('quietpaper-native', listener);
+        cleanup();
         reject(new Error('原生文件访问仍未完成'));
       },
-      method === 'completeExport' ? 600_000 : 120_000,
+      method === 'completeExport' || method === 'downloadRecognitionModel' ? 600_000 : 120_000,
     );
     window.addEventListener('quietpaper-native', listener);
+    signal?.addEventListener('abort', abort, { once: true });
     try {
       bridge[method](id, ...args);
     } catch (error) {
-      clearTimeout(timer);
-      window.removeEventListener('quietpaper-native', listener);
+      cleanup();
       reject(error);
     }
   });

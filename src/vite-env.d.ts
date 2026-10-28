@@ -24,6 +24,10 @@ interface Window {
     discardExport(id: string, sessionId: string): void;
     getPendingWrites(id: string): void;
     getRuntimeDiagnostics?(id: string): void;
+    getRecognitionStatus?(id: string, language: string): void;
+    downloadRecognitionModel?(id: string, language: string): void;
+    recognizeInk?(id: string, json: string): void;
+    recognizeImage?(id: string, json: string): void;
     getSourceSnapshot(id: string, uri: string): void;
     retryPendingWrite(id: string, uri: string): void;
     resolveSourceConflict(id: string, uri: string, text: string, sourceHash: string): void;

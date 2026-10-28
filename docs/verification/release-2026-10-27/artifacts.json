@@ -1,0 +1,36 @@
+{
+  "version": "0.1.3",
+  "bundleBuild": "4",
+  "macosArchitecture": "arm64",
+  "macosMinimum": "14.0",
+  "macosZipCRC": "pass",
+  "macosZipBinaryAndCoreMatch": true,
+  "macosWebMatchesDist": true,
+  "sharedCoreSHA256": "cb5cf3ba5390549bf294858825ee72bcdc6823cb8314457d830af4dbdfbad705",
+  "web": {
+    "index.html": "72d0e4a3a4f2e68180a58f800a9e311d2b2cddb1e0aad5ab4de55b0bce7a99f8",
+    "icon.svg": "ec6fa82de6b0e45422ef4c725e3116d82d21a644108837b07c4219cc151b7eb5",
+    "manifest.webmanifest": "935fe0ea7d49ba24aed01e67b376fc4e6d29943871e852ccde304228970893e5",
+    "sw.js": "49fae3a335ccd2fe8ca38aa5cd3a2d9253ff515feb4861368e8e2dac1bbdfae2",
+    "assets/export-BKLx2JxG.js": "5b309b55a6b685e50cc9ce802f3f5878288cce3441e8bd15fe9d33220d449c7d",
+    "assets/index-C-OunfQK.js": "70794b0ddf392d593c49e3c4a40cead2a07f33583898ad646f11da861aaafaa5",
+    "assets/index-CcdjSzlf.css": "5524d0e25692b9f3d393eb220a67028f29099491c6d039249c50ab7781af78a3"
+  },
+  "artifacts": [
+    {
+      "file": "glossa-0.1.3-android-phone-debug.apk",
+      "bytes": 77580993,
+      "sha256": "b9853864128726d741b325de495c0f451c3fb30afd4c43da96b609debc2e5ef1"
+    },
+    {
+      "file": "glossa-0.1.3-android-tablet-debug.apk",
+      "bytes": 77580993,
+      "sha256": "b9853864128726d741b325de495c0f451c3fb30afd4c43da96b609debc2e5ef1"
+    },
+    {
+      "file": "glossa-0.1.3-macos-arm64.zip",
+      "bytes": 38988378,
+      "sha256": "7259c940220a008d3546399d0a070b0e2c9b4cb8d1b26e05d39dc11ae7fb112e"
+    }
+  ]
+}

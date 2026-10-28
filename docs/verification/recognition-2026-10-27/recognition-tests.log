@@ -1,0 +1,43 @@
+
+> glossa@0.1.2 test:recognition
+> node --import tsx --test tests/recognition.test.ts tests/handwriting.test.ts && node tests/recognition.browser.mjs && node tests/recognition-flow.browser.mjs
+
+✔ B text uses confirmed real glyph vectors at the original location without modifying raw ink (8.354ms)
+✔ missing characters use an honest printed layer, then retry automatically after explicit glyph confirmation (1.901416ms)
+✔ learning a missing character never overwrites a manually moved printed fallback (1.721125ms)
+✔ glyph snapshots survive deletion and later edits of their original sample source (2.579709ms)
+✔ a newer B edit hides every stroke in the previous handwritten layer and undo leaks no glyphs (1.411917ms)
+✔ merging actual handwriting retains stroke editability and removes its dedicated provenance (1.656167ms)
+✔ partial erasure keeps every residual stroke inside the same independently undoable revision (2.487792ms)
+✔ partial erasure residuals are all included when handwriting is merged into ordinary ink (1.151792ms)
+✔ partial erasure rejects stale snapshots and malformed residuals atomically (1.799375ms)
+✔ concurrent revision erasures converge and preserve a resolvable object conflict (3.961041ms)
+✔ source changes invalidate pending handwriting without concealing the changed original (0.75175ms)
+✔ sample capture and manual retry respect tablet role and stale previews (1.851666ms)
+✔ concurrent B edits converge to exactly the same vector revision and confirmed samples (3.690125ms)
+✔ import rejects invented glyph vectors and preserves valid concurrent source translations (1.327125ms)
+✔ invalid, multi-page, oversized, and non-character samples are rejected; overflow stays printed (0.652292ms)
+✔ line recognition groups neighboring pen strokes but keeps pages and distant lines separate (1.742125ms)
+✔ native multi-stroke result retains all exact source revisions and never fabricates confidence or mapping (1.067708ms)
+✔ missing downloaded model remains actionable and does not upload without a provider consent (0.317458ms)
+✔ vision request carries real image parts with source labels and rejects duplicate or unknown IDs (19.481ms)
+✔ revoking provider aborts in-flight work and suppresses stale output while preserving a retry (0.449083ms)
+✔ candidate validation abstains for empty, oversized, or impossible confidence without changing text (0.187959ms)
+✔ a later bridge stroke joins neighboring existing groups without changing pen order (0.120459ms)
+✔ explicit recognition scopes keep neighboring already-linked segments separate (0.111083ms)
+✔ an OCR backend failure does not mark an unrelated formula stage as failed (0.223458ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 154.195167
+PASS: actual canvas raster contains grouped visible ink, opaque background, bounded crop; image OCR preserves aspect and rejects network URLs.
+PASS native adapter groups multiple strokes, leaves uncertain OCR unmapped, and real proofreading confirms all sources together.
+PASS real selection learns confirmed glyph; editing B creates editable pressure-preserving vector strokes that survive reload.
+PASS real partial eraser preserves all split fragments in their revision; independent undo restores raw ink without leaked fragments.
+PASS explicit re-recognition of an already confirmed line offers a new candidate while preserving the existing B text.
+PASS appending to a confirmed line produces a versioned review candidate and updates the same B segment without duplicate blocks.
+PASS new strokes between multiple confirmed B segments are recognized separately and cannot duplicate both existing segments.

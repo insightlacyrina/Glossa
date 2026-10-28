@@ -1,0 +1,69 @@
+{
+  "chrome": "156.0.8078.48",
+  "results": [
+    {
+      "scale": 1,
+      "oldArea": 789,
+      "newArea": 810,
+      "difference": 21,
+      "relativeContourDifference": 0.026615969581749048,
+      "alphaAbsoluteEquivalentPixels": 25.2078431372549,
+      "maxAlphaDifference": 67,
+      "fullyOpaqueVsTransparentPixels": 0,
+      "bounds": [
+        13,
+        27,
+        83,
+        83
+      ]
+    },
+    {
+      "scale": 2,
+      "oldArea": 3505,
+      "newArea": 3506,
+      "difference": 7,
+      "relativeContourDifference": 0.0019971469329529245,
+      "alphaAbsoluteEquivalentPixels": 14.141176470588235,
+      "maxAlphaDifference": 84,
+      "fullyOpaqueVsTransparentPixels": 0,
+      "bounds": [
+        27,
+        54,
+        167,
+        167
+      ]
+    },
+    {
+      "scale": 4,
+      "oldArea": 13381,
+      "newArea": 13380,
+      "difference": 5,
+      "relativeContourDifference": 0.00037366415066138555,
+      "alphaAbsoluteEquivalentPixels": 5.4394607843137255,
+      "maxAlphaDifference": 105,
+      "fullyOpaqueVsTransparentPixels": 0,
+      "bounds": [
+        54,
+        108,
+        334,
+        334
+      ]
+    },
+    {
+      "scale": 8,
+      "oldArea": 53522,
+      "newArea": 54263,
+      "difference": 791,
+      "relativeContourDifference": 0.01477896939576249,
+      "alphaAbsoluteEquivalentPixels": 3.8688725490196076,
+      "maxAlphaDifference": 146,
+      "fullyOpaqueVsTransparentPixels": 0,
+      "bounds": [
+        109,
+        217,
+        669,
+        669
+      ]
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+
+> glossa@0.1.2 test:swift
+> bash scripts/test-swift.sh
+
+Swift JavaScriptCore resource built from shared data kernel.
+Building for debugging...
+[Computing dependencies]
+[1 / 1]
+[3 / 12] Glossa_GlossaCore
+Build complete! (24.42秒)
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite LocalWorkspaceTests started.
+◇ Suite AIProxyTests started.
+◇ Test testExclusiveOwnershipAndAtomicRecovery() started.
+◇ Suite LocalServerTests started.
+◇ Test testCorruptionIsReportedWithoutReplacement() started.
+◇ Test testSwiftCryptoKitObjectsInteroperateWithNodeProxyAndRevocation() started.
+◇ Test restoreStopsOnlyOwnedJobAndResumesOriginalRunningStateOnFailure() started.
+◇ Test runningConfigurationNeedsExplicitRestartAndProxySecretsStayLocal() started.
+◇ Test initializationCanRetryAfterPostCopyFilesystemFailure() started.
+◇ Test initializationRefusesExistingServerDataWithoutOverwritingIt() started.
+◇ Test initializationUsesPrivateSeparateDirectoryAndNeverEnablesLoginImplicitly() started.
+◇ Suite CoreTests started.
+◇ Test testStaleEditAndFailedBatchLeaveAllOperationsUnchanged() started.
+◇ Test testBRevisionUsesNativeSelectedRangeAndCreatesPrintedLayer() started.
+◇ Test testCompatibleRoundTripPreservesFullProject() started.
+◇ Test testConcreteBatchChecksFinalTextAndRollsBackUncapturedInput() started.
+◇ Test testReviewPersistsImmutableAssessmentAndSchedule() started.
+◇ Test testMacCannotCreateNotesPagesOrBlocks() started.
+◇ Test testImportedConfirmedGlyphCreatesNativeHandwritingAndOfflineReadingPaths() started.
+◇ Test testMergeAndOfflineReadingExportsUseSharedKernel() started.
+◇ Suite SyncTests started.
+✔ Test testCorruptionIsReportedWithoutReplacement() passed after 0.286 seconds.
+✔ Test testExclusiveOwnershipAndAtomicRecovery() passed after 0.286 seconds.
+✔ Test testImportedConfirmedGlyphCreatesNativeHandwritingAndOfflineReadingPaths() passed after 0.286 seconds.
+◇ Test testTransportValidationRejectsRemoteHTTPAndCredentials() started.
+◇ Test testEncryptedAuthenticationBindsProjectIdentityAndRejectsTampering() started.
+◇ Test testEncryptedHTTPInteropPaginationBisectionAndServerRestore() started.
+◇ Test testPlainHTTPInteropPaginationBisectionAndServerRestore() started.
+✔ Suite LocalWorkspaceTests passed after 0.785 seconds.
+✔ Test testTransportValidationRejectsRemoteHTTPAndCredentials() passed after 0.519 seconds.
+✔ Test testMacCannotCreateNotesPagesOrBlocks() passed after 0.930 seconds.
+✔ Test testConcreteBatchChecksFinalTextAndRollsBackUncapturedInput() passed after 1.049 seconds.
+✔ Test testStaleEditAndFailedBatchLeaveAllOperationsUnchanged() passed after 1.073 seconds.
+✔ Test initializationRefusesExistingServerDataWithoutOverwritingIt() passed after 1.073 seconds.
+✔ Test testReviewPersistsImmutableAssessmentAndSchedule() passed after 1.082 seconds.
+✔ Test testCompatibleRoundTripPreservesFullProject() passed after 1.140 seconds.
+✔ Test initializationCanRetryAfterPostCopyFilesystemFailure() passed after 1.302 seconds.
+✔ Test initializationUsesPrivateSeparateDirectoryAndNeverEnablesLoginImplicitly() passed after 1.343 seconds.
+✔ Test runningConfigurationNeedsExplicitRestartAndProxySecretsStayLocal() passed after 1.465 seconds.
+✔ Test restoreStopsOnlyOwnedJobAndResumesOriginalRunningStateOnFailure() passed after 1.484 seconds.
+✔ Suite LocalServerTests passed after 1.485 seconds.
+✔ Test testMergeAndOfflineReadingExportsUseSharedKernel() passed after 1.492 seconds.
+✔ Test testBRevisionUsesNativeSelectedRangeAndCreatesPrintedLayer() passed after 1.609 seconds.
+✔ Suite CoreTests passed after 1.609 seconds.
+✔ Test testSwiftCryptoKitObjectsInteroperateWithNodeProxyAndRevocation() passed after 1.828 seconds.
+✔ Suite AIProxyTests passed after 1.828 seconds.
+(node:3599) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:3598) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Test testEncryptedAuthenticationBindsProjectIdentityAndRejectsTampering() passed after 2.567 seconds.
+✔ Test testPlainHTTPInteropPaginationBisectionAndServerRestore() passed after 2.723 seconds.
+✔ Test testEncryptedHTTPInteropPaginationBisectionAndServerRestore() passed after 5.036 seconds.
+✔ Suite SyncTests passed after 5.323 seconds.
+✔ Test run with 20 tests in 5 suites passed after 5.324 seconds.

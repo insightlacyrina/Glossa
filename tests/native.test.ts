@@ -87,3 +87,50 @@ test('synchronous native failure removes the listener and rejects the request', 
     Object.defineProperty(globalThis, 'window', { configurable: true, value: previous });
   }
 });
+
+test('revoked native recognition stops listening and cannot accept a late model result', async () => {
+  const previous = globalThis.window;
+  const target = new EventTarget();
+  let request = '',
+    listeners = 0;
+  const add = target.addEventListener.bind(target),
+    remove = target.removeEventListener.bind(target);
+  target.addEventListener = (...args: Parameters<EventTarget['addEventListener']>) => {
+    listeners++;
+    return add(...args);
+  };
+  target.removeEventListener = (...args: Parameters<EventTarget['removeEventListener']>) => {
+    listeners--;
+    return remove(...args);
+  };
+  Object.defineProperty(globalThis, 'window', {
+    configurable: true,
+    value: Object.assign(target, {
+      QuietPaperNative: {
+        recognizeInk(id: string) {
+          request = id;
+        },
+      },
+    }),
+  });
+  try {
+    const controller = new AbortController();
+    const pending = nativeRequest('recognizeInk', ['{}'], controller.signal);
+    assert.equal(listeners, 1);
+    controller.abort(new Error('authorization revoked'));
+    await assert.rejects(pending, /authorization revoked/);
+    assert.equal(listeners, 0);
+    target.dispatchEvent(
+      new CustomEvent('quietpaper-native', {
+        detail: { requestId: request, ok: true, text: 'late result' },
+      }),
+    );
+    await assert.rejects(
+      nativeRequest('recognizeInk', ['{}'], controller.signal),
+      /authorization revoked/,
+    );
+    assert.equal(listeners, 0);
+  } finally {
+    Object.defineProperty(globalThis, 'window', { configurable: true, value: previous });
+  }
+});

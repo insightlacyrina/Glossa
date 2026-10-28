@@ -18,7 +18,7 @@ struct SegmentEditor: View {
         VStack(alignment: .leading, spacing: 22) {
             Eyebrow(text: "A CAREFUL REVISION")
             Text(segment.kind == "formula" ? "修订公式" : "修订这段内容").font(.custom("Songti SC", size: 28))
-            Text("修改保留稳定字符身份，并在原位置生成独立印刷修订层。公式按原文保存。")
+            Text("修改保留稳定字符身份，并在原位置生成独立修订层。已有确认字形时使用仿手写，缺字时保留印刷文字。公式按原文保存。")
                 .font(.system(size: 12)).foregroundStyle(Palette.muted).lineSpacing(5)
             NativeTextEditor(text: $draft, monospaced: segment.kind == "formula") { before, range, replacement in
                 let utf16 = Array(before.utf16)

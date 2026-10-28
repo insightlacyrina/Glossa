@@ -1,8 +1,12 @@
 # 笺注 · Glossa
 
-本地优先的固定纸张笔记系统，当前版本为 **0.1.2 工程验证版**。工作区原为空，从零实现；没有复用或冒用此前 Quiet Editorial 的美术资源。界面重新设计为暖纸、深墨、灰紫工具与编辑式排版，默认进入原稿纸张。
+本地优先的固定纸张笔记系统，当前版本为 **0.1.3 工程验证版**。工作区原为空，从零实现；没有复用或冒用此前 Quiet Editorial 的美术资源。界面重新设计为暖纸、深墨、灰紫工具与编辑式排版，默认进入原稿纸张。
 
-这不是全部需求的最终完成版。当前交付包含可操作的客户端、Android 原生工程、Mac 自托管同步服务、可恢复数据内核和自动验收。**印刷文字修订层已实现；仿手写生成尚未实现。** Office、Keynote、Numbers 未实现，不能把文本往返或 PDF 截图算作这些格式的兼容。
+这不是全部需求的最终完成版。当前交付包含可操作的客户端、Android 原生工程、Mac 自托管同步服务、可恢复数据内核和自动验收。**支持端侧文字识别和基于已确认字形的矢量仿手写修订；缺字时保留印刷文字。** Office、Keynote、Numbers 未实现，不能把文本往返或 PDF 截图算作这些格式的兼容。
+
+## 下载 0.1.3
+
+[GitHub 工程预发布](https://github.com/insightlacyrina/Glossa/releases/tag/v0.1.3)提供 Android 平板、Android 手机和 Apple Silicon Mac 三个下载入口，以及 SHA-256 校验清单。手机与平板使用同一个 APK，按设备自动区分权限；两个下载文件内容相同。Android 为调试签名，Mac 为本地 ad-hoc 签名、尚未公证。变更与验证边界见 [发布说明](docs/RELEASE-0.1.3.md)。
 
 ## 启动
 
@@ -39,7 +43,7 @@ adb install -r android/app/build/outputs/apk/debug/app-debug.apk
 
 Android 使用系统 WebView 的 Pointer Events 保存真实采样，并通过 SAF 独立读写 Markdown/LaTeX。SAF、原生历史、待写回及编译细节见 [Android 文档](docs/ANDROID.md)。APK 编译、模拟器运行和真实触控笔验证是不同证据，最终结果见 [交付报告](docs/DELIVERY.md)。
 
-0.1.1 的 Android 生产文件层已在 API 35 模拟器通过 71 项新增断言，覆盖文本往返、双版本冲突保护、强制停止后的待写恢复与错误分类。测试使用真实 ContentResolver 和专用文件提供者，不代表系统文件选择器、持久授权或真实触控笔已验。当前本机验收安装包为 [glossa-0.1.2-visual-refresh-debug.apk](releases/visual-refresh-20261022/glossa-0.1.2-visual-refresh-debug.apk)。
+0.1.1 的 Android 生产文件层已在 API 35 模拟器通过 71 项新增断言，覆盖文本往返、双版本冲突保护、强制停止后的待写恢复与错误分类。测试使用真实 ContentResolver 和专用文件提供者，不代表系统文件选择器、持久授权或真实触控笔已验。0.1.2 的本机视觉验收安装包保留在 `releases/visual-refresh-20261022/`。
 
 0.1.2 新增“运行状态 → 窗口记录”：Android 持久保存最近 8 次可捕获的渲染器退出元数据，不记录笔记正文、文件 URI 或令牌。原生持久化 4 项、模拟桥界面 2 项及后续 1 项协议检查的既有证据沿用。云端 x86 软件模拟器阶段曾因 WebView 快照校验及首页超时未通过主页桥与 SAF；原失败日志与 [Android 诊断](docs/ANDROID-WEBVIEW-DIAGNOSIS.md) 保留。
 
@@ -57,7 +61,7 @@ npm run test:swift
 
 本机桌面已放置 `启动笺注.command`，双击即可打开上述应用。仓库中的通用启动入口为 `scripts/launch-macos.sh`。
 
-界面、纸张绘制、编辑器、文件与网络均使用原生 API；JavaScriptCore 只复用已有数据规则，不加载 WebView。原生自动测试覆盖工程兼容、权限、实际范围编辑、修订层、复习、耐久恢复与真实 HTTP 普通/E2EE 互通。安装包为 [Glossa.app](releases/macos/Glossa.app)，构建与验证边界见 [Mac 文档](docs/MACOS.md)。本机 ad-hoc 签名尚未做 Developer ID 公证；跨公网与另一台实体设备仍待验。
+界面、纸张绘制、编辑器、文件与网络均使用原生 API；JavaScriptCore 只复用已有数据规则，不加载 WebView。原生自动测试覆盖工程兼容、权限、实际范围编辑、修订层、复习、耐久恢复与真实 HTTP 普通/E2EE 互通。构建后的应用位于 `releases/macos/Glossa.app`，本轮分发包见上方 GitHub 预发布，构建与验证边界见 [Mac 文档](docs/MACOS.md)。本机 ad-hoc 签名尚未做 Developer ID 公证；跨公网与另一台实体设备仍待验。
 
 ## Mac 自托管服务
 
@@ -81,9 +85,9 @@ npm run server
 
 - 平板“一张新纸”即创建固定纸张，无需先建知识块。支持 A4/B5/自定义比例、横竖、点阵/横线/方格/空白，手动加页。
 - 钢笔保存位置、压力、倾斜、时间与图层；框选移动、局部橡皮、键盘文字/公式和图片可以混排。长按已有对象查看对应 B；B 菜单跳转至当前有效 A 修订。
-- 停笔/离开笔记按变化对象增量整理。文字、公式、分类、几何、结构、复习有独立开关和状态。未配置识别服务时保留笔迹并进入校对，不会显示伪造识别结果。已有键盘文字可确定性提取。
+- 停笔/离开笔记按变化对象增量整理。Android 用 ML Kit 数字笔迹模型识别同页成组笔画、内置中英文 OCR 识别图片；手写模型首次下载后离线使用。可选外部视觉模型发送真实裁切图像，需当前会话授权。所有识别候选先校对，不推测字符与笔画的精确对应。已有键盘文字可确定性提取。
 - 已有 B 文字/公式以真实选区和稳定字符身份编辑，保存到操作日志。非重叠字符编辑合流，同一内容争用进入校对中的冲突预览。
-- B 修订在原位置创建独立可编辑印刷层。平板“修订与历史”可独立撤销或明确确认不可逆合并；通用故障恢复历史仍保留。
+- 框选单字全部笔画后“学习选中字形”，B 修订可在原位置生成保留压力与倾斜的可编辑矢量笔迹。缺字、空间不足或公式保留印刷层；补齐字形后自动重试，人工改动过的修订需显式重试。平板“修订与历史”支持独立撤销和确认后合并。使用方式与证据见 [文字识别与仿手写](docs/RECOGNITION.md)。
 - 复习按知识块离线排期，可切 A/B/对照、自评“会了/还不会”，固定间隔与可插拔自适应算法均可运行。当前 adaptive 是 FSRS 启发式，不是经过验证的完整 FSRS 模型。
 - 原生 Markdown/LaTeX 可选择源对象插入纸张，并保留完整源快照、历史和待写队列；未经证明的源对象重定位进入人工确认，不能靠坐标或文件名猜。
 - 导出完整 `.glossa` 工程恢复原始 A/B、映射、对象/版本、知识关系、复习及源快照。Markdown/独立 HTML 是另行提供的 B 阅读快照，不能替代完整恢复包。
@@ -102,7 +106,7 @@ npm run test:browser
 npm run test:offline
 ```
 
-Android 原生往返使用单独 instrumentation APK，命令见 [Android 文档](docs/ANDROID.md)。所有最终测试数量、通过/未执行和证据路径统一记录在 [交付报告](docs/DELIVERY.md)，避免把编译成功当作设备功能通过。
+Android 原生往返使用单独 instrumentation APK，命令见 [Android 文档](docs/ANDROID.md)。早期交付见 [交付报告](docs/DELIVERY.md)；0.1.3 的构建、测试和发布前视觉审查见 [本轮验收](docs/verification/release-2026-10-27/README.md)。
 
 ## 数据边界与后续开发
 

@@ -209,7 +209,7 @@ struct ManageNoteView: View {
                     ForEach(store.snapshot?.folders ?? []) { Text($0.name).tag($0.id) }
                 }
                 TextField("标签，以逗号分隔", text: $tags)
-            }.formStyle(.grouped)
+            }.formStyle(.columns).fixedSize(horizontal: false, vertical: true)
             HStack { Spacer(); Button("取消") { dismiss() }.keyboardShortcut(.cancelAction)
                 Button("保存") {
                     if store.action("manageNote", ["noteID": note.id, "title": title,
@@ -228,12 +228,12 @@ struct HistoryView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             HStack { Text("修订与历史").font(.title2.weight(.semibold)); Spacer(); Button("完成") { dismiss() } }
-            Text("B 修订保存为原位置的独立印刷层。撤销或合并原稿修订请在平板完成。").font(.system(size: 13)).lineSpacing(4).foregroundStyle(Palette.muted)
+            Text("B 修订保存为原位置的独立仿手写或印刷层。补充字形、重试、撤销或合并修订请在平板完成。").font(.system(size: 13)).lineSpacing(4).foregroundStyle(Palette.muted)
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     ForEach((store.snapshot?.corrections ?? []).filter { $0.noteId == note.id }) { correction in
                         VStack(alignment: .leading, spacing: 9) {
-                            Label(correction.needsPlacement == true ? "待平板定位" : "印刷修订层", systemImage: "square.3.layers.3d").font(.system(size: 11)).foregroundStyle(Palette.plum)
+                            Label(correction.needsPlacement == true ? "待平板定位" : (correction.mode == "handwriting" ? "仿手写修订层" : "印刷修订层"), systemImage: "square.3.layers.3d").font(.system(size: 11)).foregroundStyle(Palette.plum)
                             Text(correction.before).strikethrough().foregroundStyle(Palette.muted)
                             Text(correction.after)
                             Text(correction.reason).font(.system(size: 11)).foregroundStyle(Palette.muted)

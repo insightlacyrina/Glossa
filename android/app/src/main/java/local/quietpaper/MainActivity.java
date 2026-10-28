@@ -54,6 +54,7 @@ public final class MainActivity extends Activity {
     private WebView web;
     private NativeSourceStore sources;
     private NativeRuntimeDiagnostics runtimeDiagnostics;
+    private NativeRecognition recognition;
     private String role, deviceId, openRequest, exportRequest, exportText, exportSession;
     private ValueCallback<Uri[]> fileCallback;
     private android.window.OnBackInvokedCallback systemBackCallback;
@@ -66,6 +67,7 @@ public final class MainActivity extends Activity {
         super.onCreate(saved);
         sources = new NativeSourceStore(this);
         runtimeDiagnostics = new NativeRuntimeDiagnostics(this);
+        recognition = new NativeRecognition();
         SharedPreferences prefs = getSharedPreferences("device", MODE_PRIVATE);
         deviceId = prefs.getString("id", null);
         if (deviceId == null) {
@@ -249,6 +251,18 @@ public final class MainActivity extends Activity {
         @JavascriptInterface public String getRole() { return role; }
         @JavascriptInterface public String getDeviceId() { return deviceId; }
         @JavascriptInterface public String getPlatform() { return "android"; }
+        @JavascriptInterface public void getRecognitionStatus(String requestId, String language) {
+            recognition.status(language, result -> recognitionResult(requestId, "recognition-status", result));
+        }
+        @JavascriptInterface public void downloadRecognitionModel(String requestId, String language) {
+            recognition.downloadModel(language, result -> recognitionResult(requestId, "recognition-model", result));
+        }
+        @JavascriptInterface public void recognizeInk(String requestId, String json) {
+            recognition.recognizeInk(json, result -> recognitionResult(requestId, "recognition-ink", result));
+        }
+        @JavascriptInterface public void recognizeImage(String requestId, String json) {
+            recognition.recognizeImage(json, result -> recognitionResult(requestId, "recognition-image", result));
+        }
         @JavascriptInterface public void getRuntimeDiagnostics(String requestId) {
             io.execute(() -> {
                 JSONObject result = runtimeDiagnostics.read();
@@ -429,6 +443,10 @@ public final class MainActivity extends Activity {
         try { emit(new JSONObject().put("requestId", request).put("type", type).put("ok", false).put("error", error)); }
         catch (Exception ignored) { }
     }
+    private void recognitionResult(String request, String type, JSONObject result) {
+        try { emit(result.put("requestId", request).put("type", type)); }
+        catch (Exception failed) { failure(request, type, "recognition-failed"); }
+    }
     private void emit(JSONObject detail) {
         String json = detail.toString().replace("\u2028", "\\u2028").replace("\u2029", "\\u2029");
         runOnUiThread(() -> {
@@ -448,6 +466,7 @@ public final class MainActivity extends Activity {
             systemBackCallback = null;
         }
         cancelFileChooser();
+        if (recognition != null) recognition.close();
         WebView previous = web; web = null;
         if (previous != null) { previous.removeJavascriptInterface("QuietPaperNative"); previous.destroy(); }
         super.onDestroy();

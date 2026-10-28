@@ -116,6 +116,7 @@ test('external AI sends changed objects only and even confident output stays unm
   });
   const processor = new IncrementalProcessor({
     idleMs: 60000,
+    rasterizer: async () => 'data:image/png;base64,aGVsbG8=',
     provider: {
       endpoint: 'https://example.com/v1',
       model: 'model',
@@ -164,6 +165,7 @@ test('external AI sends changed objects only and even confident output stays unm
 test('AI API failure remains visible and preserves original candidate reference', async () => {
   const processor = new IncrementalProcessor({
     idleMs: 60000,
+    rasterizer: async () => 'data:image/png;base64,aGVsbG8=',
     provider: {
       endpoint: 'https://example.com/v1',
       model: 'm',
@@ -258,6 +260,7 @@ test('in-flight recognition is buffered throughout handwriting and published onl
   const processor = new IncrementalProcessor({
     idleMs: 30,
     onResults: (results) => batches.push(results),
+    rasterizer: async () => 'data:image/png;base64,aGVsbG8=',
     provider: {
       endpoint: 'https://example.com/v1',
       model: 'm',
@@ -322,6 +325,7 @@ test('close explicitly flushes paused changes, while disposal never publishes a 
     onResults: () => {
       callbacks++;
     },
+    rasterizer: async () => 'data:image/png;base64,aGVsbG8=',
     provider: {
       endpoint: 'https://example.com/v1',
       model: 'm',
@@ -341,4 +345,29 @@ test('close explicitly flushes paused changes, while disposal never publishes a 
   release();
   await inFlight;
   assert.equal(callbacks, 1);
+});
+
+test('disabling every stage suppresses empty publication and cannot create an idle requeue loop', async () => {
+  let callbacks = 0;
+  const object = { id: 'disabled', revision: 1, kind: 'stroke' as const };
+  const processor = new IncrementalProcessor({
+    idleMs: 2,
+    stages: {
+      ocr: false,
+      formula: false,
+      classification: false,
+      layout: false,
+      structure: false,
+      review: false,
+    },
+    onResults: () => {
+      callbacks++;
+      processor.markDirty([object]);
+    },
+  });
+  processor.markDirty([object]);
+  await new Promise((resolve) => setTimeout(resolve, 25));
+  assert.equal(callbacks, 0);
+  assert.equal((await processor.flush()).length, 0);
+  processor.dispose();
 });

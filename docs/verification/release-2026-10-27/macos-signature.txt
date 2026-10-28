@@ -1,0 +1,4 @@
+--prepared:/Users/zhuyongfei/Documents/ChatGPT/Glossa/releases/v0.1.3/macos/Glossa.app/Contents/MacOS/Glossa_GlossaCore.bundle
+--validated:/Users/zhuyongfei/Documents/ChatGPT/Glossa/releases/v0.1.3/macos/Glossa.app/Contents/MacOS/Glossa_GlossaCore.bundle
+releases/v0.1.3/macos/Glossa.app: valid on disk
+releases/v0.1.3/macos/Glossa.app: satisfies its Designated Requirement

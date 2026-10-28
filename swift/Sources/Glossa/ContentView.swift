@@ -189,7 +189,9 @@ struct ContentView: View {
                             Button { store.chooseImport() } label: { Label("导入笔记", systemImage: "square.and.arrow.down") }.buttonStyle(QuietButton())
                         }
                         if store.filteredNotes.isEmpty {
-                            EmptyState(symbol: "magnifyingglass", title: "这里还没有笔记", message: "试试其他关键词，或把已有笔记归入这个文件夹。 ").frame(height: 370)
+                            EmptyState(symbol: "magnifyingglass",
+                                title: store.search.isEmpty ? "这里还没有笔记" : "没有找到匹配的笔记",
+                                message: store.search.isEmpty ? "把已有笔记归入这个文件夹。" : "试试其他关键词，或检查标题、正文与标签。").frame(height: 370)
                         } else {
                             LazyVGrid(columns: [GridItem(.adaptive(minimum: 250, maximum: 370), spacing: 20)], alignment: .leading, spacing: 20) {
                                 ForEach(store.filteredNotes) { note in

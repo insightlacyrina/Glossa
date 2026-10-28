@@ -15,6 +15,43 @@ struct CoreTests {
     private func expectedCharacters(_ segment: CoreSegment) -> [[String: String]] {
         segment.chars.filter { !$0.deleted }.map { ["id": $0.id, "version": $0.version, "value": $0.value] }
     }
+    private func handwritingFixture() throws -> String {
+        var operations: [[String: Any]] = []
+        func append(_ type: String, _ payload: [String: Any]) {
+            let seq = operations.count + 1
+            operations.append(["id": "pen-fixture:\(seq)", "deviceId": "pen-fixture", "role": "tablet",
+                "seq": seq, "clock": seq, "at": 1_792_600_000_000 + seq, "type": type,
+                "seen": ["pen-fixture": seq - 1], "payload": payload])
+        }
+        func point(_ x: Double, _ y: Double, _ pressure: Double, _ time: Int) -> [String: Any] {
+            ["x": x, "y": y, "pressure": pressure, "tiltX": 18, "tiltY": -4, "time": time]
+        }
+        append("note.create", ["noteId": "ink-note", "pageId": "ink-page", "title": "仿手写原生验收", "paper": [:]])
+        append("object.create", ["noteId": "ink-note", "pageId": "ink-page", "object": [
+            "id": "original-ink", "kind": "stroke", "layerId": "ink", "color": "#343434", "width": 3,
+            "bounds": ["x": 40, "y": 60, "width": 140, "height": 40],
+            "points": [point(40, 60, 0.25, 100), point(180, 80, 0.8, 145)]
+        ]])
+        append("object.create", ["noteId": "ink-note", "pageId": "ink-page", "object": [
+            "id": "confirmed-b-ink", "kind": "stroke", "layerId": "ink", "color": "#343434", "width": 3,
+            "bounds": ["x": 300, "y": 100, "width": 10, "height": 20],
+            "points": [point(300, 100, 0.25, 100), point(310, 120, 0.8, 145)]
+        ]])
+        append("block.create", ["noteId": "ink-note", "blockId": "ink-block", "title": "文字", "objectIds": ["original-ink"]])
+        append("segment.create", ["noteId": "ink-note", "blockId": "ink-block", "segmentId": "ink-segment",
+            "objectIds": ["original-ink"], "text": "a", "options": ["confirmed": true, "kind": "text"]])
+        // A tablet-confirmed normalized snapshot, with exact raw-source provenance.
+        append("handwriting.learn", ["noteId": "ink-note", "glyph": [
+            "character": "b", "noteId": "ink-note", "pageId": "ink-page",
+            "sourceVersions": ["confirmed-b-ink": "pen-fixture:3"], "height": 20, "aspect": 0.5,
+            "strokes": [["points": [point(0, 0, 0.25, 100), point(0.5, 1, 0.8, 145)],
+                "width": 0.15, "color": "#343434"]]
+        ]])
+        let envelope: [String: Any] = ["format": "quiet-paper-project", "version": 1, "project": [
+            "schemaVersion": 1, "id": "native-handwriting-fixture", "operations": operations, "metadata": [:]
+        ]]
+        return String(decoding: try JSONSerialization.data(withJSONObject: envelope), as: UTF8.self)
+    }
     @Test func testCompatibleRoundTripPreservesFullProject() throws {
         let core = try loaded()
         let before = try JSONSerialization.jsonObject(with: Data(example().utf8)) as! NSDictionary
@@ -108,6 +145,42 @@ struct CoreTests {
         let reloaded = try NativeCore(deviceID: "another-mac")
         try reloaded.loadProject(core.projectJSON())
         XCTAssertEqual(try reloaded.snapshot().notes[0].blocks.flatMap(\.segments).first { $0.id == segment.id }?.text, "甲😀乙 + x")
+    }
+    @Test func testImportedConfirmedGlyphCreatesNativeHandwritingAndOfflineReadingPaths() throws {
+        let fixture = try handwritingFixture(), core = try NativeCore(deviceID: "handwriting-mac")
+        try core.loadProject(fixture)
+        let before = try core.snapshot()
+        XCTAssertEqual(before.operationCount, 6)
+        XCTAssertEqual(before.notes[0].blocks[0].segments[0].text, "a")
+        let original = try XCTUnwrap(before.notes[0].pages[0].objects.first { $0.id == "original-ink" })
+        _ = try core.invoke("editRange", ["noteID": "ink-note", "segmentID": "ink-segment",
+            "expectedText": "a", "start": 0, "end": 1, "text": "b"])
+        let after = try core.snapshot()
+        let correction = try XCTUnwrap(after.corrections.first)
+        XCTAssertEqual(correction.mode, "handwriting")
+        XCTAssertEqual(correction.after, "b")
+        XCTAssertEqual(after.notes[0].blocks[0].segments[0].text, "b")
+        let revision = try XCTUnwrap(after.notes[0].pages[0].objects.first { $0.revisionId == correction.id })
+        XCTAssertEqual(revision.kind, "stroke")
+        XCTAssertEqual(revision.replacesObjectIds, ["original-ink"])
+        XCTAssertEqual(revision.points?.map(\.pressure), [0.25, 0.8])
+        XCTAssertEqual(revision.points?.map(\.tiltX), [18, 18])
+        XCTAssertEqual(revision.points?.map(\.time), [100, 145])
+        XCTAssertEqual(revision.bounds.x, original.bounds.x)
+        XCTAssertEqual(revision.bounds.y, original.bounds.y)
+        XCTAssertFalse(after.notes[0].pages[0].objects.contains { $0.id == "original-ink" })
+        let html = try JSONDecoder().decode(String.self, from: Data(core.invoke("readingHTML", ["noteID": "ink-note"]).utf8))
+        XCTAssertTrue(html.contains("data-object-id=\"\(revision.id)\""))
+        XCTAssertTrue(html.contains("data-replaces-object-ids=\"[&quot;original-ink&quot;]\""))
+        XCTAssertTrue(html.contains("<line "))
+        let exported = try core.projectJSON()
+        XCTAssertTrue(exported.contains("handwriting.learn"))
+        let reloaded = try NativeCore(deviceID: "handwriting-reader")
+        try reloaded.loadProject(exported)
+        let restored = try reloaded.snapshot()
+        XCTAssertEqual(restored.corrections.first?.mode, "handwriting")
+        XCTAssertEqual(restored.notes[0].pages[0].objects.first { $0.id == revision.id }?.points?.map(\.pressure), [0.25, 0.8])
+        XCTAssertEqual(try reloaded.projectJSON(), exported)
     }
     @Test func testStaleEditAndFailedBatchLeaveAllOperationsUnchanged() throws {
         let core = try loaded()

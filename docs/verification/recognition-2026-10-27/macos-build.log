@@ -1,0 +1,43 @@
+
+> glossa@0.1.2 build:macos
+> bash scripts/build-macos.sh
+
+macOS SDK: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
+
+> glossa@0.1.2 build
+> tsc --noEmit && vite build && node scripts/build-offline.mjs
+
+vite v6.4.4 building for production...
+transforming...
+✓ 1605 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.48 kB │ gzip:   0.33 kB
+dist/assets/index-x_ubapyA.css   56.24 kB │ gzip:  12.20 kB
+dist/assets/export-BKLx2JxG.js    7.91 kB │ gzip:   3.62 kB
+dist/assets/index-B046tcyX.js   476.28 kB │ gzip: 147.82 kB
+✓ built in 1.94s
+Offline shell: 6 files, glossa-7c8526356db7ce38
+Swift JavaScriptCore resource built from shared data kernel.
+Building for production...
+[4 / 11] GlossaCore
+[6 / 12] GlossaCore
+/Users/zhuyongfei/Documents/ChatGPT/Glossa/swift/Package.swift: GlossaCore: ld: warning: search path '/Library/Developer/CommandLineTools/Developer/Library/Frameworks' not found
+[12 / 14] Glossa-product
+[13 / 15] Glossa-product
+/Users/zhuyongfei/Documents/ChatGPT/Glossa/swift/Package.swift: Glossa-product: ld: warning: search path '/Library/Developer/CommandLineTools/Developer/usr/lib' not found
+/Users/zhuyongfei/Documents/ChatGPT/Glossa/swift/Package.swift: Glossa-product: ld: warning: search path '/Library/Developer/CommandLineTools/Developer/Library/Frameworks' not found
+[16 / 17] Glossa-product
+Build complete! (13.62秒)
+/Users/zhuyongfei/Documents/ChatGPT/Glossa/releases/macos/Glossa.app/Contents/Resources/server-runtime/node: replacing existing signature
+(node:5166) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Bundled independent server runtime: Node.js v24.14.0 (arm64).
+/Users/zhuyongfei/Documents/ChatGPT/Glossa/releases/macos/Glossa.app/Contents/Info.plist: OK
+/Users/zhuyongfei/Documents/ChatGPT/Glossa/releases/macos/Glossa.app: replacing existing signature
+--prepared:/Users/zhuyongfei/Documents/ChatGPT/Glossa/releases/macos/Glossa.app/Contents/MacOS/Glossa_GlossaCore.bundle
+--validated:/Users/zhuyongfei/Documents/ChatGPT/Glossa/releases/macos/Glossa.app/Contents/MacOS/Glossa_GlossaCore.bundle
+/Users/zhuyongfei/Documents/ChatGPT/Glossa/releases/macos/Glossa.app: valid on disk
+/Users/zhuyongfei/Documents/ChatGPT/Glossa/releases/macos/Glossa.app: satisfies its Designated Requirement
+Built: /Users/zhuyongfei/Documents/ChatGPT/Glossa/releases/macos/Glossa.app
+Archive: /Users/zhuyongfei/Documents/ChatGPT/Glossa/releases/macos/Glossa-macOS-arm64.zip

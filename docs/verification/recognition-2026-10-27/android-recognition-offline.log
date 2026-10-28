@@ -1,0 +1,30 @@
+
+PASS native recognition 27 assertions
+PASS empty input rejected
+PASS strokes retained as group with original source identities
+PASS duplicate identities rejected
+PASS multi-page ink rejected
+PASS out-of-range coordinate rejected
+PASS remote image URL rejected without fetching
+PASS invalid image bytes rejected
+PASS gesture classifiers cannot be used as text models
+PASS bundled image model available without download: {"ok":true,"available":true,"downloaded":true,"language":"en-US","modelLanguage":"en-US","imageAvailable":true,"engine":"mlkit-digital-ink"}
+PASS PNG decoded with bounded allocation
+PASS real bundled image OCR completed
+PASS real image OCR matches HELLO 123 ground truth
+PASS image OCR returns actual engine and line regions
+PASS real Chinese image OCR matches Chinese ground truth
+PASS real WebView JavascriptInterface status and event callback
+PASS real WebView image OCR round trip with recognized text
+PASS explicit test action downloads ink model
+PASS real local digital ink inference returns group candidates
+PASS no fabricated calibrated confidence
+PASS no fabricated calibrated confidence
+PASS no fabricated calibrated confidence
+PASS no fabricated calibrated confidence
+PASS no fabricated calibrated confidence
+PASS H ground truth is present in digital ink alternatives
+PASS explicit test action downloads simplified Chinese ink model
+PASS real local Chinese digital ink inference completes
+PASS Chinese person character ground truth is present in ink alternatives
+

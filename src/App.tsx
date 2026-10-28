@@ -97,6 +97,7 @@ import {
   type PaperCapture,
 } from './source-coordinator';
 import { downloadText, nativeRequest, type NativeReply } from './native';
+import { RecognitionSettings } from './RecognitionSettings';
 import './style.css';
 
 type View = 'paper' | 'library' | 'review' | 'proof' | 'activity';
@@ -305,11 +306,19 @@ function App() {
   const due = dueReviews(cards, reviewSettings);
   const candidates = Object.entries(settings)
     .filter(([k, v]) => k.startsWith('candidate:') && v)
-    .map(([key, value]) => ({ key, ...(value as RecognitionResult & { noteId: string }) }))
+    .map(([key, value]) => ({
+      key,
+      ...(value as RecognitionResult & { noteId: string; segmentId?: string }),
+    }))
     .filter((c) => {
       const n = e?.state.notes.find((n) => n.id === c.noteId);
-      return n?.pages.some((p) =>
-        p.objects.some((o) => o.id === c.objectId && !o.deleted && o.version === c.revision),
+      return (c.sourceObjectIds ?? [c.objectId]).every((id) =>
+        n?.pages.some((p) =>
+          p.objects.some(
+            (o) =>
+              o.id === id && !o.deleted && o.version === (c.sourceRevisions?.[id] ?? c.revision),
+          ),
+        ),
       );
     });
   const unmapped =
@@ -650,13 +659,22 @@ function App() {
     if (!n) return;
     const p = n.pages.find((p) => p.objects.some((o) => ids.includes(o.id)));
     if (!p) return;
-    const existing = n.blocks.flatMap((b) => b.segments).find((s) => s.id === segmentId);
-    const candidate = candidates.find((c) => ids.includes(c.objectId));
+    const candidate = candidates.find((c) =>
+      (c.sourceObjectIds ?? [c.objectId]).some((id) => ids.includes(id)),
+    );
+    const existing = n.blocks
+      .flatMap((b) => b.segments)
+      .find((s) => s.id === (segmentId ?? candidate?.segmentId));
+    if (candidate?.sourceObjectIds) ids = candidate.sourceObjectIds;
     const expectedObjects = n.pages
       .flatMap((p) => p.objects)
       .filter((o) => ids.includes(o.id))
       .map((o) => ({ id: o.id, version: o.version }));
-    const expectedSegment = existing ? JSON.stringify(existing.chars) : undefined;
+    const segmentSnapshot = (s: Segment | undefined) =>
+      s
+        ? JSON.stringify({ chars: s.chars, source: s.source, deleted: s.deleted, kind: s.kind })
+        : undefined;
+    const expectedSegment = segmentSnapshot(existing);
     setModal({
       title: '校对原始记录',
       wide: true,
@@ -670,7 +688,7 @@ function App() {
                 .getNote(n.id)
                 .blocks.flatMap((b) => b.segments)
                 .find((s) => s.id === existing?.id);
-              if (existing && JSON.stringify(latestSegment?.chars) !== expectedSegment)
+              if (existing && segmentSnapshot(latestSegment) !== expectedSegment)
                 throw new Error('结构内容已在校对期间改变。转录已保留，请刷新预览。');
               const text = String(data.get('text'));
               const kind = String(data.get('kind')) as 'text' | 'formula';
@@ -705,7 +723,7 @@ function App() {
               name="text"
               rows={5}
               required
-              defaultValue={existing?.text ?? candidate?.text ?? ''}
+              defaultValue={candidate?.text ?? existing?.text ?? ''}
               aria-label="校对转录内容"
             />
           </label>
@@ -741,6 +759,10 @@ function App() {
         }
         if (group.length) kept.push(group);
         if (!hit) continue;
+        if (o.revisionId) {
+          engine.splitRevisionStroke(note.id, o.id, kept, o.version);
+          continue;
+        }
         if (!kept.length) engine.deleteObject(note.id, o.id);
         else {
           const first = kept.shift()!;
@@ -961,7 +983,54 @@ function App() {
       ),
     });
   }
+  function learnHandwriting() {
+    if (!note || !selected.length) return;
+    const noteId = note.id;
+    const ids = [...selected];
+    const sources = note.pages.flatMap((p) => p.objects).filter((o) => ids.includes(o.id));
+    if (sources.some((o) => o.kind !== 'stroke' || o.revisionId)) {
+      setNotice('请只框选一个原始手写字的全部笔画');
+      return;
+    }
+    const expected = Object.fromEntries(sources.map((o) => [o.id, o.version]));
+    setModal({
+      title: '学习选中字形',
+      content: (
+        <FormModal
+          button="保存字形"
+          onSubmit={(data) => {
+            const ok = w.transact((engine) =>
+              engine.learnHandwritingGlyph(noteId, ids, String(data.get('character')), expected),
+            );
+            if (ok) {
+              setModal(null);
+              setNotice('字形已保存，后续 B 修订可复用这组真实笔迹');
+            }
+          }}
+        >
+          {page && <PaperPreview page={page} objectIds={ids} />}
+          <label>
+            这个字是
+            <input
+              name="character"
+              required
+              autoFocus
+              aria-label="字形对应字符"
+              placeholder="例如：学"
+            />
+          </label>
+          <label className="check-row">
+            <input type="checkbox" required />
+            我已选中这个字的全部笔画，并确认字符正确
+          </label>
+        </FormModal>
+      ),
+    });
+  }
   function revisions() {
+    const fingerprints = new Map(
+      e!.state.corrections.map((c) => [c.id, e!.handwritingRevisionFingerprint(c.id)]),
+    );
     setModal({
       title: '修订与历史',
       wide: true,
@@ -977,10 +1046,39 @@ function App() {
             .filter((c) => c.noteId === note?.id)
             .map((c) => (
               <div className="revision-card" key={c.id}>
-                <div className="eyebrow">可编辑文字修订层</div>
+                <div className="eyebrow">
+                  {c.mode === 'handwriting' ? '可编辑仿手写修订层' : '可编辑印刷修订层'}
+                </div>
                 <del>{c.before}</del>
                 <p>{c.after}</p>
+                <p>{c.reason}</p>
                 <div className="button-row">
+                  {editable && c.mode === 'printed' && !c.needsPlacement && (
+                    <button
+                      type="button"
+                      className="button"
+                      onClick={() => {
+                        if (
+                          w.transact((engine) =>
+                            engine.retryHandwritingRevision(c.id, fingerprints.get(c.id)),
+                          )
+                        ) {
+                          setModal(null);
+                          const result = w
+                            .getEngine()
+                            ?.state.corrections.find((item) => item.id === c.id);
+                          setNotice(
+                            result?.mode === 'handwriting'
+                              ? '已生成可编辑仿手写修订'
+                              : (result?.reason ?? '已重新检查字形样本'),
+                          );
+                        }
+                      }}
+                    >
+                      重试仿手写
+                      <PenLine size={15} />
+                    </button>
+                  )}
                   {editable && (
                     <button
                       className="button"
@@ -2650,6 +2748,9 @@ function App() {
                     <IconButton title="校对选中内容" onClick={() => proof(selected)}>
                       <ScanLine size={19} />
                     </IconButton>
+                    <IconButton title="学习选中字形" onClick={learnHandwriting}>
+                      <PenLine size={19} />
+                    </IconButton>
                     <IconButton title="删除选中内容" onClick={deleteSelected}>
                       <Trash2 size={18} />
                     </IconButton>
@@ -3134,9 +3235,9 @@ function App() {
                 <button
                   className="proof-card"
                   key={c.key}
-                  onClick={() => proof([c.objectId], undefined, c.noteId)}
+                  onClick={() => proof(c.sourceObjectIds ?? [c.objectId], undefined, c.noteId)}
                 >
-                  {p && <PaperPreview page={p} objectIds={[c.objectId]} />}
+                  {p && <PaperPreview page={p} objectIds={c.sourceObjectIds ?? [c.objectId]} />}
                   <div>
                     <h3>{n?.title}</h3>
                     <p>{c.reason ?? '识别来源待核对'}</p>
@@ -3494,6 +3595,7 @@ function SettingsPanel({
       <div className="settings-tabs">
         {[
           ['writing', '书写与整理'],
+          ['recognition', '识别与仿手写'],
           ['sync', 'Mac 同步'],
           ['ai', '外部识别'],
         ].map(([id, label]) => (
@@ -3515,6 +3617,7 @@ function SettingsPanel({
         ))}
       </div>
       {message && <div className="inline-error">{message}</div>}
+      {tab === 'recognition' && <RecognitionSettings workspace={w} />}
       {tab === 'writing' && (
         <FormModal
           onSubmit={(data) => {

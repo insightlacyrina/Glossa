@@ -1546,7 +1546,7 @@ nav {
 .dialog-stack > p {
   font-size: 14px;
   line-height: 2;
-  color: #8c726f;
+  color: #7d6462;
 }
 .form-grid {
   display: grid;
@@ -2690,6 +2690,15 @@ nav {
   }
   .app-shell.platform-android .workspace {
     padding-inline: 24px;
+  }
+  .app-shell.platform-android .workspace-split {
+    flex-direction: column;
+    gap: 24px;
+  }
+  .app-shell.platform-android .workspace-split .paper-region,
+  .app-shell.platform-android .workspace-split .structure-region {
+    width: 100%;
+    flex: auto;
   }
   .app-shell.platform-android .review-layout {
     gap: 16px;
