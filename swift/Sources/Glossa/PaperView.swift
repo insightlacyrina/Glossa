@@ -3,6 +3,7 @@ import AppKit
 import GlossaCore
 
 struct PaperView: View {
+    @Environment(\.colorScheme) private var colorScheme
     let page: CorePage
     var highlighted: Set<String> = []
     var onObject: ((CorePaperObject) -> Void)?
@@ -56,7 +57,7 @@ struct PaperView: View {
     private func draw(_ object: CorePaperObject, in context: inout GraphicsContext) {
         let b = object.bounds
         let rect = CGRect(x: b.x, y: b.y, width: b.width, height: max(b.height, 24))
-        let color = Color(hex: object.color ?? "39353b")
+        let color = Palette.paperInk(object.color ?? "39353b", dark: colorScheme == .dark)
         if object.kind == "stroke" || (object.kind == "shape" && object.points?.isEmpty == false) {
             let points = object.points ?? []
             let width = object.width ?? 2.4

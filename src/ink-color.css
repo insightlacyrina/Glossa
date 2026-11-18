@@ -1,0 +1,61 @@
+.ink-color-picker {
+  display: grid;
+  gap: 20px;
+  color: var(--ink);
+}
+.ink-palette {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(78px, 1fr));
+  gap: 8px;
+}
+.ink-palette button {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  color: var(--ink);
+}
+.ink-palette button[aria-pressed='true'] {
+  border-color: var(--plum);
+  box-shadow: inset 0 0 0 1px var(--plum);
+}
+.ink-swatch {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
+  border-radius: 50%;
+  outline: 1px solid var(--line);
+}
+.ink-color-custom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.ink-color-custom label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+}
+.ink-color-custom input {
+  min-height: 44px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.ink-color-custom input[type='color'] {
+  width: 66px;
+  padding: 4px;
+  cursor: pointer;
+}
+.ink-color-custom input[type='text'] {
+  width: 110px;
+  padding: 0 8px;
+  font-family: ui-monospace, monospace;
+}

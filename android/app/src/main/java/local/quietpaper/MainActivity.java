@@ -52,6 +52,8 @@ public final class MainActivity extends Activity {
     // Destroying a view must not start a competing file-journal executor.
     private static final ExecutorService io = Executors.newSingleThreadExecutor();
     private WebView web;
+    private FrameLayout appFrame;
+    private boolean darkTheme;
     private NativeSourceStore sources;
     private NativeRuntimeDiagnostics runtimeDiagnostics;
     private NativeRecognition recognition;
@@ -69,6 +71,7 @@ public final class MainActivity extends Activity {
         runtimeDiagnostics = new NativeRuntimeDiagnostics(this);
         recognition = new NativeRecognition();
         SharedPreferences prefs = getSharedPreferences("device", MODE_PRIVATE);
+        darkTheme = prefs.getBoolean("darkTheme", false);
         deviceId = prefs.getString("id", null);
         if (deviceId == null) {
             deviceId = "android-" + UUID.randomUUID();
@@ -79,9 +82,9 @@ public final class MainActivity extends Activity {
         DisplayMetrics display = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getRealMetrics(display);
         role = Math.min(display.widthPixels, display.heightPixels) / display.density >= 600 ? "tablet" : "phone";
-        web = new WebView(this);
+        web = "tablet".equals(role) ? new StylusWebView(this) : new WebView(this);
         web.setTag("quietpaper-web");
-        web.setBackgroundColor(0xffeeebe5);
+        web.setBackgroundColor(windowColor());
         WebSettings settings = web.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
@@ -90,7 +93,8 @@ public final class MainActivity extends Activity {
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         settings.setMediaPlaybackRequiresUserGesture(true);
         settings.setSupportZoom(false);
-        web.addJavascriptInterface(new NativeBridge(), "QuietPaperNative");
+        web.addJavascriptInterface(web instanceof StylusWebView stylus
+            ? new TabletBridge(stylus) : new NativeBridge(), "QuietPaperNative");
         web.setWebViewClient(new WebViewClient() {
             @Override public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                 Uri uri = request.getUrl();
@@ -134,7 +138,8 @@ public final class MainActivity extends Activity {
             }
         });
         FrameLayout frame = new FrameLayout(this);
-        frame.setBackgroundColor(0xffeeebe5);
+        appFrame = frame;
+        frame.setBackgroundColor(windowColor());
         frame.addView(web, new FrameLayout.LayoutParams(-1, -1));
         frame.setOnApplyWindowInsetsListener((view, insets) -> {
             if (Build.VERSION.SDK_INT >= 30) {
@@ -145,8 +150,8 @@ public final class MainActivity extends Activity {
             }
             return insets;
         });
-        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
         setContentView(frame);
+        applyAppearance();
         web.loadUrl(ORIGIN + "/index.html");
         if (Build.VERSION.SDK_INT >= 33) {
             systemBackCallback = this::navigateBack;
@@ -155,6 +160,20 @@ public final class MainActivity extends Activity {
             getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
                 android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT, systemBackCallback);
         }
+    }
+
+    private int windowColor() { return darkTheme ? 0xff141413 : 0xffeeebe5; }
+
+    private void applyAppearance() {
+        int color = windowColor();
+        if (appFrame != null) appFrame.setBackgroundColor(color);
+        if (web != null) web.setBackgroundColor(color);
+        getWindow().setStatusBarColor(color);
+        getWindow().setNavigationBarColor(color);
+        View decor = getWindow().getDecorView();
+        int lightBars = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+        int flags = decor.getSystemUiVisibility();
+        decor.setSystemUiVisibility(darkTheme ? flags & ~lightBars : flags | lightBars);
     }
 
     @Override public void onBackPressed() {
@@ -210,11 +229,12 @@ public final class MainActivity extends Activity {
         recovery.setTag("quietpaper-native-recovery");
         recovery.setOrientation(LinearLayout.VERTICAL);
         recovery.setGravity(Gravity.CENTER);
-        recovery.setBackgroundColor(0xffeeebe5);
+        recovery.setBackgroundColor(windowColor());
         int gap = Math.round(24 * getResources().getDisplayMetrics().density);
         recovery.setPadding(gap, gap, gap, gap);
         TextView title = new TextView(this);
-        title.setText("书写窗口已中断"); title.setTextSize(24); title.setTextColor(0xff4d414b);
+        title.setText("书写窗口已中断"); title.setTextSize(24);
+        title.setTextColor(darkTheme ? 0xfff5f0e8 : 0xff4d414b);
         title.setTypeface(android.graphics.Typeface.create("serif", android.graphics.Typeface.NORMAL));
         recovery.addView(title);
         Button reopen = new Button(this);
@@ -247,10 +267,31 @@ public final class MainActivity extends Activity {
         return "application/octet-stream";
     }
 
-    public final class NativeBridge {
+    public final class TabletBridge extends NativeBridge {
+        private final StylusWebView stylus;
+
+        private TabletBridge(StylusWebView stylus) {
+            this.stylus = stylus;
+        }
+
+        @JavascriptInterface public void setStylusPaperBounds(double left, double top, double right, double bottom,
+                boolean barrelErases) {
+            stylus.setPaperBounds(left, top, right, bottom, barrelErases);
+        }
+    }
+
+    public class NativeBridge {
         @JavascriptInterface public String getRole() { return role; }
         @JavascriptInterface public String getDeviceId() { return deviceId; }
         @JavascriptInterface public String getPlatform() { return "android"; }
+        @JavascriptInterface public void setAppTheme(boolean dark) {
+            runOnUiThread(() -> {
+                if (!canUseWeb() || darkTheme == dark) return;
+                darkTheme = dark;
+                applyAppearance();
+                getSharedPreferences("device", MODE_PRIVATE).edit().putBoolean("darkTheme", dark).apply();
+            });
+        }
         @JavascriptInterface public void getRecognitionStatus(String requestId, String language) {
             recognition.status(language, result -> recognitionResult(requestId, "recognition-status", result));
         }

@@ -4,6 +4,17 @@
 
 Android 平板是唯一完整创建与编辑端。Android 手机只能阅读与修改已有 B 知识块；它不能通过放宽浏览器窗口获得平板权限。原始笔迹须保留对象、坐标、压力、倾斜和图层，不能用截图替代。
 
+## 平板 S Pen 书写
+
+按住侧键落笔可临时使用局部橡皮。抬笔完成擦除，下一笔按当前工具继续。悬停提示标出笔尖位置或橡皮范围。笔离开纸面的感应范围后，可以在纸上用手指上下滑动。侧键和悬停提示可在「设置 → 书写与整理 → S Pen 与触控笔」独立开关，偏好保存在本机。交互参考 [Samsung Notes](https://www.samsung.com/us/support/answer/ANS10003634/)、[Goodnotes](https://support.goodnotes.com/hc/en-us/articles/8373153754639-Using-the-Eraser-with-the-Samsung-S-Pen-Button-on-Android)、[Apple Pencil](https://support.apple.com/en-kz/guide/ipad/ipadc55b6c7a/ipados) 和 [One UI](https://developer.samsung.com/one-ui/index.html)。
+
+安卓平板在原稿上为每一笔分配独立的输入归属。掌触抬起不会结束正在书写的笔划，系统取消会清理暂态笔迹和对应的检查点。原生历史采样经过 WebView 传到纸张并保留压力、倾斜和时间。可在专用模拟器上安装当前客户端和测试 APK 后复现。此模式会创建测试笔记，使用合成 `MotionEvent` 驱动生产页面。Galaxy Tab 实体笔感、One UI 系统快捷命令和端到端延迟仍需真机验收。 [Android 触控笔输入指南](https://developer.android.com/develop/ui/views/touch-and-input/stylus-input/advanced-stylus-features)
+
+```sh
+node tests/stylus.browser.mjs
+adb -s emulator-5556 shell am instrument -w -e mode stylus local.quietpaper.test/local.quietpaper.NativeRoundTripInstrumentation
+```
+
 ## 2026-10-24 界面与导航微调
 
 参照 Apple 人机界面指南的层级、对齐、适应宽度及克制动效原则，Android 专属样式统一暖纸色、正文与辅助信息层级，控件保留 Android 的至少 48px 触摸区域。手机收起冗长面包屑；书写工具仍可横向滚动访问，未隐藏功能或改变笔迹坐标。复习自评统一为“未掌握／已掌握”及相同尺寸。
@@ -16,14 +27,14 @@ Android 平板是唯一完整创建与编辑端。Android 手机只能阅读与�
 
 Apple Silicon Mac 使用 API 35 ARM64、Hypervisor.Framework 硬件加速模拟器与系统 WebView 124，真实 APK 首页加载和纸张操作已通过；云端 x86 软件模拟器的旧失败继续保留，不再作为所有设备的共同结论。设备配置、原始证据索引和完整范围见 [本机增量验收](LOCAL-VALIDATION.md)。
 
-| 场景 | 本轮实际结果 | 范围 |
-| --- | --- | --- |
-| `app-bridge` | 9 项通过 | 真实打包首页的身份桥、异步原生读写与 DOM 回调，源文件重开完整字节一致 |
-| `saf-prepare` | 7 项通过 | 系统 DocumentsUI 选择 Downloads 文件、持久读写 URI 授权、首页 JS 修改与字节重开 |
-| 显式 force-stop → `saf-resume` | 8 项通过，PID 3641→4033 | 新进程沿用授权读写；resume 按设计不创建 WebView |
-| `saf-faults` | 31 项通过 | 不同 UID 测试 DocumentsProvider；取消、撤销实际授权、源暂不可用、只读写失败保留待写正文/快照，重授权后重试 |
-| Markdown/LaTeX 产品界面 | 完整文本链路通过 | 真实 React 界面经系统 SAF 选择→插入源对象到纸张→修订已有 B→写回，源重开 SHA/长度一致；源离线待写与同区域冲突预览/显式选择通过 |
-| 已保存笔迹恢复 | force-stop 后重开通过 | WebView 合成笔输入的原始采样保留；不代表实体触控笔、掌触或物理延迟 |
+| 场景                           | 本轮实际结果            | 范围                                                                                                                          |
+| ------------------------------ | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `app-bridge`                   | 9 项通过                | 真实打包首页的身份桥、异步原生读写与 DOM 回调，源文件重开完整字节一致                                                         |
+| `saf-prepare`                  | 7 项通过                | 系统 DocumentsUI 选择 Downloads 文件、持久读写 URI 授权、首页 JS 修改与字节重开                                               |
+| 显式 force-stop → `saf-resume` | 8 项通过，PID 3641→4033 | 新进程沿用授权读写；resume 按设计不创建 WebView                                                                               |
+| `saf-faults`                   | 31 项通过               | 不同 UID 测试 DocumentsProvider；取消、撤销实际授权、源暂不可用、只读写失败保留待写正文/快照，重授权后重试                    |
+| Markdown/LaTeX 产品界面        | 完整文本链路通过        | 真实 React 界面经系统 SAF 选择→插入源对象到纸张→修订已有 B→写回，源重开 SHA/长度一致；源离线待写与同区域冲突预览/显式选择通过 |
+| 已保存笔迹恢复                 | force-stop 后重开通过   | WebView 合成笔输入的原始采样保留；不代表实体触控笔、掌触或物理延迟                                                            |
 
 `persistentPermission` 现在仅在实际持久 URI grant 同时含读、写时为真。这是授权掩码，不能由 `Document.FLAG_SUPPORTS_WRITE` 推算，也不保证 provider 实际接受写入；真实只读写失败必须保留待写且不能误报源离线。撤权专项由文档所有者使用 `revokeUriPermission(uri, flags)` 撤销全部机制的 grant，不能只看持久列表为空便假设 Activity 临时授权也已结束。
 
@@ -79,24 +90,24 @@ SAF 提供者不统一支持原子文件替换。当前先持久保存原文和�
 
 `window.QuietPaperNative` 暴露以下方法；读写在串行后台线程执行，不占用书写线程。
 
-| 方法                                                                                       | 结果                                                                                  |
-| ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
-| `getRole()` / `getDeviceId()` / `getPlatform()`                                            | 同步返回 `tablet`/`phone`、安装标识、`android`                                        |
-| `openDocument(requestId)`                                                                  | 用户选择已有原生文件，结果 `type: "open"`                                             |
-| `readDocument(requestId, uri)`                                                             | 重新读取已有 URI，结果 `type: "read"`；仅实际源读取失败标记 `unavailable: true`       |
-| `saveDocument(requestId, uri, text, expectedSha256)`                                       | 比较版本后写回，结果 `type: "save"`                                                   |
-| `getPendingSource(requestId, uri)`                                                         | 成功时明确返回 `pending: false`，或待写全文、`sha256`、`baseSha256`；损坏日志返回失败 |
-| `saveDocumentVersioned(requestId, uri, text, expectedSourceSha256, expectedPendingSha256)` | 同时比较源与待写版本；空待写指纹要求队列中确实无此 URI 的待写操作                     |
-| `retryPendingWrite(requestId, uri)`                                                        | 重试已有持久待写操作，保留最初源版本作为比较依据                                      |
-| `resolveSourceConflict(requestId, uri, resolvedText, sourceSha256)`                        | 旧单 SHA 接口拒绝执行，返回 `versioned-resolution-required`；决议须使用双 SHA 接口    |
-| `getPendingWrites(requestId)`                                                              | 返回有效队列元数据；损坏项另列 `diagnostics` 并设置 `needsRecovery`，不发送源全文     |
-| `getSourceSnapshot(requestId, uri)`                                                        | 返回待写版本或最后有效源快照                                                          |
-| `getRuntimeDiagnostics(requestId)`                                                       | 异步返回 `type: "runtime-diagnostics"`、`ok` 与 `runtime` 数组；损坏或读取失败返回错误 |
-| `exportDocument(requestId, name, mime, text)`                                              | 用户选择导出目标，结果 `type: "export"`                                               |
-| `beginExport(requestId, name, mime)`                                                       | 建立持久工程导出会话，返回 `sessionId`                                                |
-| `appendExportChunk(requestId, sessionId, sequence, base64)`                                | 顺序追加有界 UTF-8 字节块并确认持久偏移                                               |
-| `completeExport(requestId, sessionId)`                                                     | 校验暂存、选择目标、流式写入、重新读取并校验 SHA-256                                  |
-| `getPendingExports(requestId)` / `discardExport(requestId, sessionId)`                     | 恢复管理界面检查暂存、继续导出或经确认显式清理                                        |
+| 方法                                                                                       | 结果                                                                                   |
+| ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- |
+| `getRole()` / `getDeviceId()` / `getPlatform()`                                            | 同步返回 `tablet`/`phone`、安装标识、`android`                                         |
+| `openDocument(requestId)`                                                                  | 用户选择已有原生文件，结果 `type: "open"`                                              |
+| `readDocument(requestId, uri)`                                                             | 重新读取已有 URI，结果 `type: "read"`；仅实际源读取失败标记 `unavailable: true`        |
+| `saveDocument(requestId, uri, text, expectedSha256)`                                       | 比较版本后写回，结果 `type: "save"`                                                    |
+| `getPendingSource(requestId, uri)`                                                         | 成功时明确返回 `pending: false`，或待写全文、`sha256`、`baseSha256`；损坏日志返回失败  |
+| `saveDocumentVersioned(requestId, uri, text, expectedSourceSha256, expectedPendingSha256)` | 同时比较源与待写版本；空待写指纹要求队列中确实无此 URI 的待写操作                      |
+| `retryPendingWrite(requestId, uri)`                                                        | 重试已有持久待写操作，保留最初源版本作为比较依据                                       |
+| `resolveSourceConflict(requestId, uri, resolvedText, sourceSha256)`                        | 旧单 SHA 接口拒绝执行，返回 `versioned-resolution-required`；决议须使用双 SHA 接口     |
+| `getPendingWrites(requestId)`                                                              | 返回有效队列元数据；损坏项另列 `diagnostics` 并设置 `needsRecovery`，不发送源全文      |
+| `getSourceSnapshot(requestId, uri)`                                                        | 返回待写版本或最后有效源快照                                                           |
+| `getRuntimeDiagnostics(requestId)`                                                         | 异步返回 `type: "runtime-diagnostics"`、`ok` 与 `runtime` 数组；损坏或读取失败返回错误 |
+| `exportDocument(requestId, name, mime, text)`                                              | 用户选择导出目标，结果 `type: "export"`                                                |
+| `beginExport(requestId, name, mime)`                                                       | 建立持久工程导出会话，返回 `sessionId`                                                 |
+| `appendExportChunk(requestId, sessionId, sequence, base64)`                                | 顺序追加有界 UTF-8 字节块并确认持久偏移                                                |
+| `completeExport(requestId, sessionId)`                                                     | 校验暂存、选择目标、流式写入、重新读取并校验 SHA-256                                   |
+| `getPendingExports(requestId)` / `discardExport(requestId, sessionId)`                     | 恢复管理界面检查暂存、继续导出或经确认显式清理                                         |
 
 所有异步结果通过 `quietpaper-native` DOM 事件传递：
 

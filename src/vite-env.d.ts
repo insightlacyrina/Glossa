@@ -5,6 +5,14 @@ interface Window {
     getRole(): 'tablet' | 'phone';
     getDeviceId(): string;
     getPlatform(): 'android';
+    setAppTheme?(dark: boolean): void;
+    setStylusPaperBounds?(
+      left: number,
+      top: number,
+      right: number,
+      bottom: number,
+      barrelErases: boolean,
+    ): void;
     openDocument(id: string): void;
     readDocument(id: string, uri: string): void;
     saveDocument(id: string, uri: string, text: string, hash: string): void;

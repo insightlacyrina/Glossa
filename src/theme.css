@@ -1,0 +1,79 @@
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --theme-background: #141413;
+  --theme-sidebar: #1c1b19;
+  --theme-surface: #211f1d;
+  --theme-paper: #252320;
+  --theme-elevated: #2b2825;
+  --theme-field: #1b1a18;
+  --theme-hover: #332f2b;
+  --theme-selected: #3b2e38;
+  --theme-selected-line: #92798a;
+
+  --theme-text: #f5f0e8;
+  --theme-secondary: #d3ccc3;
+  --theme-muted: #a9a39b;
+  --theme-line: #35322d;
+  --theme-border: #565047;
+  --theme-accent: #c9adbf;
+  --theme-primary: #c9adbf;
+  --theme-primary-hover: #ddc3d4;
+  --theme-on-primary: #241c23;
+  --theme-success: #a8b39e;
+  --theme-success-surface: #293227;
+  --theme-warning: #e0ad8b;
+  --theme-warning-surface: #362c25;
+  --theme-warning-line: #6b4b3c;
+  --theme-danger: #e7a187;
+  --theme-focus: #d5b7ce;
+  --theme-focus-glow: #d5b7ce33;
+  --theme-shadow-soft: #0003;
+  --theme-shadow: #0006;
+  --theme-scrim: #080706a6;
+
+  --theme-paper-dot: #585247;
+  --theme-paper-grid: #45483d;
+  --theme-paper-revision: #352b24;
+  --theme-paper-highlight: #a8b39e2e;
+  --theme-paper-selection: #c9adbf26;
+  --theme-eraser: #c9adbf80;
+  --theme-match: #443545;
+  --theme-match-region: #2b252b;
+}
+
+.search-location-mark {
+  color: var(--ink, #3b343e);
+  background: var(--theme-match, #eadfe8);
+  border-radius: 2px;
+  box-shadow: 0 1px var(--theme-accent, #8a6780);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.search-location-segment {
+  background: var(--theme-match-region, #f1e9ef);
+  box-shadow: inset 2px 0 var(--theme-accent, #8a6780);
+  border-radius: 4px;
+}
+
+:root[data-theme='dark'] ::selection {
+  background-color: var(--theme-primary);
+  color: var(--theme-background);
+}
+
+:root[data-theme='dark'] :is(input, textarea)::placeholder {
+  color: var(--theme-muted);
+  opacity: 1;
+}
+
+:root[data-theme='dark'] :is([data-ink-stroke], [data-ink-preview]) {
+  fill: var(--paper-ink-dark, none);
+}
+
+:root[data-theme='dark'] .paper-text {
+  color: var(--paper-ink-dark, var(--ink));
+}
+
+:root[data-theme='dark'] .revision-text {
+  color: var(--paper-ink-dark, var(--theme-warning));
+}

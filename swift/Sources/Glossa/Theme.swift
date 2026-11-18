@@ -1,14 +1,38 @@
 import SwiftUI
+import AppKit
 
 enum Palette {
-    static let paper = Color(hex: "fbf9f2")
-    static let background = Color(hex: "edeae4")
-    static let sidebar = Color(hex: "f5f2ec")
-    static let ink = Color(hex: "3b343e")
-    static let muted = Color(hex: "6f6863")
-    static let line = Color(hex: "dcd6cc")
-    static let plum = Color(hex: "665463")
-    static let green = Color(hex: "7b866d")
+    static let paper = adaptive("fbf9f2", "252320")
+    static let background = adaptive("edeae4", "141413")
+    static let sidebar = adaptive("f5f2ec", "1c1b19")
+    static let ink = adaptive("3b343e", "f5f0e8")
+    static let muted = adaptive("6f6863", "a9a39b")
+    static let line = adaptive("dcd6cc", "35322d")
+    static let plum = adaptive("665463", "c9adbf")
+    static let green = adaptive("7b866d", "a8b39e")
+
+    private static func adaptive(_ light: String, _ dark: String) -> Color {
+        let lightColor = NSColor(Color(hex: light)), darkColor = NSColor(Color(hex: dark))
+        return Color(nsColor: NSColor(name: nil) { appearance in
+            appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua ? darkColor : lightColor
+        })
+    }
+
+    static func paperInk(_ hex: String, dark: Bool) -> Color {
+        let color = Color(hex: hex)
+        guard dark, let original = NSColor(color).usingColorSpace(.sRGB),
+              let cream = NSColor(Color(hex: "f5f0e8")).usingColorSpace(.sRGB) else { return color }
+        func linear(_ channel: CGFloat) -> CGFloat {
+            channel <= 0.04045 ? channel / 12.92 : pow((channel + 0.055) / 1.055, 2.4)
+        }
+        for step in 0...10 {
+            let candidate = original.blended(withFraction: CGFloat(step) / 10, of: cream) ?? cream
+            let luminance = 0.2126 * linear(candidate.redComponent)
+                + 0.7152 * linear(candidate.greenComponent) + 0.0722 * linear(candidate.blueComponent)
+            if (luminance + 0.05) / 0.067 >= 4.5 { return Color(nsColor: candidate) }
+        }
+        return Color(nsColor: cream)
+    }
 }
 extension Color {
     init(hex: String) {

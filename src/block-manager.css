@@ -2,7 +2,7 @@
   position: fixed;
   inset: 0;
   z-index: 65;
-  background: #3e354b4d;
+  background: var(--theme-scrim, #3e354b4d);
   backdrop-filter: blur(5px);
   display: flex;
   align-items: center;
@@ -15,11 +15,11 @@
   max-width: 100%;
   max-height: 90vh;
   overflow: auto;
-  border: 1px solid #cfc0b4;
+  border: 1px solid var(--theme-border, #cfc0b4);
   border-radius: 9px;
-  background: #f8f4ec;
-  box-shadow: 0 25px 90px #30213930;
-  color: #65555d;
+  background: var(--theme-elevated, #f8f4ec);
+  box-shadow: 0 25px 90px var(--theme-shadow, #30213930);
+  color: var(--theme-text, #65555d);
 }
 .block-manager * {
   box-sizing: border-box;
@@ -39,7 +39,7 @@
     11px Georgia,
     serif;
   letter-spacing: 0.18em;
-  color: #9a897f;
+  color: var(--theme-muted, #9a897f);
 }
 .bm-header h2 {
   font:
@@ -47,7 +47,7 @@
     Georgia,
     serif;
   margin: 7px 0 0;
-  color: #5c4d54;
+  color: var(--theme-text, #5c4d54);
 }
 .bm-header > div:last-child {
   display: flex;
@@ -62,17 +62,17 @@
   border-radius: 5px;
   width: 35px;
   height: 35px;
-  color: #8a747e;
+  color: var(--theme-secondary, #8a747e);
 }
 .bm-icon:hover {
-  background: #eae2dc;
-  border-color: #ded1c9;
+  background: var(--theme-hover, #eae2dc);
+  border-color: var(--theme-line, #ded1c9);
 }
 .bm-tabs {
   display: flex;
   gap: 28px;
   padding: 0 28px;
-  border-bottom: 1px solid #ded3c7;
+  border-bottom: 1px solid var(--theme-line, #ded3c7);
 }
 .bm-tabs button {
   border: 0;
@@ -82,12 +82,12 @@
   gap: 9px;
   padding: 14px 0 15px;
   border-bottom: 2px solid transparent;
-  color: #98858b;
+  color: var(--theme-muted, #98858b);
   font-size: 14px;
 }
 .bm-tabs button[aria-selected='true'] {
-  border-bottom-color: #7c626f;
-  color: #674c5c;
+  border-bottom-color: var(--theme-accent, #7c626f);
+  color: var(--theme-accent, #674c5c);
 }
 .bm-error,
 .bm-notice {
@@ -101,8 +101,8 @@
   overflow-wrap: anywhere;
 }
 .bm-error {
-  background: #efe0d2;
-  color: #996249;
+  background: var(--theme-warning-surface, #efe0d2);
+  color: var(--theme-danger, #996249);
 }
 .bm-error > span {
   flex: 1;
@@ -118,8 +118,8 @@
   white-space: nowrap;
 }
 .bm-notice {
-  color: #68745d;
-  background: #edf0e5;
+  color: var(--theme-success, #68745d);
+  background: var(--theme-success-surface, #edf0e5);
 }
 .bm-layout {
   display: grid;
@@ -131,8 +131,8 @@
   flex-direction: column;
   gap: 8px;
   padding: 22px 17px 28px;
-  border-right: 1px solid #ded3c7;
-  background: #f0eae2;
+  border-right: 1px solid var(--theme-line, #ded3c7);
+  background: var(--theme-sidebar, #f0eae2);
 }
 .bm-block-option {
   display: flex;
@@ -144,18 +144,18 @@
   cursor: pointer;
 }
 .bm-block-option:hover {
-  background: #f8f2e9;
+  background: var(--theme-hover, #f8f2e9);
 }
 .bm-block-option.selected {
-  background: #f9f4ec;
-  border-color: #d1bfc8;
+  background: var(--theme-selected, #f9f4ec);
+  border-color: var(--theme-selected-line, #d1bfc8);
 }
 .bm-block-option input {
   width: 16px;
   height: 16px;
   margin-top: 4px;
   flex-shrink: 0;
-  accent-color: #745969;
+  accent-color: var(--theme-accent, #745969);
 }
 .bm-block-option > span {
   display: flex;
@@ -168,13 +168,13 @@
     500 16px/1.7 'Noto Serif CJK SC',
     Georgia,
     serif;
-  color: #705c65;
+  color: var(--theme-secondary, #705c65);
   overflow-wrap: anywhere;
 }
 .bm-block-option > span > span {
   font-size: 13px;
   line-height: 1.5;
-  color: #9a8c83;
+  color: var(--theme-muted, #9a8c83);
 }
 .bm-workspace {
   min-width: 0;
@@ -189,15 +189,15 @@
   gap: 10px;
   font-size: 14px;
   line-height: 1.7;
-  color: #8c747b;
+  color: var(--theme-muted, #8c747b);
 }
 .bm-field > input,
 .bm-field > select {
   width: 100%;
   font-size: 15px;
-  border: 1px solid #d7c9c3;
-  background: #fcf8f0;
-  color: #685761;
+  border: 1px solid var(--theme-border, #d7c9c3);
+  background: var(--theme-field, #fcf8f0);
+  color: var(--theme-secondary, #685761);
   border-radius: 4px;
   padding: 12px 13px;
   outline-offset: 3px;
@@ -215,25 +215,25 @@
   font-size: 14px;
   line-height: 1.7;
   margin-bottom: 11px;
-  color: #8c747b;
+  color: var(--theme-muted, #8c747b);
 }
 .bm-segment-selection > label {
   display: flex;
   align-items: flex-start;
   gap: 13px;
   padding: 13px;
-  border: 1px solid #dfd2c7;
+  border: 1px solid var(--theme-border, #dfd2c7);
   border-radius: 4px;
   cursor: pointer;
-  background: #fcf8f1;
+  background: var(--theme-surface, #fcf8f1);
 }
 .bm-segment-selection > label.selected {
-  border-color: #ba9fac;
-  background: #eee4e7;
+  border-color: var(--theme-selected-line, #ba9fac);
+  background: var(--theme-selected, #eee4e7);
 }
 .bm-segment-selection input {
   flex-shrink: 0;
-  accent-color: #745969;
+  accent-color: var(--theme-accent, #745969);
   width: 16px;
   height: 16px;
   margin-top: 3px;
@@ -245,7 +245,7 @@
 .bm-segment-preview > span {
   display: block;
   font-size: 12px;
-  color: #a08c82;
+  color: var(--theme-muted, #a08c82);
   line-height: 1.6;
 }
 .bm-segment-preview > p {
@@ -256,7 +256,7 @@
     15px/1.8 'Noto Serif CJK SC',
     Georgia,
     serif;
-  color: #79646b;
+  color: var(--theme-muted, #79646b);
   max-height: 155px;
   overflow: auto;
 }
@@ -274,8 +274,8 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  border: 1px solid #dbcec3;
-  background: #f9f4ec;
+  border: 1px solid var(--theme-line, #dbcec3);
+  background: var(--theme-surface, #f9f4ec);
   border-radius: 4px;
   overflow: hidden;
 }
@@ -286,7 +286,7 @@
     serif;
   margin: 0;
   padding: 13px 15px;
-  border-bottom: 1px solid #dfd3c8;
+  border-bottom: 1px solid var(--theme-line, #dfd3c8);
   overflow-wrap: anywhere;
 }
 .bm-result-segments {
@@ -296,8 +296,8 @@
   gap: 17px;
 }
 .bm-object-previews {
-  border-top: 1px solid #e1d5c8;
-  background: #f4ede2;
+  border-top: 1px solid var(--theme-line, #e1d5c8);
+  background: var(--theme-sidebar, #f4ede2);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -305,7 +305,7 @@
 }
 .bm-object-previews > div > span {
   font-size: 12px;
-  color: #a58d7d;
+  color: var(--theme-muted, #a58d7d);
   display: block;
   margin-bottom: 7px;
 }
@@ -314,12 +314,12 @@
   height: auto;
   max-height: 150px;
   min-height: 45px;
-  border: 1px solid #dfd2c1;
+  border: 1px solid var(--theme-line, #dfd2c1);
 }
 .bm-empty-selection {
   padding: 22px 15px;
   font-size: 14px;
-  color: #a18f86;
+  color: var(--theme-muted, #a18f86);
   line-height: 1.8;
 }
 .bm-button {
@@ -328,25 +328,25 @@
   justify-content: space-between;
   gap: 18px;
   padding: 13px 17px;
-  border: 1px solid #d4c3c9;
+  border: 1px solid var(--theme-border, #d4c3c9);
   border-radius: 5px;
   font-size: 14px;
-  color: #735a68;
-  background: #f7f0e9;
+  color: var(--theme-secondary, #735a68);
+  background: var(--theme-field, #f7f0e9);
   line-height: 1.5;
 }
 .bm-button:hover {
-  background: #e9dfe4;
+  background: var(--theme-hover, #e9dfe4);
 }
 .bm-button.primary {
-  background: #69525f;
-  border-color: #69525f;
-  color: #fffcf5;
+  background: var(--theme-primary, #69525f);
+  border-color: var(--theme-primary, #69525f);
+  color: var(--theme-on-primary, #fffcf5);
   align-self: flex-end;
   min-width: 170px;
 }
 .bm-button.primary:hover {
-  background: #7a5e6e;
+  background: var(--theme-primary-hover, #7a5e6e);
 }
 .bm-button:disabled {
   cursor: default;
@@ -362,7 +362,7 @@
   align-items: center;
   gap: 10px;
   padding-top: 3px;
-  color: #806570;
+  color: var(--theme-muted, #806570);
 }
 .bm-preview-heading h3 {
   font:
@@ -372,8 +372,8 @@
   margin: 0;
 }
 .bm-merged-preview {
-  border: 1px solid #d6c5c9;
-  background: #f3e9ea;
+  border: 1px solid var(--theme-line, #d6c5c9);
+  background: var(--theme-surface, #f3e9ea);
   border-radius: 4px;
   padding: 18px;
   display: flex;
@@ -388,10 +388,10 @@
 }
 .bm-relation-arrow {
   align-self: center;
-  color: #ab9099;
+  color: var(--theme-accent, #ab9099);
 }
 .bm-existing-links {
-  border-top: 1px solid #ddcec3;
+  border-top: 1px solid var(--theme-line, #ddcec3);
   padding-top: 17px;
 }
 .bm-existing-links h3 {
@@ -400,7 +400,7 @@
     Georgia,
     serif;
   margin: 0 0 11px;
-  color: #8a7078;
+  color: var(--theme-muted, #8a7078);
 }
 .bm-existing-links > div {
   display: flex;
@@ -418,19 +418,19 @@
   align-items: center;
   justify-content: center;
   gap: 22px;
-  color: #a28c91;
+  color: var(--theme-muted, #a28c91);
 }
 .bm-empty h3 {
   font:
     500 22px 'Noto Serif CJK SC',
     Georgia,
     serif;
-  color: #806b76;
+  color: var(--theme-muted, #806b76);
 }
 .block-manager button:focus-visible,
 .block-manager input:focus-visible,
 .block-manager select:focus-visible {
-  outline: 2px solid #a28898;
+  outline: 2px solid var(--theme-focus, #a28898);
   outline-offset: 3px;
 }
 @media (max-width: 850px) {
@@ -481,7 +481,7 @@
   }
   .bm-block-list {
     border-right: 0;
-    border-bottom: 1px solid #ded3c7;
+    border-bottom: 1px solid var(--theme-line, #ded3c7);
     max-height: 220px;
     overflow: auto;
     padding: 14px 17px;

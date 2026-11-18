@@ -4,6 +4,8 @@ import { NotebookEngine, type Note, type Segment } from './domain';
 import { PaperPreview } from './Paper';
 import { codepointOffset, inputRange, replacedValue, type EditRange } from './structure-edit';
 import { useBackHandler } from './ui-navigation';
+import { characterLocation, SearchMark, type TextLocation } from './SearchMark';
+import type { SearchHit } from './search';
 import './structure.css';
 
 export type StructureProps = {
@@ -14,6 +16,7 @@ export type StructureProps = {
   onJump: (objectIds: string[]) => void;
   onProof: (objectIds: string[], segmentId?: string) => void;
   activeBlockId?: string;
+  searchHit?: SearchHit | null;
   onReview?: (blockId: string) => void;
 };
 
@@ -385,10 +388,12 @@ function ReferenceView({
   engine,
   note,
   segment,
+  location,
 }: {
   engine: NotebookEngine;
   note: Note;
   segment: Segment;
+  location?: TextLocation;
 }) {
   const correspondence = engine.findCorrespondence(note.id, segment.id);
   const objectIds =
@@ -406,13 +411,18 @@ function ReferenceView({
       ))}
       {!pages.length && segment.preview && <img src={segment.preview} alt="原始对象快照" />}
       {!pages.length && !segment.preview && <p className="structure-missing">来源对象待恢复</p>}
-      {segment.text && <div className="structure-reference-caption">{segment.text}</div>}
+      {segment.text && (
+        <div className="structure-reference-caption">
+          <SearchMark text={segment.text} location={location} />
+        </div>
+      )}
     </div>
   );
 }
 
 export function Structure(props: StructureProps) {
-  const { engine, note, editable, onChange, onJump, onProof, activeBlockId, onReview } = props;
+  const { engine, note, editable, onChange, onJump, onProof, activeBlockId, onReview, searchHit } =
+    props;
   const [editing, setEditing] = useState<string | null>(null);
   const [menu, setMenu] = useState<string | null>(null);
   const [history, setHistory] = useState<string | null>(null);
@@ -435,12 +445,22 @@ export function Structure(props: StructureProps) {
     setHistory(null);
   }, [note.id]);
   useEffect(() => {
-    if (activeBlockId)
-      document.getElementById(`structure-block-${activeBlockId}`)?.scrollIntoView({
-        behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
-        block: 'nearest',
-      });
-  }, [activeBlockId]);
+    if (!activeBlockId) return;
+    const frame = requestAnimationFrame(() => {
+      const block = document.getElementById(`structure-block-${activeBlockId}`);
+      const target = searchHit
+        ? (block?.querySelector('.search-location-mark') ??
+          (searchHit.segmentId && document.getElementById(`segment-${searchHit.segmentId}`)) ??
+          block)
+        : block;
+      if (target)
+        target.scrollIntoView({
+          behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+          block: searchHit ? 'center' : 'nearest',
+        });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [activeBlockId, searchHit]);
   useEffect(
     () => () => {
       if (press.current) clearTimeout(press.current.timer);
@@ -453,7 +473,7 @@ export function Structure(props: StructureProps) {
   };
   const blocks = note.blocks;
   return (
-    <div className="structure-view" aria-label="结构稿 B">
+    <div className="structure-view" aria-label="整理内容">
       {!blocks.length && (
         <div className="structure-empty">
           <span>留白，也是一种开始。</span>
@@ -471,7 +491,16 @@ export function Structure(props: StructureProps) {
               {String(blockIndex + 1).padStart(2, '0')}
             </span>
             <div className="structure-block-heading-text">
-              <h2>{block.title}</h2>
+              <h2>
+                <SearchMark
+                  text={block.title}
+                  location={
+                    searchHit?.kind === 'concept' && searchHit.blockId === block.id
+                      ? searchHit.location
+                      : undefined
+                  }
+                />
+              </h2>
               <div className="structure-page-range">
                 {block.pageIds
                   .map((id) => note.pages.findIndex((page) => page.id === id) + 1)
@@ -508,11 +537,13 @@ export function Structure(props: StructureProps) {
                   ? '字符对应'
                   : '对象对应'
                 : '待校对';
+              const located = searchHit?.segmentId === segment.id;
+              const location = located ? characterLocation(segment, searchHit?.charIds) : undefined;
               return (
                 <article
                   id={`segment-${segment.id}`}
                   key={segment.id}
-                  className={`structure-segment structure-segment-${segment.kind}`}
+                  className={`structure-segment structure-segment-${segment.kind}${located ? ' search-location-segment' : ''}`}
                   onContextMenu={(event) => {
                     if (editing !== segment.id) {
                       event.preventDefault();
@@ -599,14 +630,23 @@ export function Structure(props: StructureProps) {
                       onPointerCancel={clearPress}
                     >
                       {segment.kind === 'reference' ? (
-                        <ReferenceView engine={engine} note={note} segment={segment} />
+                        <ReferenceView
+                          engine={engine}
+                          note={note}
+                          segment={segment}
+                          location={location}
+                        />
                       ) : (
                         <div
                           className={
                             segment.kind === 'formula' ? 'structure-formula' : 'structure-prose'
                           }
                         >
-                          {segment.text || <span className="structure-empty-text">空白段落</span>}
+                          {segment.text ? (
+                            <SearchMark text={segment.text} location={location} />
+                          ) : (
+                            <span className="structure-empty-text">空白段落</span>
+                          )}
                         </div>
                       )}
                     </div>

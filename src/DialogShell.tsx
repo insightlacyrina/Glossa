@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode, type SyntheticEvent } from 'react';
 import { X } from 'lucide-react';
 import { useBackHandler } from './ui-navigation';
 
@@ -64,7 +64,8 @@ export function DialogShell({
       if (previous?.isConnected) previous.focus({ preventScroll: true });
     };
   }, []);
-  function trackInput() {
+  function trackInput(event: SyntheticEvent) {
+    if (event.target instanceof Element && event.target.closest('form[data-dirty]')) return;
     if (container.current) dirty.current = inputState(container.current) !== baseline.current;
   }
   return (

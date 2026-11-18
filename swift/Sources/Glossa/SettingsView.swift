@@ -5,6 +5,7 @@ import GlossaCore
 struct SettingsView: View {
     @EnvironmentObject var store: WorkspaceStore
     @Environment(\.dismiss) var dismiss
+    @AppStorage("glossa.appearance") private var appearance = "light"
     @State private var showSources = false
     @State private var showServer = false
     @State private var pendingLocalConnection: SyncConfiguration?
@@ -15,6 +16,13 @@ struct SettingsView: View {
                 .font(.system(size: 12)).foregroundStyle(Palette.muted)
             ScrollView {
                 VStack(alignment: .leading, spacing: 26) {
+                    syncRow("界面主题") {
+                        Picker("界面主题", selection: $appearance) {
+                            Text("浅色").tag("light")
+                            Text("炭黑").tag("dark")
+                            Text("跟随系统").tag("system")
+                        }.labelsHidden().pickerStyle(.segmented)
+                    }
                     VStack(alignment: .leading, spacing: 12) {
                         sectionTitle("本机服务器")
                         Button { showServer = true } label: { Label("管理这台 Mac 上的服务器", systemImage: "server.rack") }

@@ -1,12 +1,15 @@
 # 笺注 · Glossa
 
-本地优先的固定纸张笔记系统，当前版本为 **0.1.3 工程验证版**。工作区原为空，从零实现；没有复用或冒用此前 Quiet Editorial 的美术资源。界面重新设计为暖纸、深墨、灰紫工具与编辑式排版，默认进入原稿纸张。
+本地优先的固定纸张笔记系统，当前版本为 **0.1.4 工程验证版**。界面以暖纸、深墨和灰紫为主，支持炭黑主题，默认进入原稿纸张。
 
 这不是全部需求的最终完成版。当前交付包含可操作的客户端、Android 原生工程、Mac 自托管同步服务、可恢复数据内核和自动验收。**支持端侧文字识别和基于已确认字形的矢量仿手写修订；缺字时保留印刷文字。** Office、Keynote、Numbers 未实现，不能把文本往返或 PDF 截图算作这些格式的兼容。
 
-## 下载 0.1.3
+## 下载
 
-[GitHub 工程预发布](https://github.com/insightlacyrina/Glossa/releases/tag/v0.1.3)提供 Android 平板、Android 手机和 Apple Silicon Mac 三个下载入口，以及 SHA-256 校验清单。手机与平板使用同一个 APK，按设备自动区分权限；两个下载文件内容相同。Android 为调试签名，Mac 为本地 ad-hoc 签名、尚未公证。变更与验证边界见 [发布说明](docs/RELEASE-0.1.3.md)。
+- Android 0.1.4 包含 S Pen 交互、快捷撤销、自定义墨色、向量搜索、外部模型自动选择及炭黑主题。平板与手机共用调试签名 APK，按设备自动区分权限。[GitHub 工程预发布](https://github.com/insightlacyrina/Glossa/releases/tag/v0.1.4)
+- Apple Silicon Mac 的上一版安装包使用本地 ad-hoc 签名。[GitHub 0.1.3 工程预发布](https://github.com/insightlacyrina/Glossa/releases/tag/v0.1.3)
+
+同步含 0.1.4 快捷撤销记录的工程前，请先将相连的客户端更新到 0.1.4。
 
 ## 启动
 
@@ -61,7 +64,7 @@ npm run test:swift
 
 本机桌面已放置 `启动笺注.command`，双击即可打开上述应用。仓库中的通用启动入口为 `scripts/launch-macos.sh`。
 
-界面、纸张绘制、编辑器、文件与网络均使用原生 API；JavaScriptCore 只复用已有数据规则，不加载 WebView。原生自动测试覆盖工程兼容、权限、实际范围编辑、修订层、复习、耐久恢复与真实 HTTP 普通/E2EE 互通。构建后的应用位于 `releases/macos/Glossa.app`，本轮分发包见上方 GitHub 预发布，构建与验证边界见 [Mac 文档](docs/MACOS.md)。本机 ad-hoc 签名尚未做 Developer ID 公证；跨公网与另一台实体设备仍待验。
+界面、纸张绘制、编辑器、文件与网络均使用原生 API；JavaScriptCore 只复用已有数据规则，不加载 WebView。原生自动测试覆盖工程兼容、权限、实际范围编辑、修订层、复习、耐久恢复与真实 HTTP 普通/E2EE 互通。构建后的应用位于 `releases/macos/Glossa.app`。构建与验证边界见 [Mac 文档](docs/MACOS.md)。本机 ad-hoc 签名尚未做 Developer ID 公证；跨公网与另一台实体设备仍待验。
 
 ## Mac 自托管服务
 

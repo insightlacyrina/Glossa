@@ -28,6 +28,7 @@ public final class NativeRoundTripInstrumentation extends RendererRecoveryInstru
     private boolean adlerProbe;
     private boolean runtimeDiagnostics;
     private boolean recognition;
+    private boolean stylus;
     private boolean downloadInk;
     private String safPhase;
     @Override public void onCreate(Bundle arguments) {
@@ -38,6 +39,7 @@ public final class NativeRoundTripInstrumentation extends RendererRecoveryInstru
         adlerProbe = "adler-probe".equals(mode);
         runtimeDiagnostics = "runtime-diagnostics".equals(mode);
         recognition = "recognition".equals(mode);
+        stylus = "stylus".equals(mode);
         downloadInk = arguments != null && "true".equals(arguments.getString("ink-model"));
         if (mode != null && mode.startsWith("saf-")) safPhase = mode.substring(4);
         if (mode != null && mode.startsWith("native-source-")) nativeSourcePhase = mode.substring("native-source-".length());
@@ -49,6 +51,7 @@ public final class NativeRoundTripInstrumentation extends RendererRecoveryInstru
         if (adlerProbe) { AdlerProbeScenarios.run(this); return; }
         if (runtimeDiagnostics) { RuntimeDiagnosticsScenarios.run(this); return; }
         if (recognition) { RecognitionScenarios.run(this, downloadInk); return; }
+        if (stylus) { StylusScenarios.run(this); return; }
         if ("faults".equals(safPhase)) { SafFaultScenarios.run(this); return; }
         if (safPhase != null) { SafPickerScenarios.run(this, safPhase); return; }
         if (nativeSourcePhase != null) { NativeSourceScenarios.run(this, nativeSourcePhase); return; }

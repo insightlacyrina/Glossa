@@ -28,6 +28,7 @@ import { startAutoSync, type SyncConfig, type SyncOperation } from './sync';
 import { atomicAction, blockContentModifiedAt, SyncSessionGuard } from './workspaceSafety';
 import { nativeRequest } from './native';
 import { groupRecognitionObjects } from './recognition';
+import { PAPER_ACTION_TYPES } from './paperUndo';
 
 export const role: Role =
   window.QuietPaperNative?.getRole() ??
@@ -80,6 +81,10 @@ export function useWorkspace() {
     processor = useRef<IncrementalProcessor | null>(null);
   const syncGuard = useRef(new SyncSessionGuard());
   const forcedRecognition = useRef(new Map<string, string>());
+  const paperHistory = useRef({
+    epoch: '',
+    notes: new Map<string, { pageId: string; actionIds: string[] }[]>(),
+  });
   const redraw = () => setVersion((v) => v + 1);
   const connectionIdentity = (config: SyncConfig | null) =>
     config ? `${config.url}|${config.projectId}|${config.mode}` : '';
@@ -261,6 +266,48 @@ export function useWorkspace() {
     void persist(options).catch(() => {});
     return true;
   };
+  function transactPaper(
+    noteId: string,
+    pageId: string,
+    action: (engine: NotebookEngine) => void,
+    options: WorkspaceSaveOptions = {},
+  ) {
+    let ids: string[] | undefined;
+    const accepted = transact((engine) => {
+      const start = engine.project.operations.length;
+      action(engine);
+      const appended = engine.project.operations.slice(start);
+      if (
+        appended.length &&
+        appended.every((op) => op.payload.noteId === noteId && PAPER_ACTION_TYPES.has(op.type))
+      )
+        ids = appended.map((op) => op.id);
+    }, options);
+    if (accepted && ids) {
+      if (paperHistory.current.epoch !== epochRef.current)
+        paperHistory.current = { epoch: epochRef.current, notes: new Map() };
+      const stack = paperHistory.current.notes.get(noteId) ?? [];
+      stack.push({ pageId, actionIds: ids });
+      paperHistory.current.notes.set(noteId, stack);
+    }
+    return accepted;
+  }
+  function canUndoPaper(noteId: string) {
+    return (
+      !stale.current &&
+      !switching.current &&
+      paperHistory.current.epoch === epochRef.current &&
+      !!paperHistory.current.notes.get(noteId)?.length
+    );
+  }
+  function undoPaper(noteId: string) {
+    if (draft.current || !canUndoPaper(noteId)) return;
+    const stack = paperHistory.current.notes.get(noteId)!;
+    const { pageId, actionIds } = stack[stack.length - 1];
+    if (!transact((engine) => engine.undoPaperAction(noteId, actionIds))) return;
+    stack.pop();
+    return pageId;
+  }
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -587,7 +634,9 @@ export function useWorkspace() {
     const completed = draft.current;
     draft.current = null;
     processor.current?.setWriting(false);
-    transact(
+    transactPaper(
+      noteId,
+      pageId,
       (engine) => {
         engine.addStroke(noteId, pageId, points, { ...options, draftId: completed?.id });
       },
@@ -722,6 +771,7 @@ export function useWorkspace() {
     awaitIdle: waitForSave,
     durableSnapshot,
     ready,
+    workspaceEpoch: processorEpoch,
     version,
     role,
     saveState,
@@ -729,6 +779,9 @@ export function useWorkspace() {
     setError,
     persistent,
     transact,
+    transactPaper,
+    canUndoPaper,
+    undoPaper,
     checkpoint,
     stroke,
     pendingDrafts,

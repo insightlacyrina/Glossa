@@ -312,8 +312,9 @@ try {
     .getByRole('button', { name: /^所有笔记/ })
     .click();
   await page.getByPlaceholder('搜索文字、公式与标签').fill('验收标签');
-  assert.equal(await page.locator('.note-card:not(.new-note-card)').count(), 1);
-  assert.match(await page.locator('.note-card:not(.new-note-card)').innerText(), /验收 · 笺注/);
+  const searchResult = page.getByRole('region', { name: '搜索结果' });
+  await searchResult.getByRole('heading', { name: title, exact: true }).waitFor();
+  assert.equal(await searchResult.getByRole('article').count(), 1);
   await page.getByPlaceholder('搜索文字、公式与标签').fill('');
   await page.locator('.folder-item').filter({ hasText: '数学' }).click();
   assert.ok(

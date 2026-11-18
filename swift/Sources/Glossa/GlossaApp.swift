@@ -3,11 +3,12 @@ import AppKit
 
 @main struct GlossaApp: App {
     @StateObject private var store = WorkspaceStore()
+    @AppStorage("glossa.appearance") private var appearance = "light"
     var body: some Scene {
         Window("笺注 · Glossa", id: "workspace") {
             ContentView().environmentObject(store)
                 .frame(minWidth: 960, minHeight: 640)
-                .preferredColorScheme(.light)
+                .preferredColorScheme(appearance == "system" ? nil : appearance == "dark" ? .dark : .light)
                 .task { store.startInitialImport(); await store.autoSync() }
                 .onOpenURL { url in
                     if store.notes.isEmpty { store.importProject(url) } else { store.pendingImport = url }

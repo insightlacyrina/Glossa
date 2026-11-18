@@ -135,6 +135,138 @@
     };
   }
 
+  // src/paperUndo.ts
+  var PAPER_ACTION_TYPES = /* @__PURE__ */ new Set([
+    "object.create",
+    "object.update",
+    "object.delete",
+    "revision.stroke.split"
+  ]);
+  function collectPaperUndos(events, validate) {
+    const first = /* @__PURE__ */ new Map();
+    const last = /* @__PURE__ */ new Map();
+    const undos = /* @__PURE__ */ new Map();
+    if (!events.some((event) => event.type === "paper.undo")) return { first, last, undos };
+    const byId2 = new Map(events.map((event) => [event.id, event]));
+    const register = (map, id, undo) => map.set(id, [...map.get(id) ?? [], undo]);
+    for (const operation of events) {
+      if (operation.type !== "paper.undo") continue;
+      validate(operation);
+      const actions = operation.payload.actionIds.map((id) => byId2.get(id));
+      if (!actions.every(
+        (action, index) => !!action && action.deviceId === operation.deviceId && action.role === "tablet" && action.payload.noteId === operation.payload.noteId && action.clock < operation.clock && action.seq <= (operation.seen?.[operation.deviceId] ?? 0) && (index === 0 || action.seq === actions[index - 1].seq + 1 && action.clock > actions[index - 1].clock) && PAPER_ACTION_TYPES.has(action.type)
+      ))
+        throw new Error("Invalid paper undo targets");
+      const objectIds = /* @__PURE__ */ new Set();
+      for (const action of actions) {
+        validate(action);
+        if (action.type === "object.create") objectIds.add(action.payload.object.id);
+        else {
+          objectIds.add(action.payload.objectId);
+          if (action.type === "revision.stroke.split")
+            for (const fragment of action.payload.fragments) objectIds.add(fragment.id);
+        }
+      }
+      const undo = { operation, actions, objectIds };
+      undos.set(operation.id, undo);
+      register(first, actions[0].id, undo);
+      register(last, actions[actions.length - 1].id, undo);
+    }
+    return { first, last, undos };
+  }
+  function capturePaperUndo(state, undo) {
+    const note = state.notes.find((candidate) => candidate.id === undo.operation.payload.noteId);
+    const objects2 = note?.pages.flatMap((page) => page.objects) ?? [];
+    const segments = note?.blocks.flatMap((block) => block.segments).filter((segment) => segment.source.objectIds.some((id) => undo.objectIds.has(id))) ?? [];
+    const segmentIds = new Set(segments.map((segment) => segment.id));
+    const touchedRevisions = new Set(
+      objects2.filter((object) => undo.objectIds.has(object.id)).map((object) => object.revisionId)
+    );
+    const corrections = state.corrections.filter(
+      (correction) => correction.noteId === note?.id && (segmentIds.has(correction.segmentId) || touchedRevisions.has(correction.id))
+    );
+    const revisionIds = /* @__PURE__ */ new Set([
+      ...corrections.map((correction) => correction.id),
+      ...undo.before?.corrections.map((correction) => correction.id) ?? []
+    ]);
+    return {
+      objects: objects2.filter(
+        (object) => undo.objectIds.has(object.id) || object.revisionId && revisionIds.has(object.revisionId)
+      ),
+      segments,
+      corrections
+    };
+  }
+  function paperUndoTouches(undo, current, event, otherUndo) {
+    const payload = event.payload;
+    const objectIds = /* @__PURE__ */ new Set([
+      ...undo.objectIds,
+      ...undo.before?.objects.map((object) => object.id) ?? [],
+      ...undo.after?.objects.map((object) => object.id) ?? []
+    ]);
+    const corrections = [...undo.before?.corrections ?? [], ...current.corrections];
+    const touchesObject = (id) => typeof id === "string" && objectIds.has(id);
+    if (event.type === "handwriting.learn")
+      return corrections.length > 0 || Object.keys(payload.glyph?.sourceVersions ?? {}).some(touchesObject);
+    if (payload.noteId !== undo.operation.payload.noteId) return false;
+    if ([payload.objectId, payload.object?.id, payload.sourceObjectId].some(touchesObject) || Array.isArray(payload.objectIds) && payload.objectIds.some(touchesObject) || otherUndo && [...otherUndo.objectIds].some(touchesObject))
+      return true;
+    if (corrections.some((correction) => correction.id === payload.revisionId)) return true;
+    const segments = [...undo.before?.segments ?? [], ...current.segments];
+    return segments.some((segment) => segment.id === payload.segmentId) || (segments.length > 0 || corrections.length > 0) && ["block.split", "block.merge", "conflict.resolve"].includes(event.type);
+  }
+  function byId(records) {
+    return new Map(records.map((record) => [record.id, record]));
+  }
+  function restorePaperUndo(state, note, undo, current, matches) {
+    const { before, after } = undo;
+    if (!before || !after || matches(before, after)) return false;
+    const createdObjects = new Set(
+      undo.actions.filter((action) => action.type === "object.create").map((action) => action.payload.object.id)
+    );
+    const knownSegments = byId(after.segments);
+    const automaticSegments = current.segments.filter((segment) => {
+      if (knownSegments.has(segment.id) || segment.deleted || segment.source.evidence !== "deterministic" || segment.source.objectIds.length !== 1 || !createdObjects.has(segment.source.objectIds[0]) || current.corrections.some((correction) => correction.segmentId === segment.id))
+        return false;
+      const create = state.events.find(
+        (operation) => operation.type === "segment.create" && operation.deviceId === undo.operation.deviceId && operation.payload.segmentId === segment.id && operation.payload.options.deterministic === true && operation.payload.text === segment.text
+      );
+      return !!create && segment.chars.every((character) => !character.deleted && character.version === create.id);
+    });
+    const automaticIds = new Set(automaticSegments.map((segment) => segment.id));
+    if (!matches(after, {
+      ...current,
+      segments: current.segments.filter((segment) => !automaticIds.has(segment.id))
+    }))
+      return false;
+    const originalObjects = byId(before.objects), editedObjects = byId(after.objects);
+    for (const page of note.pages) {
+      for (let index = 0; index < page.objects.length; index++) {
+        const object = page.objects[index];
+        if (!editedObjects.has(object.id)) continue;
+        const original = originalObjects.get(object.id);
+        if (original) page.objects[index] = structuredClone(original);
+        else object.deleted = true;
+      }
+    }
+    const originalSegments = byId(before.segments);
+    for (const block of note.blocks)
+      block.segments = block.segments.map(
+        (segment) => originalSegments.has(segment.id) ? structuredClone(originalSegments.get(segment.id)) : segment
+      );
+    for (const segment of automaticSegments) {
+      segment.deleted = true;
+      for (const character of segment.chars) character.deleted = true;
+      segment.text = "";
+    }
+    const editedCorrections = new Set(after.corrections.map((correction) => correction.id));
+    state.corrections = [
+      ...state.corrections.filter((correction) => !editedCorrections.has(correction.id)),
+      ...structuredClone(before.corrections)
+    ];
+    return true;
+  }
+
   // src/domain.ts
   var clone = (x) => structuredClone(x);
   var uid = () => globalThis.crypto.randomUUID();
@@ -159,6 +291,7 @@
     "object.create",
     "object.update",
     "object.delete",
+    "paper.undo",
     "block.create",
     "block.link",
     "block.split",
@@ -192,6 +325,8 @@
     if (tabletOnly.has(op.type) && op.role !== "tablet")
       throw new Error("This operation requires the Android tablet");
     const p = op.payload;
+    if (op.type === "paper.undo" && (typeof p.noteId !== "string" || !Array.isArray(p.actionIds) || !p.actionIds.length || p.actionIds.some((id) => typeof id !== "string" || !id) || new Set(p.actionIds).size !== p.actionIds.length))
+      throw new Error("Invalid paper undo");
     if (op.type === "handwriting.learn") validateHandwritingGlyph(p.glyph);
     if (op.type === "revision.handwriting" && (typeof p.revisionId !== "string" || typeof p.fingerprint !== "string"))
       throw new Error("Invalid handwriting retry");
@@ -323,6 +458,9 @@
       blockArchive: []
     };
     const events = [...project.operations].sort((a, b) => a.clock - b.clock || lexical(a.id, b.id));
+    const paperUndos = collectPaperUndos(events, checkOperation);
+    const undonePaperActions = /* @__PURE__ */ new Set();
+    let previous;
     const revisionChanges = /* @__PURE__ */ new Map();
     const addConflict = (c) => {
       if (!state.conflicts.some((x) => x.id === c.id)) state.conflicts.push(c);
@@ -625,6 +763,11 @@ ${survivor.segments.map((s) => s.text).join("\n")}`
       state.undoneRevisionIds.push(revisionId);
     };
     for (const op of events) {
+      for (const undo of paperUndos.last.get(previous?.id ?? "") ?? [])
+        undo.after = clone(capturePaperUndo(state, undo));
+      for (const undo of paperUndos.first.get(op.id) ?? [])
+        undo.before = clone(capturePaperUndo(state, undo));
+      previous = op;
       checkOperation(op);
       const p = op.payload;
       state.events.push(op);
@@ -660,17 +803,57 @@ ${survivor.segments.map((s) => s.text).join("\n")}`
         if (!page) throw new Error("Page not found");
         if (!objects(note).some((x) => x.id === p.object.id))
           page.objects.push({ ...clone(p.object), pageId: page.id, version: op.id });
+      } else if (op.type === "paper.undo") {
+        const undo = paperUndos.undos.get(op.id);
+        const current = capturePaperUndo(state, undo);
+        const actionIds = new Set(undo.actions.map((action) => action.id));
+        const first = undo.actions[0].clock, last = undo.actions[undo.actions.length - 1].clock;
+        const competing = events.find(
+          (event) => !actionIds.has(event.id) && (concurrent(op, event) || event.clock >= first && event.clock <= last) && paperUndoTouches(undo, current, event, paperUndos.undos.get(event.id))
+        );
+        if (competing || undo.actions.some((action) => undonePaperActions.has(action.id)) || !restorePaperUndo(
+          state,
+          note,
+          undo,
+          current,
+          (left, right) => canonical(left) === canonical(right)
+        )) {
+          addConflict({
+            id: op.id,
+            kind: "object",
+            noteId: note.id,
+            objectId: undo.objectIds.values().next().value,
+            current: "原稿或对应内容已有更新",
+            incoming: "撤销上一步",
+            currentEventId: competing?.id ?? undo.actions[undo.actions.length - 1].id,
+            incomingEventId: op.id
+          });
+          continue;
+        }
+        for (const id of actionIds) undonePaperActions.add(id);
       } else if (op.type === "handwriting.learn") {
         const glyph = clone(p.glyph);
+        let causalPaper;
         const sourceAtVersion = (id, version) => {
           const current = objects(note).find(
             (o) => o.id === id && o.version === version && !o.deleted
           );
           if (current) return current;
+          const causalEvents = events.filter(
+            (event) => event.clock < op.clock && (op.seen?.[event.deviceId] ?? 0) >= event.seq
+          );
+          if (causalEvents.some((event) => paperUndos.undos.get(event.id)?.objectIds.has(id))) {
+            if (causalPaper === void 0)
+              causalPaper = projectState({ ...project, operations: causalEvents }).notes.find(
+                (candidate) => candidate.id === note.id
+              ) ?? null;
+            return causalPaper ? objects(causalPaper).find(
+              (object) => object.id === id && object.version === version && !object.deleted
+            ) : void 0;
+          }
           let historical;
-          for (const event of events) {
-            if (event.clock >= op.clock || event.payload.noteId !== note.id || (op.seen?.[event.deviceId] ?? 0) < event.seq)
-              continue;
+          for (const event of causalEvents) {
+            if (event.payload.noteId !== note.id) continue;
             if (event.type === "object.create" && event.payload.object.id === id)
               historical = {
                 ...clone(event.payload.object),
@@ -1249,6 +1432,8 @@ ${survivor.segments.map((s) => s.text).join("\n")}`
             if (incoming?.type === "revision.stroke.split") {
               if (!applyStrokeSplit({ ...incoming, id: op.id }, true))
                 throw new Error("此修订已更新或合并，请在当前笔迹重新擦除");
+            } else if (incoming?.type === "paper.undo") {
+              throw new Error("这一步的原稿已有更新，请保留当前内容");
             } else Object.assign(obj, clone(incoming?.payload.changes ?? {}), { version: op.id });
           }
         } else if (ch && seg) {
@@ -1356,6 +1541,15 @@ ${survivor.segments.map((s) => s.text).join("\n")}`
       const pageId = uid();
       this.append("page.create", { noteId, pageId, paper });
       return pageId;
+    }
+    undoPaperAction(noteId, actionIds) {
+      const project = this.project, cached = this.cached;
+      const undo = this.append("paper.undo", { noteId, actionIds });
+      if (this.state.conflicts.some((conflict) => conflict.id === undo.id)) {
+        this.project = project;
+        this.cached = cached;
+        throw new Error("原稿或对应内容已有更新，无法撤销这一步");
+      }
     }
     addStroke(noteId, pageId, points, options = {}) {
       if (options.draftId) {
@@ -1808,14 +2002,14 @@ ${survivor.segments.map((s) => s.text).join("\n")}`
     merge(remote) {
       if (remote.id !== this.project.id || remote.schemaVersion !== 1)
         throw new Error("Cannot merge unrelated projects");
-      const byId = new Map(this.project.operations.map((o) => [o.id, o]));
+      const byId2 = new Map(this.project.operations.map((o) => [o.id, o]));
       for (const op of remote.operations) {
         checkOperation(op);
-        const old = byId.get(op.id);
+        const old = byId2.get(op.id);
         if (old && canonical(old) !== canonical(op)) throw new Error("Operation identity collision");
-        if (!old) byId.set(op.id, clone(op));
+        if (!old) byId2.set(op.id, clone(op));
       }
-      const candidate = { ...this.project, operations: [...byId.values()] };
+      const candidate = { ...this.project, operations: [...byId2.values()] };
       const state = projectState(candidate);
       this.project = candidate;
       this.cached = state;

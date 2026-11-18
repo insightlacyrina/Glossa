@@ -5,6 +5,12 @@ import {
   validateHandwritingGlyph,
   type HandwritingGlyph,
 } from './handwriting';
+import {
+  capturePaperUndo,
+  collectPaperUndos,
+  paperUndoTouches,
+  restorePaperUndo,
+} from './paperUndo';
 export type Role = 'tablet' | 'phone' | 'mac';
 export type Point = {
   x: number;
@@ -208,6 +214,7 @@ const tabletOnly = new Set([
   'object.create',
   'object.update',
   'object.delete',
+  'paper.undo',
   'block.create',
   'block.link',
   'block.split',
@@ -264,6 +271,15 @@ function checkOperation(op: Operation) {
   if (tabletOnly.has(op.type) && op.role !== 'tablet')
     throw new Error('This operation requires the Android tablet');
   const p = op.payload;
+  if (
+    op.type === 'paper.undo' &&
+    (typeof p.noteId !== 'string' ||
+      !Array.isArray(p.actionIds) ||
+      !p.actionIds.length ||
+      p.actionIds.some((id: unknown) => typeof id !== 'string' || !id) ||
+      new Set(p.actionIds).size !== p.actionIds.length)
+  )
+    throw new Error('Invalid paper undo');
   if (op.type === 'handwriting.learn') validateHandwritingGlyph(p.glyph);
   if (
     op.type === 'revision.handwriting' &&
@@ -481,6 +497,9 @@ function projectState(project: Project): NotebookState {
     blockArchive: [],
   };
   const events = [...project.operations].sort((a, b) => a.clock - b.clock || lexical(a.id, b.id));
+  const paperUndos = collectPaperUndos(events, checkOperation);
+  const undonePaperActions = new Set<string>();
+  let previous: Operation | undefined;
   const revisionChanges = new Map<
     string,
     {
@@ -852,6 +871,11 @@ function projectState(project: Project): NotebookState {
     state.undoneRevisionIds.push(revisionId);
   };
   for (const op of events) {
+    for (const undo of paperUndos.last.get(previous?.id ?? '') ?? [])
+      undo.after = clone(capturePaperUndo(state, undo));
+    for (const undo of paperUndos.first.get(op.id) ?? [])
+      undo.before = clone(capturePaperUndo(state, undo));
+    previous = op;
     checkOperation(op);
     const p = op.payload;
     state.events.push(op);
@@ -887,23 +911,72 @@ function projectState(project: Project): NotebookState {
       if (!page) throw new Error('Page not found');
       if (!objects(note).some((x) => x.id === p.object.id))
         page.objects.push({ ...clone(p.object), pageId: page.id, version: op.id });
+    } else if (op.type === 'paper.undo') {
+      const undo = paperUndos.undos.get(op.id)!;
+      const current = capturePaperUndo(state, undo);
+      const actionIds = new Set(undo.actions.map((action) => action.id));
+      const first = undo.actions[0].clock,
+        last = undo.actions[undo.actions.length - 1].clock;
+      const competing = events.find(
+        (event) =>
+          !actionIds.has(event.id) &&
+          (concurrent(op, event) || (event.clock >= first && event.clock <= last)) &&
+          paperUndoTouches(undo, current, event, paperUndos.undos.get(event.id)),
+      );
+      if (
+        competing ||
+        undo.actions.some((action) => undonePaperActions.has(action.id)) ||
+        !restorePaperUndo(
+          state,
+          note,
+          undo,
+          current,
+          (left, right) => canonical(left) === canonical(right),
+        )
+      ) {
+        addConflict({
+          id: op.id,
+          kind: 'object',
+          noteId: note.id,
+          objectId: undo.objectIds.values().next().value,
+          current: '原稿或对应内容已有更新',
+          incoming: '撤销上一步',
+          currentEventId: competing?.id ?? undo.actions[undo.actions.length - 1].id,
+          incomingEventId: op.id,
+        });
+        continue;
+      }
+      for (const id of actionIds) undonePaperActions.add(id);
     } else if (op.type === 'handwriting.learn') {
       const glyph = clone(p.glyph) as Omit<HandwritingGlyph, 'id'>;
       // Verify imported snapshots against their declared original vectors. Concurrent
       // edits can move the current object, so follow the immutable source-version chain.
+      let causalPaper: Note | null | undefined;
       const sourceAtVersion = (id: string, version: string): PaperObject | undefined => {
         const current = objects(note).find(
           (o) => o.id === id && o.version === version && !o.deleted,
         );
         if (current) return current;
+        const causalEvents = events.filter(
+          (event) => event.clock < op.clock && (op.seen?.[event.deviceId] ?? 0) >= event.seq,
+        );
+        if (causalEvents.some((event) => paperUndos.undos.get(event.id)?.objectIds.has(id))) {
+          // A restored version may predate an erased or moved sample. Replay only
+          // the history the learner saw when concurrent edits obscure the source.
+          if (causalPaper === undefined)
+            causalPaper =
+              projectState({ ...project, operations: causalEvents }).notes.find(
+                (candidate) => candidate.id === note.id,
+              ) ?? null;
+          return causalPaper
+            ? objects(causalPaper).find(
+                (object) => object.id === id && object.version === version && !object.deleted,
+              )
+            : undefined;
+        }
         let historical: PaperObject | undefined;
-        for (const event of events) {
-          if (
-            event.clock >= op.clock ||
-            event.payload.noteId !== note.id ||
-            (op.seen?.[event.deviceId] ?? 0) < event.seq
-          )
-            continue;
+        for (const event of causalEvents) {
+          if (event.payload.noteId !== note.id) continue;
           if (event.type === 'object.create' && event.payload.object.id === id)
             historical = {
               ...clone(event.payload.object),
@@ -1614,6 +1687,8 @@ function projectState(project: Project): NotebookState {
           if (incoming?.type === 'revision.stroke.split') {
             if (!applyStrokeSplit({ ...incoming, id: op.id }, true))
               throw new Error('此修订已更新或合并，请在当前笔迹重新擦除');
+          } else if (incoming?.type === 'paper.undo') {
+            throw new Error('这一步的原稿已有更新，请保留当前内容');
           } else Object.assign(obj, clone(incoming?.payload.changes ?? {}), { version: op.id });
         }
       } else if (ch && seg) {
@@ -1743,6 +1818,16 @@ export class NotebookEngine {
     const pageId = uid();
     this.append('page.create', { noteId, pageId, paper });
     return pageId;
+  }
+  undoPaperAction(noteId: string, actionIds: string[]): void {
+    const project = this.project,
+      cached = this.cached;
+    const undo = this.append('paper.undo', { noteId, actionIds });
+    if (this.state.conflicts.some((conflict) => conflict.id === undo.id)) {
+      this.project = project;
+      this.cached = cached;
+      throw new Error('原稿或对应内容已有更新，无法撤销这一步');
+    }
   }
   addStroke(
     noteId: string,

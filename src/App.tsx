@@ -26,6 +26,7 @@ import {
   Link2,
   Menu,
   MoreHorizontal,
+  Palette,
   PenLine,
   Plus,
   RotateCcw,
@@ -37,6 +38,7 @@ import {
   SquareDashedMousePointer,
   Trash2,
   Type,
+  Undo2,
   X,
 } from 'lucide-react';
 import { useWorkspace } from './useWorkspace';
@@ -50,7 +52,7 @@ import {
   type Point,
   type Segment,
 } from './domain';
-import { Paper, PaperPreview, visibleObjects, type Tool } from './Paper';
+import { Paper, PaperPreview, visibleObjects, type StylusOptions, type Tool } from './Paper';
 import { Structure } from './Structure';
 import { BlockManager } from './BlockManager';
 import { RecoveryManager } from './RecoveryManager';
@@ -60,6 +62,8 @@ import { readLocal } from './storage';
 import {
   PIPELINE_STAGES,
   straightenLine,
+  validateAIConfig,
+  type ExternalAIConfig,
   type PipelineStage,
   type RecognitionResult,
 } from './automation';
@@ -98,10 +102,31 @@ import {
 } from './source-coordinator';
 import { downloadText, nativeRequest, type NativeReply } from './native';
 import { RecognitionSettings } from './RecognitionSettings';
+import { InkColorPicker, quickInkColors, readInkColor, saveInkColor } from './InkColorPicker';
+import { readAppearance, setAppearance } from './appearance';
+import { NotebookSearch } from './NotebookSearch';
+import { SearchMark } from './SearchMark';
+import {
+  validateEmbeddingSearchConfig,
+  type EmbeddingSearchConfig,
+  type SearchHit,
+} from './search';
+import {
+  AutoModelRouter,
+  GOOGLE_AI_STUDIO,
+  modelEndpoint,
+  type ModelStatus,
+} from './external-models';
 import './style.css';
 
 type View = 'paper' | 'library' | 'review' | 'proof' | 'activity';
 type Modal = { title: string; content: ReactNode; wide?: boolean } | null;
+type ModelAuthorization = {
+  workspace: string;
+  endpoint: string;
+  embedding?: EmbeddingSearchConfig;
+  router?: AutoModelRouter;
+};
 const STAGES: Record<PipelineStage, string> = {
   ocr: '文字识别',
   formula: '公式识别',
@@ -247,6 +272,19 @@ function ConflictVisual({
     </div>
   );
 }
+const stylusOptionsKey = 'glossa:android-stylus';
+function readStylusOptions(): StylusOptions {
+  const defaults = { barrelEraser: true, hoverCursor: true };
+  try {
+    const options = JSON.parse(localStorage.getItem(stylusOptionsKey) ?? 'null');
+    return {
+      barrelEraser: options?.barrelEraser !== false,
+      hoverCursor: options?.hoverCursor !== false,
+    };
+  } catch {
+    return defaults;
+  }
+}
 function App() {
   const w = useWorkspace();
   const e = w.engine;
@@ -255,14 +293,18 @@ function App() {
   const [pageIndex, setPageIndex] = useState(0);
   const [mode, setMode] = useState<'a' | 'b' | 'split'>('a');
   const [tool, setTool] = useState<Tool>('pen');
-  const [color, setColor] = useState('#3f3b42');
+  const [color, setColor] = useState(readInkColor);
   const [penWidth, setPenWidth] = useState(2.4);
+  const [stylusOptions, setStylusOptions] = useState(readStylusOptions);
   const [layer, setLayer] = useState('ink');
   const [selected, setSelected] = useState<string[]>([]);
   const [highlighted, setHighlighted] = useState<string[]>([]);
   const [activeBlock, setActiveBlock] = useState('');
   const [modal, setModal] = useState<Modal>(null);
   const [search, setSearch] = useState('');
+  const [searchComposing, setSearchComposing] = useState(false);
+  const [searchHit, setSearchHit] = useState<SearchHit | null>(null);
+  const [modelAuthorization, setModelAuthorization] = useState<ModelAuthorization>();
   const [folderFilter, setFolderFilter] = useState<string | null>(null);
   const [sidebar, setSidebar] = useState(false);
   const [compactNavigation, setCompactNavigation] = useState(
@@ -287,6 +329,10 @@ function App() {
   const note = selectedNote ? e?.state.notes.find((n) => n.id === selectedNote) : e?.state.notes[0];
   const page = note?.pages[Math.min(pageIndex, note.pages.length - 1)];
   const editable = w.role === 'tablet';
+  const workspaceKey = `${e?.project.id ?? ''}:${w.workspaceEpoch}`;
+  const modelSession =
+    modelAuthorization?.workspace === workspaceKey ? modelAuthorization : undefined;
+  const tabletStylus = editable && window.QuietPaperNative ? stylusOptions : undefined;
   const settings = e?.state.settings ?? {};
   const reviewSettings = (settings.reviewSettings ?? {
     dailyLimit: 20,
@@ -331,13 +377,7 @@ function App() {
     ) ?? [];
   const conflicts = e?.state.conflicts.filter((c) => !c.resolved) ?? [];
   const notes = e?.state.notes ?? [];
-  const visibleNotes = notes.filter(
-    (n) =>
-      (!folderFilter || n.folderId === folderFilter) &&
-      `${n.title} ${n.tags.join(' ')} ${n.blocks.flatMap((b) => b.segments.map((s) => s.text)).join(' ')}`
-        .toLowerCase()
-        .includes(search.toLowerCase()),
-  );
+  const visibleNotes = folderFilter ? notes.filter((n) => n.folderId === folderFilter) : notes;
   const proofCount = candidates.length + unmapped.length + conflicts.length;
   const folderName = e?.state.folders.find(
     (f) => f.id === (view === 'paper' ? note?.folderId : folderFilter),
@@ -395,6 +435,7 @@ function App() {
     setActiveBlock('');
     setFolderFilter(null);
     setSearch('');
+    setSearchHit(null);
     setReviewId('');
     setSidebar(false);
     sectionOrigin.current = 'paper';
@@ -454,6 +495,38 @@ function App() {
     resetNavigation();
     setView('library');
   }, [w.ready, e, selectedNote, note?.id]);
+  useEffect(() => {
+    if (modelAuthorization && !modelSession) {
+      setModelAuthorization(undefined);
+      w.setProvider(undefined);
+    }
+  }, [modelAuthorization, modelSession]);
+  useEffect(() => {
+    const router = modelSession?.router;
+    if (!router) return;
+    const refresh = () => {
+      if (document.visibilityState !== 'hidden') void router.refresh().catch(() => {});
+    };
+    refresh();
+    const interval = setInterval(refresh, 5 * 60_000);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', refresh);
+      router.dispose();
+    };
+  }, [modelSession?.router]);
+  useEffect(() => {
+    if (view !== 'paper' || !searchHit || searchHit.blockId) return;
+    const frame = requestAnimationFrame(() => {
+      const target =
+        document.getElementById('search-location-mark') ??
+        (searchHit.objectId && document.getElementById(`paper-object-${searchHit.objectId}`));
+      if (target) target.scrollIntoView({ block: 'center' });
+      else window.scrollTo(0, 0);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [view, searchHit, page?.id]);
   function entryAction() {
     return notes.length ? (
       <button className="button" onClick={showLibrary}>
@@ -488,14 +561,45 @@ function App() {
     return () => clearTimeout(timer);
   }, [notice]);
   function openNote(n: Note) {
-    if (!canNavigate()) return;
+    if (!canNavigate()) return false;
     setSelectedNote(n.id);
     setPageIndex(0);
     setView('paper');
     setSelected([]);
     setHighlighted([]);
     setActiveBlock('');
+    setSearchHit(null);
     setSidebar(false);
+    return true;
+  }
+  function openSearchHit(hit: SearchHit) {
+    const target = notes.find((candidate) => candidate.id === hit.noteId);
+    const block = target?.blocks.find((candidate) => candidate.id === hit.blockId);
+    const pageAt = hit.objectId
+      ? (target?.pages.findIndex(
+          (candidate) =>
+            candidate.id === hit.pageId &&
+            visibleObjects(candidate).some((object) => object.id === hit.objectId),
+        ) ?? -1)
+      : -1;
+    if (
+      !target ||
+      (hit.objectId && pageAt < 0) ||
+      (hit.blockId && !block) ||
+      (hit.segmentId &&
+        !block?.segments.some((segment) => segment.id === hit.segmentId && !segment.deleted))
+    ) {
+      setNotice('内容已更新，请重新搜索');
+      return;
+    }
+    if (!openNote(target)) return;
+    setSearchHit(hit);
+    setMode(block ? 'b' : 'a');
+    if (block) setActiveBlock(block.id);
+    if (pageAt >= 0 && hit.objectId) {
+      setPageIndex(pageAt);
+      setHighlighted([hit.objectId]);
+    }
   }
   function newNote(spec: PaperSpec = {}) {
     if (!canNavigate()) return;
@@ -511,6 +615,7 @@ function App() {
       setActiveBlock('');
       setFolderFilter(null);
       setSearch('');
+      setSearchHit(null);
       setSidebar(false);
     });
   }
@@ -522,6 +627,7 @@ function App() {
       return;
     }
     setPageIndex(index);
+    setSearchHit(null);
     setHighlighted(ids);
     setMode(mode === 'b' ? 'split' : mode);
     setView('paper');
@@ -571,7 +677,7 @@ function App() {
                 );
               }}
             >
-              对应结构 B <ArrowLeftRight size={16} />
+              查看整理内容 <ArrowLeftRight size={16} />
             </button>
           ) : editable ? (
             <button className="button" onClick={() => proof([object.id], seg?.id)}>
@@ -591,6 +697,24 @@ function App() {
       ),
     });
   }
+  function chooseInkColor(value: string) {
+    setColor(value);
+    saveInkColor(value);
+  }
+  function selectInkColor() {
+    setModal({
+      title: '笔迹颜色',
+      content: (
+        <InkColorPicker
+          color={color}
+          onChoose={(value) => {
+            chooseInkColor(value);
+            setModal(null);
+          }}
+        />
+      ),
+    });
+  }
   function addText(kind: 'text' | 'formula', at = { x: 75, y: 100 }) {
     setModal({
       title: kind === 'formula' ? '写入公式' : '写入文字',
@@ -599,7 +723,7 @@ function App() {
           onSubmit={(data) => {
             const text = String(data.get('text'));
             if (!text.trim()) return;
-            w.transact((engine) =>
+            const accepted = w.transactPaper(note!.id, page!.id, (engine) =>
               engine.addText(
                 note!.id,
                 page!.id,
@@ -613,7 +737,7 @@ function App() {
                 kind,
               ),
             );
-            setModal(null);
+            if (accepted) setModal(null);
           }}
         >
           <textarea
@@ -744,7 +868,7 @@ function App() {
   }
   function erase(points: Point[], radius: number) {
     if (!note || !page) return;
-    w.transact((engine) => {
+    w.transactPaper(note.id, page.id, (engine) => {
       for (const o of visibleObjects(page)) {
         if (o.kind !== 'stroke' || !o.points) continue;
         const kept: Point[][] = [];
@@ -778,11 +902,12 @@ function App() {
     });
   }
   function moveObjects(ids: string[], dx: number, dy: number) {
-    w.transact((engine) => {
+    if (!note || !page) return;
+    w.transactPaper(note.id, page.id, (engine) => {
       for (const id of ids) {
-        const o = page!.objects.find((o) => o.id === id);
+        const o = page.objects.find((o) => o.id === id);
         if (!o) continue;
-        engine.updateObject(note!.id, id, {
+        engine.updateObject(note.id, id, {
           bounds: { ...o.bounds, x: o.bounds.x + dx, y: o.bounds.y + dy },
           ...(o.points
             ? { points: o.points.map((p) => ({ ...p, x: p.x + dx, y: p.y + dy })) }
@@ -792,17 +917,18 @@ function App() {
     });
   }
   function tidySelected() {
+    if (!note || !page) return;
     let changed = 0;
-    const ok = w.transact((engine) => {
+    const ok = w.transactPaper(note.id, page.id, (engine) => {
       for (const id of selected) {
         const o = engine
-          .getNote(note!.id)
+          .getNote(note.id)
           .pages.flatMap((p) => p.objects)
           .find((o) => o.id === id && !o.deleted);
         if (!o?.points) continue;
         const points = straightenLine(o.points.map((p) => ({ ...p })));
         if (points.some((p, i) => p.x !== o.points![i].x || p.y !== o.points![i].y)) {
-          engine.updateObject(note!.id, id, { points, bounds: pointsBounds(points) });
+          engine.updateObject(note.id, id, { points, bounds: pointsBounds(points) });
           changed++;
         }
       }
@@ -1004,7 +1130,7 @@ function App() {
             );
             if (ok) {
               setModal(null);
-              setNotice('字形已保存，后续 B 修订可复用这组真实笔迹');
+              setNotice('字形已保存，后续文字修订可复用这组笔迹');
             }
           }}
         >
@@ -1235,7 +1361,7 @@ function App() {
             className="button danger"
             onClick={() => {
               if (
-                w.transact((engine) => {
+                w.transactPaper(noteId, page!.id, (engine) => {
                   verifySelection(engine);
                   ids.forEach((id) => engine.deleteObject(noteId, id));
                 })
@@ -2049,7 +2175,69 @@ function App() {
     setModal({
       title: '偏好与同步',
       wide: true,
-      content: <SettingsPanel workspace={w} onClose={() => setModal(null)} onNotice={setNotice} />,
+      content: (
+        <SettingsPanel
+          workspace={w}
+          models={modelSession}
+          onModelSave={(data) => {
+            const automatic = data.has('automatic-models');
+            const allowRecognition = data.has('allow-recognition');
+            const allowSearch = data.has('allow-search');
+            if (!allowRecognition && !allowSearch) throw new Error('请选择授权用途');
+            const key = String(data.get('key') ?? '').trim();
+            const address =
+              String(data.get('endpoint') ?? '').trim() || (automatic ? GOOGLE_AI_STUDIO : '');
+            const base = modelEndpoint(address);
+            const endpoint =
+              base.hostname === 'generativelanguage.googleapis.com'
+                ? automatic
+                  ? GOOGLE_AI_STUDIO
+                  : `${GOOGLE_AI_STUDIO}/openai`
+                : base.href.replace(/\/$/, '');
+            const router = automatic ? new AutoModelRouter(endpoint, key) : undefined;
+            const grantedAt = Date.now();
+            const recognition: ExternalAIConfig | undefined = allowRecognition
+              ? {
+                  endpoint,
+                  model: String(data.get('vision-model') ?? '').trim(),
+                  apiKey: key,
+                  auto: router,
+                  consent: { granted: true, grantedAt, scope: 'changed-objects' },
+                }
+              : undefined;
+            const embedding: EmbeddingSearchConfig | undefined = allowSearch
+              ? {
+                  endpoint,
+                  model: String(data.get('embedding-model') ?? '').trim(),
+                  apiKey: key,
+                  auto: router,
+                  consent: { granted: true, grantedAt, scope: 'search-text' },
+                }
+              : undefined;
+            if (recognition) validateAIConfig(recognition);
+            if (embedding) validateEmbeddingSearchConfig(embedding);
+            modelSession?.router?.dispose();
+            w.setProvider(recognition);
+            setModelAuthorization({ workspace: workspaceKey, endpoint, embedding, router });
+            setModal(null);
+            setNotice('外部模型已启用');
+          }}
+          onModelRevoke={() => {
+            modelSession?.router?.dispose();
+            w.setProvider(undefined);
+            setModelAuthorization(undefined);
+            setModal(null);
+            setNotice('外部模型授权已撤销');
+          }}
+          stylus={tabletStylus}
+          onStylusChange={(options) => {
+            localStorage.setItem(stylusOptionsKey, JSON.stringify(options));
+            setStylusOptions(options);
+          }}
+          onClose={() => setModal(null)}
+          onNotice={setNotice}
+        />
+      ),
     });
   }
   function draftRecovery() {
@@ -2137,6 +2325,7 @@ function App() {
       onJump={jump}
       onProof={editable ? proof : () => setNotice('来源对应待平板校对')}
       activeBlockId={activeBlock}
+      searchHit={searchHit?.noteId === note.id ? searchHit : null}
       onReview={reviewBlock}
     />
   );
@@ -2475,8 +2664,12 @@ function App() {
           <>
             <div className="note-heading">
               <div>
-                <div className="eyebrow">A PLACE FOR YOUR THOUGHTS</div>
-                <h1 onDoubleClick={manage}>{note.title}</h1>
+                <h1 onDoubleClick={manage}>
+                  <SearchMark
+                    text={note.title}
+                    location={searchHit?.kind === 'title' ? searchHit.location : undefined}
+                  />
+                </h1>
                 <div className="note-meta">
                   <span>{date(note.modifiedAt)}</span>
                   <span className="meta-divider" />
@@ -2512,14 +2705,14 @@ function App() {
                   aria-pressed={mode === 'a'}
                   onClick={() => setMode('a')}
                 >
-                  原稿 <span>A</span>
+                  原稿
                 </button>
                 <button
                   className={mode === 'b' ? 'active' : ''}
                   aria-pressed={mode === 'b'}
                   onClick={() => setMode('b')}
                 >
-                  结构 <span>B</span>
+                  整理
                 </button>
                 <button
                   className={mode === 'split' ? 'active' : ''}
@@ -2585,7 +2778,7 @@ function App() {
               {mode !== 'b' && (
                 <section className="paper-region">
                   <div className="paper-overline">
-                    <span>原稿 / ORIGINAL</span>
+                    {mode === 'split' && <span>原稿</span>}
                     <span>
                       {String(pageIndex + 1).padStart(2, '0')} —{' '}
                       {String(note.pages.length).padStart(2, '0')}
@@ -2593,6 +2786,7 @@ function App() {
                   </div>
                   <div className="paper-frame">
                     <Paper
+                      key={`${note.id}:${page.id}`}
                       note={note}
                       page={page}
                       tool={tool}
@@ -2600,8 +2794,17 @@ function App() {
                       width={penWidth}
                       layer={layer}
                       editable={editable}
+                      stylus={tabletStylus}
+                      inputBlocked={
+                        !!modal || showBlocks || showRecovery || (sidebar && compactNavigation)
+                      }
                       selected={selected}
                       highlighted={highlighted}
+                      searchObject={
+                        searchHit?.objectId
+                          ? { id: searchHit.objectId, location: searchHit.location }
+                          : undefined
+                      }
                       onSelect={setSelected}
                       onStroke={(points) => {
                         writing.current = false;
@@ -2678,8 +2881,8 @@ function App() {
               {mode !== 'a' && (
                 <aside className="structure-region">
                   <div className="structure-heading">
-                    <span>结构 / STRUCTURED</span>
-                    <span>{String(note.blocks.length).padStart(2, '0')}</span>
+                    {mode === 'split' && <span>整理</span>}
+                    <span>{note.blocks.length} 个知识块</span>
                   </div>
                   {structure}
                 </aside>
@@ -2687,6 +2890,22 @@ function App() {
             </div>
             {editable && mode !== 'b' && (
               <div className="writing-dock">
+                <IconButton
+                  title="撤销上一步"
+                  disabled={!w.canUndoPaper(note.id)}
+                  onClick={() => {
+                    const undonePage = w.undoPaper(note.id);
+                    if (!undonePage) return;
+                    const index = note.pages.findIndex((candidate) => candidate.id === undonePage);
+                    if (index >= 0) setPageIndex(index);
+                    setSelected([]);
+                    setHighlighted([]);
+                    setNotice('已撤销上一步');
+                  }}
+                >
+                  <Undo2 size={19} />
+                </IconButton>
+                <span className="dock-divider" />
                 <div className="dock-tools">
                   {(
                     [
@@ -2712,16 +2931,21 @@ function App() {
                 </div>
                 <span className="dock-divider" />
                 <div className="ink-colors">
-                  {['#3f3b42', '#67755d', '#926c59'].map((c) => (
+                  {quickInkColors.map(([name, value]) => (
                     <button
-                      key={c}
-                      style={{ background: c }}
-                      aria-label={`墨色 ${c}`}
-                      className={color === c ? 'active' : ''}
-                      onClick={() => setColor(c)}
+                      key={value}
+                      style={{ background: value }}
+                      aria-label={`墨色 ${value}`}
+                      aria-pressed={color === value}
+                      title={name}
+                      className={color === value ? 'active' : ''}
+                      onClick={() => chooseInkColor(value)}
                     />
                   ))}
                 </div>
+                <IconButton title="选择笔迹颜色" onClick={selectInkColor}>
+                  <Palette size={19} />
+                </IconButton>
                 <button
                   className="pen-width"
                   title="笔宽"
@@ -2792,36 +3016,53 @@ function App() {
                   placeholder="搜索文字、公式与标签"
                   value={search}
                   onChange={(ev) => setSearch(ev.target.value)}
+                  onCompositionStart={() => setSearchComposing(true)}
+                  onCompositionEnd={() => setSearchComposing(false)}
+                  onBlur={() => setSearchComposing(false)}
                 />
               </div>
             </div>
-            <div className="note-grid">
-              {visibleNotes.map((n) => (
-                <button className="note-card" key={n.id} onClick={() => openNote(n)}>
-                  <div className="note-card-preview">
-                    <PaperPreview page={n.pages[0]} />
-                    <span>{n.pages.length} 页</span>
-                  </div>
-                  <div className="note-card-body">
-                    <span className="eyebrow">
-                      {e.state.folders.find((f) => f.id === n.folderId)?.name ?? '未归档'}
-                    </span>
-                    <h2>{n.title}</h2>
-                    <div>
-                      <span>{date(n.modifiedAt)}</span>
-                      <ArrowRight size={16} />
+            {search.trim() ? (
+              <NotebookSearch
+                projectId={e.project.id}
+                workspaceKey={workspaceKey}
+                notes={notes}
+                folders={e.state.folders}
+                folderId={folderFilter}
+                query={search}
+                composing={searchComposing}
+                embedding={modelSession?.embedding}
+                onOpen={openSearchHit}
+              />
+            ) : (
+              <div className="note-grid">
+                {visibleNotes.map((n) => (
+                  <button className="note-card" key={n.id} onClick={() => openNote(n)}>
+                    <div className="note-card-preview">
+                      <PaperPreview page={n.pages[0]} />
+                      <span>{n.pages.length} 页</span>
                     </div>
-                  </div>
-                </button>
-              ))}
-              {editable && visibleNotes.length > 0 && (
-                <button className="note-card new-note-card" onClick={() => newNote()}>
-                  <Plus size={30} />
-                  <span>一张新纸</span>
-                </button>
-              )}
-            </div>
-            {!visibleNotes.length && (
+                    <div className="note-card-body">
+                      <span className="eyebrow">
+                        {e.state.folders.find((f) => f.id === n.folderId)?.name ?? '未归档'}
+                      </span>
+                      <h2>{n.title}</h2>
+                      <div>
+                        <span>{date(n.modifiedAt)}</span>
+                        <ArrowRight size={16} />
+                      </div>
+                    </div>
+                  </button>
+                ))}
+                {editable && visibleNotes.length > 0 && (
+                  <button className="note-card new-note-card" onClick={() => newNote()}>
+                    <Plus size={30} />
+                    <span>一张新纸</span>
+                  </button>
+                )}
+              </div>
+            )}
+            {!search.trim() && !visibleNotes.length && (
               <div className="empty library-empty">
                 {notes.length ? (
                   <Search size={34} />
@@ -2829,13 +3070,11 @@ function App() {
                   <div className="empty-paper" aria-hidden="true" />
                 )}
                 <h2>
-                  {search
-                    ? '还没有找到这段记忆'
-                    : folderFilter
-                      ? '这个文件夹，留给下一篇笔记'
-                      : editable
-                        ? '记下第一笔'
-                        : '让已有笔记，回到眼前'}
+                  {folderFilter
+                    ? '这个文件夹，留给下一篇笔记'
+                    : editable
+                      ? '记下第一笔'
+                      : '让已有笔记，回到眼前'}
                 </h2>
                 <p className="empty-copy">
                   {notes.length
@@ -3010,21 +3249,21 @@ function App() {
                             aria-pressed={reviewMode === 'a'}
                             onClick={() => setReviewMode('a')}
                           >
-                            A
+                            原稿
                           </button>
                           <button
                             className={reviewMode === 'b' ? 'active' : ''}
                             aria-pressed={reviewMode === 'b'}
                             onClick={() => setReviewMode('b')}
                           >
-                            B
+                            整理
                           </button>
                           <button
                             className={reviewMode === 'split' ? 'active' : ''}
                             aria-pressed={reviewMode === 'split'}
                             onClick={() => setReviewMode('split')}
                           >
-                            A / B
+                            对照
                           </button>
                         </div>
                       </div>
@@ -3460,7 +3699,7 @@ function App() {
             }
             const reader = new FileReader();
             reader.onload = () =>
-              w.transact((engine) =>
+              w.transactPaper(note!.id, page!.id, (engine) =>
                 engine.addImage(note!.id, page!.id, String(reader.result), {
                   x: 75,
                   y: 180,
@@ -3580,24 +3819,41 @@ function FunctionIcon({ size = 20 }: { size?: number }) {
 }
 function SettingsPanel({
   workspace: w,
+  models,
+  onModelSave,
+  onModelRevoke,
+  stylus,
+  onStylusChange,
   onClose,
   onNotice,
 }: {
   workspace: ReturnType<typeof useWorkspace>;
+  models?: ModelAuthorization;
+  onModelSave(data: FormData): void;
+  onModelRevoke(): void;
+  stylus?: StylusOptions;
+  onStylusChange(options: StylusOptions): void;
   onClose: () => void;
   onNotice: (s: string) => void;
 }) {
   const [tab, setTab] = useState('writing');
+  const [appearance, setAppearanceChoice] = useState(readAppearance);
+  const [automaticModels, setAutomaticModels] = useState(Boolean(models?.router));
+  const [allowRecognition, setAllowRecognition] = useState(Boolean(w.provider));
+  const [allowSearch, setAllowSearch] = useState(Boolean(models?.embedding));
+  const [catalog, setCatalog] = useState<ModelStatus>();
   const [message, setMessage] = useState('');
   const e = w.engine!;
+  useEffect(() => models?.router?.subscribe(setCatalog), [models?.router]);
   return (
     <div className="settings-panel">
       <div className="settings-tabs">
         {[
           ['writing', '书写与整理'],
+          ['appearance', '外观'],
           ['recognition', '识别与仿手写'],
           ['sync', 'Mac 同步'],
-          ['ai', '外部识别'],
+          ['ai', '外部模型'],
         ].map(([id, label]) => (
           <button
             className={tab === id ? 'active' : ''}
@@ -3617,12 +3873,41 @@ function SettingsPanel({
         ))}
       </div>
       {message && <div className="inline-error">{message}</div>}
+      {tab === 'appearance' && (
+        <div className="representation-switch" role="group" aria-label="界面主题">
+          {(
+            [
+              ['light', '浅色'],
+              ['dark', '炭黑'],
+              ['system', '跟随系统'],
+            ] as const
+          ).map(([value, label]) => (
+            <button
+              type="button"
+              key={value}
+              className={appearance === value ? 'active' : ''}
+              aria-pressed={appearance === value}
+              onClick={() => {
+                setAppearance(value);
+                setAppearanceChoice(value);
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
       {tab === 'recognition' && <RecognitionSettings workspace={w} />}
       {tab === 'writing' && (
         <FormModal
           onSubmit={(data) => {
             const stages = Object.fromEntries(PIPELINE_STAGES.map((s) => [s, data.has(s)]));
             const idleMs = Number(data.get('idle')) * 1000;
+            if (stylus)
+              onStylusChange({
+                barrelEraser: data.has('stylus-barrel-eraser'),
+                hoverCursor: data.has('stylus-hover-cursor'),
+              });
             w.transact((engine) => {
               engine.setSetting('idleMs', idleMs);
               engine.setSetting('stages', stages);
@@ -3633,6 +3918,30 @@ function SettingsPanel({
             onNotice('偏好已保存');
           }}
         >
+          {stylus && (
+            <fieldset className="stylus-preferences">
+              <legend>S Pen 与触控笔</legend>
+              <p>用笔书写，笔尖离开纸面感应范围后可用手指滑动。</p>
+              <div className="stage-switches">
+                <label>
+                  <span>按住侧键落笔时使用局部橡皮</span>
+                  <input
+                    type="checkbox"
+                    name="stylus-barrel-eraser"
+                    defaultChecked={stylus.barrelEraser}
+                  />
+                </label>
+                <label>
+                  <span>显示笔尖悬停提示</span>
+                  <input
+                    type="checkbox"
+                    name="stylus-hover-cursor"
+                    defaultChecked={stylus.hoverCursor}
+                  />
+                </label>
+              </div>
+            </fieldset>
+          )}
           <label>
             停笔等待 / 秒
             <input
@@ -3761,53 +4070,99 @@ function SettingsPanel({
           <FormModal
             button="授权并启用"
             onSubmit={(data) => {
-              const config = {
-                endpoint: String(data.get('endpoint')),
-                model: String(data.get('model')),
-                apiKey: String(data.get('key')),
-                consent: {
-                  granted: true,
-                  grantedAt: Date.now(),
-                  scope: 'changed-objects' as const,
-                },
-              };
-              w.setProvider(config);
-              onClose();
-              onNotice('已授权当前会话的变化对象识别');
+              try {
+                onModelSave(data);
+              } catch (error) {
+                setMessage(error instanceof Error ? error.message : String(error));
+              }
             }}
           >
+            <div className="stage-switches">
+              <label>
+                <span>自动选模与限流切换</span>
+                <input
+                  type="checkbox"
+                  role="switch"
+                  name="automatic-models"
+                  checked={automaticModels}
+                  onChange={(event) => setAutomaticModels(event.target.checked)}
+                />
+              </label>
+            </div>
             <label>
-              兼容 API 地址
+              API 地址
               <input
                 name="endpoint"
                 type="url"
-                required
-                placeholder="https://api.example.com/v1"
-                defaultValue={w.provider?.endpoint}
+                required={!automaticModels}
+                placeholder={
+                  automaticModels ? '留空使用 Google AI Studio' : 'https://api.example.com/v1'
+                }
+                defaultValue={models?.endpoint ?? w.provider?.endpoint}
               />
-            </label>
-            <label>
-              模型
-              <input name="model" required defaultValue={w.provider?.model} />
             </label>
             <label>
               API 密钥
               <input name="key" type="password" required autoComplete="off" />
             </label>
             <label className="check-row">
-              <input type="checkbox" required />
+              <input
+                name="allow-recognition"
+                type="checkbox"
+                checked={allowRecognition}
+                onChange={(event) => setAllowRecognition(event.target.checked)}
+              />
               允许将变化对象发送至此服务以转录与整理
             </label>
+            {!automaticModels && allowRecognition && (
+              <label>
+                识别模型
+                <input name="vision-model" required defaultValue={w.provider?.model} />
+              </label>
+            )}
+            <label className="check-row">
+              <input
+                name="allow-search"
+                type="checkbox"
+                checked={allowSearch}
+                onChange={(event) => setAllowSearch(event.target.checked)}
+              />
+              允许搜索时发送查询词和笔记文字以生成向量
+            </label>
+            {!automaticModels && allowSearch && (
+              <label>
+                向量模型
+                <input name="embedding-model" required defaultValue={models?.embedding?.model} />
+              </label>
+            )}
           </FormModal>
-          {w.provider && (
-            <button
-              className="text-button disconnect"
-              onClick={() => {
-                w.setProvider(undefined);
-                onClose();
-                onNotice('外部识别授权已撤销');
-              }}
-            >
+          {catalog && models?.router && (
+            <details className="model-catalog">
+              <summary>
+                可用模型{catalog.loading ? ' · 正在刷新' : ` · ${catalog.models.length}`}
+              </summary>
+              {catalog.error && <p role="status">{catalog.error}</p>}
+              {(['vision', 'embedding'] as const).map((kind) => {
+                const available = catalog.models.filter((model) => model.kind === kind);
+                if (!available.length) return null;
+                return (
+                  <div key={kind}>
+                    <h3>{kind === 'vision' ? '识别' : '向量搜索'}</h3>
+                    <ul>
+                      {available.map((model) => (
+                        <li key={model.id}>
+                          {model.name}
+                          {catalog.selected[kind] === model.id ? ' · 最近使用' : ''}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
+            </details>
+          )}
+          {(models || w.provider) && (
+            <button className="text-button disconnect" onClick={onModelRevoke}>
               撤销授权
               <X size={15} />
             </button>

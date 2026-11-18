@@ -50,7 +50,7 @@ struct NoteView: View {
     }
     private var readingPicker: some View {
         Picker("阅读方式", selection: $mode) {
-            Text("原稿 A").tag("a"); Text("对照").tag("split"); Text("结构 B").tag("b")
+            Text("原稿").tag("a"); Text("对照").tag("split"); Text("整理").tag("b")
         }.pickerStyle(.segmented).labelsHidden().frame(width: 220)
     }
     private var noteActions: some View {
@@ -67,8 +67,8 @@ struct NoteView: View {
                 .help("管理笔记")
             Menu {
                 Button("完整工程 .glossa") { store.exportProject() }
-                Button("本篇 B 阅读快照 · HTML") { store.exportReading(note, html: true) }
-                Button("本篇 B 阅读快照 · Markdown") { store.exportReading(note, html: false) }
+                Button("阅读快照 · HTML") { store.exportReading(note, html: true) }
+                Button("阅读快照 · Markdown") { store.exportReading(note, html: false) }
             } label: { Label("导出", systemImage: "square.and.arrow.up") }
                 .menuStyle(.borderlessButton).fixedSize().help("导出笔记")
         }.buttonStyle(.borderless).font(.system(size: 12))
@@ -81,7 +81,7 @@ struct NoteView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 VStack(spacing: 20) {
-                    HStack { Eyebrow(text: "A / TRUE TO THE SOURCE"); Spacer(); Text("\(note.pages.count) 页").font(.system(size: 11)).foregroundStyle(Palette.muted) }
+                    HStack { if mode == "split" { Eyebrow(text: "原稿") }; Spacer(); Text("\(note.pages.count) 页").font(.system(size: 11)).foregroundStyle(Palette.muted) }
                     ForEach(Array(note.pages.enumerated()), id: \.element.id) { index, page in
                         VStack(spacing: 10) {
                             PaperView(page: page, highlighted: highlight) { object in focus(object) }
@@ -99,7 +99,7 @@ struct NoteView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    Eyebrow(text: "B / THOUGHTS IN ORDER")
+                    if mode == "split" { Eyebrow(text: "整理") }
                     Text(note.title).font(.title2.weight(.semibold))
                     if note.blocks.isEmpty {
                         Text("这份原稿还没有整理成知识块。\n在平板中创建对应结构后，它会随工程同步到这里。")
@@ -228,7 +228,7 @@ struct HistoryView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             HStack { Text("修订与历史").font(.title2.weight(.semibold)); Spacer(); Button("完成") { dismiss() } }
-            Text("B 修订保存为原位置的独立仿手写或印刷层。补充字形、重试、撤销或合并修订请在平板完成。").font(.system(size: 13)).lineSpacing(4).foregroundStyle(Palette.muted)
+            Text("文字修订保存为原位置的独立仿手写或印刷层。补充字形、重试、撤销或合并修订请在平板完成。").font(.system(size: 13)).lineSpacing(4).foregroundStyle(Palette.muted)
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     ForEach((store.snapshot?.corrections ?? []).filter { $0.noteId == note.id }) { correction in

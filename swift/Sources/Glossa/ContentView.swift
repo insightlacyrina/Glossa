@@ -216,10 +216,10 @@ struct PaperMotif: View {
         ZStack {
             RoundedRectangle(cornerRadius: 3).fill(Palette.paper.opacity(0.65)).frame(width: 140, height: 184).rotationEffect(.degrees(-12)).offset(x: -24, y: 3)
             VStack(alignment: .leading, spacing: 14) {
-                HStack { Text("A").font(.custom("Georgia", size: 23)); Spacer(); Image(systemName: "sparkle").font(.system(size: 15, weight: .ultraLight)) }
+                HStack { Image(systemName: "doc.text").font(.system(size: 22, weight: .light)); Spacer() }
                 ForEach(0..<4) { i in Rectangle().fill(Palette.plum.opacity(i == 3 ? 0.1 : 0.23)).frame(width: i == 3 ? 56 : 92, height: 1) }
                 Spacer()
-                HStack { Spacer(); Text("B").font(.custom("Georgia", size: 28)).foregroundStyle(Palette.plum) }
+                HStack { Spacer(); Image(systemName: "line.3.horizontal").font(.system(size: 22, weight: .light)).foregroundStyle(Palette.plum) }
             }.padding(24).frame(width: 149, height: 195).background(Palette.paper)
                 .overlay(Rectangle().stroke(Palette.line, lineWidth: 1)).rotationEffect(.degrees(6)).offset(x: 16)
                 .shadow(color: Palette.ink.opacity(0.06), radius: 12, y: 8)

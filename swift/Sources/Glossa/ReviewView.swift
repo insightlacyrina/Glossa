@@ -68,7 +68,7 @@ struct ReviewView: View {
                                     .id(card.blockId).transition(.opacity)
                             }.frame(maxWidth: .infinity, alignment: .leading)
                                 .animation(selectionAnimation, value: card.blockId)
-                            Picker("复习方式", selection: $mode) { Text("A").tag("a"); Text("对照").tag("split"); Text("B").tag("b") }
+                            Picker("复习方式", selection: $mode) { Text("原稿").tag("a"); Text("对照").tag("split"); Text("整理").tag("b") }
                                 .pickerStyle(.segmented).labelsHidden().frame(width: 145)
                         }.padding(16)
                         Divider()

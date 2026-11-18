@@ -48,7 +48,7 @@ try {
   await page.locator('.paper-sheet').waitFor();
   await page.locator('.folder-item').filter({ hasText: '数学' }).click();
   await page.locator('.search-input').fill('积累');
-  await page.locator('.note-card').first().click();
+  await page.locator('.search-hit').first().click();
   await state(page, 'paper');
   assert.equal(await page.locator('.folder-item.active').getAttribute('aria-current'), 'page');
   assert.equal(await page.evaluate(() => window.glossaNavigateBack()), true);
@@ -72,6 +72,19 @@ try {
   await modal.waitFor({ state: 'detached' });
   assert.equal(await page.locator('main').evaluate((el) => el.inert), false);
   console.log('PASS unsaved settings survive rejected Back and tab changes; clean modal closes');
+
+  await page.getByRole('button', { name: '设置', exact: true }).click();
+  await modal.locator('input[name=idle]').fill('2.8');
+  page.once('dialog', (dialog) => dialog.accept());
+  await modal.getByRole('button', { name: '外观', exact: true }).click();
+  await modal.getByRole('button', { name: '炭黑', exact: true }).click();
+  assert.equal(await page.locator('html').getAttribute('data-theme'), 'dark');
+  await modal.getByRole('button', { name: '关闭', exact: true }).click();
+  await modal.waitFor({ state: 'detached' });
+  await page.reload();
+  await page.locator('.app-shell').waitFor();
+  assert.equal(await page.locator('html').getAttribute('data-theme'), 'dark');
+  console.log('PASS changing appearance saves immediately and closes without a discard prompt');
 
   await page.locator('nav').getByRole('button', { name: /^温故/ }).click();
   await page
