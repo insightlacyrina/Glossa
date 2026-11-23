@@ -92,17 +92,20 @@ try {
   const zoomedBox = await viewport.boundingBox();
   const dragX = Math.round(zoomedBox.x + zoomedBox.width * 0.7);
   const dragY = Math.round(zoomedBox.y + zoomedBox.height * 0.58);
-  await cdp.send('Input.dispatchTouchEvent', {
-    type: 'touchStart',
-    touchPoints: [{ x: dragX, y: dragY }],
-  });
-  for (let i = 1; i <= 5; i++) {
-    await cdp.send('Input.dispatchTouchEvent', {
-      type: 'touchMove',
-      touchPoints: [{ x: dragX - 20 * i, y: dragY - 13 * i }],
+  // Verify each axis separately. Chromium may lock a diagonal touch drag to one axis.
+  for (const [xDistance, yDistance] of [
+    [-100, 0],
+    [0, -100],
+  ]) {
+    await cdp.send('Input.synthesizeScrollGesture', {
+      x: dragX,
+      y: dragY,
+      xDistance,
+      yDistance,
+      gestureSourceType: 'touch',
+      preventFling: true,
     });
   }
-  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
   await phone.waitForFunction(({ x, y }) => {
     const el = document.querySelector('.reading-viewport');
     return el.scrollLeft > x + 30 && el.scrollTop > y + 20;

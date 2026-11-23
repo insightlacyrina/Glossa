@@ -143,7 +143,10 @@ try {
   const manage = page.getByRole('dialog', { name: '笔记信息' });
   await manage.getByLabel('标题', { exact: true }).fill(title);
   await manage.getByRole('button', { name: '保存', exact: true }).click();
-  ownId = (await snapshot()).notes.find((n) => n.title === title).id;
+  ownId = await until(
+    async () => (await snapshot()).notes.find((note) => note.title === title)?.id,
+    'Renamed test note was not durably saved',
+  );
   const sheet = page.locator('.paper-sheet'),
     box = await sheet.boundingBox();
   const cdp = await page.context().newCDPSession(page);
