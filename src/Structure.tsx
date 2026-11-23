@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ArrowUpRight, Check, ChevronDown, Ellipsis, History, Pencil, X } from 'lucide-react';
 import { NotebookEngine, type Note, type Segment } from './domain';
-import { PaperPreview } from './Paper';
+import { PaperPreview, visibleObjects } from './Paper';
 import { codepointOffset, inputRange, replacedValue, type EditRange } from './structure-edit';
 import { useBackHandler } from './ui-navigation';
 import { characterLocation, SearchMark, type TextLocation } from './SearchMark';
@@ -13,7 +13,9 @@ export type StructureProps = {
   note: Note;
   editable: boolean;
   onChange: (action: (e: NotebookEngine) => void) => void;
-  onJump: (objectIds: string[]) => void;
+  onJump: (objectIds: string[], fullPage?: boolean) => void;
+  inlineSources?: boolean;
+  onOpenPaper?: () => void;
   onProof: (objectIds: string[], segmentId?: string) => void;
   activeBlockId?: string;
   searchHit?: SearchHit | null;
@@ -389,18 +391,27 @@ function ReferenceView({
   note,
   segment,
   location,
+  hideOriginal,
 }: {
   engine: NotebookEngine;
   note: Note;
   segment: Segment;
   location?: TextLocation;
+  hideOriginal: boolean;
 }) {
   const correspondence = engine.findCorrespondence(note.id, segment.id);
   const objectIds =
     correspondence.status === 'exact' ? correspondence.objectIds : segment.source.objectIds;
   const pages = note.pages.filter((page) =>
-    page.objects.some((object) => objectIds.includes(object.id)),
+    visibleObjects(page).some((object) => objectIds.includes(object.id)),
   );
+  if (hideOriginal) {
+    return (
+      <div className="structure-reference-caption">
+        {segment.text ? <SearchMark text={segment.text} location={location} /> : '原稿引用'}
+      </div>
+    );
+  }
   return (
     <div className="structure-reference">
       {pages.map((page) => (
@@ -421,16 +432,47 @@ function ReferenceView({
 }
 
 export function Structure(props: StructureProps) {
-  const { engine, note, editable, onChange, onJump, onProof, activeBlockId, onReview, searchHit } =
-    props;
+  const {
+    engine,
+    note,
+    editable,
+    onChange,
+    onJump,
+    onProof,
+    activeBlockId,
+    onReview,
+    searchHit,
+    inlineSources,
+  } = props;
   const [editing, setEditing] = useState<string | null>(null);
   const [menu, setMenu] = useState<string | null>(null);
   const [history, setHistory] = useState<string | null>(null);
+  const [selectedSegment, setSelectedSegment] = useState<string | null>(null);
+  const [expandedSource, setExpandedSource] = useState<string | null>(null);
+  const [blockTools, setBlockTools] = useState<string | null>(null);
+  const sourceAnchor = useRef<{ element: HTMLElement; top: number } | null>(null);
+  useLayoutEffect(() => {
+    const anchor = sourceAnchor.current;
+    sourceAnchor.current = null;
+    if (anchor?.element.isConnected) {
+      const shift = anchor.element.getBoundingClientRect().top - anchor.top;
+      if (Math.abs(shift) > 1) window.scrollBy(0, shift);
+    }
+  }, [expandedSource]);
+  function showSource(segmentId: string, expanded: boolean) {
+    const next = expanded ? segmentId : null;
+    if (next === expandedSource) return;
+    const element = document.getElementById(`segment-${segmentId}`);
+    if (element) sourceAnchor.current = { element, top: element.getBoundingClientRect().top };
+    setExpandedSource(next);
+  }
   useBackHandler(
-    !!menu || !!history,
+    !!menu || !!history || (!!expandedSource && !!inlineSources) || !!blockTools,
     () => {
       if (menu) setMenu(null);
-      else setHistory(null);
+      else if (history) setHistory(null);
+      else if (blockTools) setBlockTools(null);
+      else setExpandedSource(null);
       return true;
     },
     60,
@@ -443,6 +485,9 @@ export function Structure(props: StructureProps) {
     setEditing(null);
     setMenu(null);
     setHistory(null);
+    setSelectedSegment(null);
+    setExpandedSource(null);
+    setBlockTools(null);
   }, [note.id]);
   useEffect(() => {
     if (!activeBlockId) return;
@@ -476,74 +521,93 @@ export function Structure(props: StructureProps) {
     <div className="structure-view" aria-label="整理内容">
       {!blocks.length && (
         <div className="structure-empty">
-          <span>留白，也是一种开始。</span>
-          <p>还没有知识块</p>
+          <p>还没有整理稿</p>
+          <button className="button" onClick={props.onOpenPaper}>
+            查看原稿 <ArrowUpRight size={14} />
+          </button>
         </div>
       )}
-      {blocks.map((block, blockIndex) => (
+      {blocks.map((block) => (
         <section
           className={`structure-block ${activeBlockId === block.id ? 'structure-block-active' : ''}`}
           id={`structure-block-${block.id}`}
           key={block.id}
         >
           <header className="structure-block-heading">
-            <span className="structure-block-number">
-              {String(blockIndex + 1).padStart(2, '0')}
-            </span>
-            <div className="structure-block-heading-text">
-              <h2>
-                <SearchMark
-                  text={block.title}
-                  location={
-                    searchHit?.kind === 'concept' && searchHit.blockId === block.id
-                      ? searchHit.location
-                      : undefined
-                  }
-                />
-              </h2>
-              <div className="structure-page-range">
-                {block.pageIds
-                  .map((id) => note.pages.findIndex((page) => page.id === id) + 1)
-                  .filter((index) => index > 0)
-                  .map((index) => `P.${String(index).padStart(2, '0')}`)
-                  .join(' / ') || '未定位'}
-              </div>
-            </div>
-            <button
-              type="button"
-              className="structure-icon-button"
-              aria-label="查看知识块历史"
-              onClick={() => setHistory(history === block.id ? null : block.id)}
-            >
-              <History size={17} />
-            </button>
-            {onReview && (
+            <h2>
+              <SearchMark
+                text={block.title}
+                location={
+                  searchHit?.kind === 'concept' && searchHit.blockId === block.id
+                    ? searchHit.location
+                    : undefined
+                }
+              />
+            </h2>
+            <div className="structure-block-actions">
               <button
                 type="button"
-                className="structure-review-button"
-                onClick={() => onReview(block.id)}
+                className="structure-icon-button"
+                aria-label="知识块操作"
+                aria-expanded={blockTools === block.id}
+                onClick={() => setBlockTools(blockTools === block.id ? null : block.id)}
               >
-                复习 <ArrowUpRight size={14} />
+                <Ellipsis size={17} />
               </button>
-            )}
+              {blockTools === block.id && (
+                <div className="structure-context-menu">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBlockTools(null);
+                      setHistory(history === block.id ? null : block.id);
+                    }}
+                  >
+                    知识块历史 <History size={15} />
+                  </button>
+                  {onReview && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBlockTools(null);
+                        onReview(block.id);
+                      }}
+                    >
+                      复习 <ArrowUpRight size={14} />
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           </header>
           {block.segments
             .filter((segment) => !segment.deleted)
             .map((segment) => {
               const correspondence = engine.findCorrespondence(note.id, segment.id);
               const exact = correspondence.status === 'exact' && valid.get(segment.id) === true;
-              const label = exact
-                ? correspondence.precision === 'character'
-                  ? '字符对应'
-                  : '对象对应'
-                : '待校对';
+              const showingSource = exact && inlineSources && expandedSource === segment.id;
+              const sourcePages = showingSource
+                ? note.pages.filter((page) =>
+                    visibleObjects(page).some((object) =>
+                      correspondence.objectIds.includes(object.id),
+                    ),
+                  )
+                : [];
+              function openSource() {
+                if (!exact) {
+                  onProof(segment.source.objectIds, segment.id);
+                } else if (inlineSources) {
+                  setSelectedSegment(segment.id);
+                  showSource(segment.id, !showingSource);
+                } else onJump(correspondence.objectIds);
+              }
               const located = searchHit?.segmentId === segment.id;
               const location = located ? characterLocation(segment, searchHit?.charIds) : undefined;
               return (
                 <article
                   id={`segment-${segment.id}`}
                   key={segment.id}
-                  className={`structure-segment structure-segment-${segment.kind}${located ? ' search-location-segment' : ''}`}
+                  className={`structure-segment structure-segment-${segment.kind}${located ? ' search-location-segment' : ''}${selectedSegment === segment.id || menu === segment.id ? ' structure-segment-selected' : ''}`}
                   onContextMenu={(event) => {
                     if (editing !== segment.id) {
                       event.preventDefault();
@@ -551,44 +615,6 @@ export function Structure(props: StructureProps) {
                     }
                   }}
                 >
-                  <div className="structure-segment-meta">
-                    <button
-                      type="button"
-                      className={`structure-mapping ${exact ? 'structure-mapping-exact' : 'structure-mapping-pending'}`}
-                      onClick={() =>
-                        exact
-                          ? onJump(correspondence.objectIds)
-                          : onProof(segment.source.objectIds, segment.id)
-                      }
-                    >
-                      {exact && <span />}
-                      {label}
-                    </button>
-                    <div className="structure-segment-tools">
-                      {editable && segment.kind !== 'reference' && editing !== segment.id && (
-                        <button
-                          type="button"
-                          className="structure-icon-button"
-                          aria-label={segment.kind === 'formula' ? '修订公式' : '修订文字'}
-                          onClick={() => {
-                            setEditing(segment.id);
-                            setMenu(null);
-                          }}
-                        >
-                          <Pencil size={14} />
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        className="structure-icon-button"
-                        aria-label="段落菜单"
-                        aria-expanded={menu === segment.id}
-                        onClick={() => setMenu(menu === segment.id ? null : segment.id)}
-                      >
-                        <Ellipsis size={17} />
-                      </button>
-                    </div>
-                  </div>
                   {editing === segment.id ? (
                     <SegmentEditor
                       key={segment.id}
@@ -601,6 +627,11 @@ export function Structure(props: StructureProps) {
                   ) : (
                     <div
                       className="structure-segment-content"
+                      onClick={() => {
+                        if (menu === segment.id || window.getSelection()?.toString()) return;
+                        setSelectedSegment(segment.id);
+                        if (exact && inlineSources) showSource(segment.id, true);
+                      }}
                       onDoubleClick={() => {
                         if (editable && segment.kind !== 'reference') setEditing(segment.id);
                       }}
@@ -635,6 +666,7 @@ export function Structure(props: StructureProps) {
                           note={note}
                           segment={segment}
                           location={location}
+                          hideOriginal={Boolean(exact && inlineSources)}
                         />
                       ) : (
                         <div
@@ -651,6 +683,76 @@ export function Structure(props: StructureProps) {
                       )}
                     </div>
                   )}
+                  <div className="structure-segment-meta">
+                    <button
+                      type="button"
+                      className={`structure-mapping ${exact ? 'structure-mapping-exact' : 'structure-mapping-pending'}`}
+                      aria-expanded={exact && inlineSources ? showingSource : undefined}
+                      aria-controls={showingSource ? `source-${segment.id}` : undefined}
+                      onClick={openSource}
+                    >
+                      {!exact ? '待校对' : showingSource ? '收起原稿' : '看原稿'}
+                      {exact &&
+                        (inlineSources ? <ChevronDown size={13} /> : <ArrowUpRight size={13} />)}
+                    </button>
+                    <div className="structure-segment-tools">
+                      {editable && segment.kind !== 'reference' && editing !== segment.id && (
+                        <button
+                          type="button"
+                          className="structure-icon-button"
+                          aria-label={segment.kind === 'formula' ? '修订公式' : '修订文字'}
+                          onClick={() => {
+                            setEditing(segment.id);
+                            setMenu(null);
+                          }}
+                        >
+                          <Pencil size={14} />
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="structure-icon-button"
+                        aria-label="段落菜单"
+                        aria-expanded={menu === segment.id}
+                        onClick={() => setMenu(menu === segment.id ? null : segment.id)}
+                      >
+                        <Ellipsis size={17} />
+                      </button>
+                    </div>
+                  </div>
+                  {showingSource && sourcePages.length > 0 && (
+                    <div className="structure-inline-source" id={`source-${segment.id}`}>
+                      {sourcePages.map((page) => (
+                        <figure key={page.id}>
+                          <figcaption>
+                            <span>原稿 · 第 {note.pages.indexOf(page) + 1} 页</span>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                onJump(
+                                  visibleObjects(page)
+                                    .filter((object) =>
+                                      correspondence.objectIds.includes(object.id),
+                                    )
+                                    .map((object) => object.id),
+                                  true,
+                                )
+                              }
+                            >
+                              查看整页 <ArrowUpRight size={13} />
+                            </button>
+                          </figcaption>
+                          <div className="structure-source-crop">
+                            <PaperPreview
+                              page={page}
+                              objectIds={correspondence.objectIds}
+                              minimumScale={segment.kind === 'reference' ? undefined : 0.8}
+                            />
+                          </div>
+                        </figure>
+                      ))}
+                    </div>
+                  )}
                   {menu === segment.id && (
                     <div className="structure-context-menu" role="menu">
                       <button
@@ -658,9 +760,8 @@ export function Structure(props: StructureProps) {
                         role="menuitem"
                         onClick={() => {
                           setMenu(null);
-                          exact
-                            ? onJump(correspondence.objectIds)
-                            : onProof(segment.source.objectIds, segment.id);
+                          if (exact) onJump(correspondence.objectIds, true);
+                          else onProof(segment.source.objectIds, segment.id);
                         }}
                       >
                         转到原稿 <ArrowUpRight size={14} />

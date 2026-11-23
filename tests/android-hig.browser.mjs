@@ -121,7 +121,6 @@ try {
   await phone.page
     .locator('input[type=file][accept=".glossa,.quietpaper,.json"]')
     .setInputFiles(resolve('examples/变化与积累.glossa'));
-  await phone.page.getByRole('button', { name: '确认恢复', exact: true }).click();
   await phone.page.locator('.paper-sheet').waitFor();
   assert.equal(await phone.page.locator('.new-paper').count(), 0);
   assert.equal(await phone.page.locator('.writing-dock').count(), 0);

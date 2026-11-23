@@ -229,8 +229,8 @@ async function createNote() {
     async () => (await state()).notes.find((n) => !previous.has(n.id))?.id,
     'New paper not persisted',
   );
-  await page.getByRole('button', { name: '归档', exact: true }).click();
-  const dialog = page.getByRole('dialog', { name: '笔记归档' });
+  await page.getByRole('button', { name: '笔记信息', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: '笔记信息' });
   await dialog.getByLabel('标题', { exact: true }).fill(noteTitle);
   await dialog.getByRole('button', { name: '保存', exact: true }).click();
   await until(async () => (await ownNote())?.title === noteTitle, 'Note title not saved');
@@ -280,6 +280,7 @@ async function importFixture(kind) {
   control('create', id, { text: before, name });
   await openNote();
   await represent('a');
+  await page.getByRole('button', { name: '插入', exact: true }).click();
   await page.getByRole('button', { name: '导入原生文件', exact: true }).click();
   await selectSource(name);
   const dialog = page.getByRole('dialog', { name, exact: true });

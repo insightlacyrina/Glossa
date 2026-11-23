@@ -7,7 +7,6 @@ import {
   BookOpen,
   CalendarDays,
   Check,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
   CircleCheck,
@@ -25,7 +24,7 @@ import {
   Layers,
   Link2,
   Menu,
-  MoreHorizontal,
+  Info,
   Palette,
   PenLine,
   Plus,
@@ -54,6 +53,7 @@ import {
 } from './domain';
 import { Paper, PaperPreview, visibleObjects, type StylusOptions, type Tool } from './Paper';
 import { Structure } from './Structure';
+import { ReadingPaper } from './ReadingPaper';
 import { BlockManager } from './BlockManager';
 import { RecoveryManager } from './RecoveryManager';
 import { DialogShell, inputState } from './DialogShell';
@@ -118,6 +118,32 @@ import {
   type ModelStatus,
 } from './external-models';
 import './style.css';
+
+const inlineComparisonQuery = '(max-width: 980px), (max-width: 1200px) and (orientation: portrait)';
+const readingPositionKey = 'glossa-reading-position';
+type ReadingMode = 'a' | 'b' | 'split';
+type ReadingPosition = { page: number; mode: ReadingMode; y: number };
+
+function storedReadingPositions(workspace: string): [string, ReadingPosition][] {
+  const saved = JSON.parse(localStorage.getItem(readingPositionKey) ?? 'null');
+  return saved?.workspace === workspace && Array.isArray(saved.positions) ? saved.positions : [];
+}
+
+function savedReadingPosition(workspace: string, noteId: string): ReadingPosition | undefined {
+  try {
+    const position = storedReadingPositions(workspace).find(([id]) => id === noteId)?.[1];
+    if (
+      Number.isSafeInteger(position?.page) &&
+      position &&
+      position.page >= 0 &&
+      Number.isFinite(position.y) &&
+      ['a', 'b', 'split'].includes(position.mode)
+    )
+      return position;
+  } catch {
+    // Reading position is a local preference and does not affect the project.
+  }
+}
 
 type View = 'paper' | 'library' | 'review' | 'proof' | 'activity';
 type Modal = { title: string; content: ReactNode; wide?: boolean } | null;
@@ -291,7 +317,12 @@ function App() {
   const [view, setView] = useState<View>('paper');
   const [selectedNote, setSelectedNote] = useState('');
   const [pageIndex, setPageIndex] = useState(0);
-  const [mode, setMode] = useState<'a' | 'b' | 'split'>('a');
+  const [mode, setMode] = useState<ReadingMode>('a');
+  const [inlineComparison, setInlineComparison] = useState(
+    () => matchMedia(inlineComparisonQuery).matches,
+  );
+  const readingPositions = useRef(new Map<string, ReadingPosition>());
+  const restoredPosition = useRef('');
   const [tool, setTool] = useState<Tool>('pen');
   const [color, setColor] = useState(readInkColor);
   const [penWidth, setPenWidth] = useState(2.4);
@@ -326,8 +357,11 @@ function App() {
     projectInput = useRef<HTMLInputElement>(null);
   const currentSources = useRef<SourceRecord[]>([]);
   const sourceBusy = useRef(new Set<string>());
+  const importingProject = useRef(false);
   const note = selectedNote ? e?.state.notes.find((n) => n.id === selectedNote) : e?.state.notes[0];
   const page = note?.pages[Math.min(pageIndex, note.pages.length - 1)];
+  const compareInline = mode === 'split' && inlineComparison;
+  const hasOpenNote = view === 'paper' && !!note && !!page;
   const editable = w.role === 'tablet';
   const workspaceKey = `${e?.project.id ?? ''}:${w.workspaceEpoch}`;
   const modelSession =
@@ -405,8 +439,27 @@ function App() {
       setNotice('请先抬笔，当前笔迹会保留');
       return false;
     }
-    if (view === 'paper' && note) void w.closeNote();
+    if (view === 'paper' && note) {
+      rememberPosition(note.id);
+      void w.closeNote();
+    }
     return true;
+  }
+  function rememberPosition(noteId: string) {
+    const position = { page: pageIndex, mode, y: window.scrollY };
+    readingPositions.current.set(noteId, position);
+    try {
+      const positions = storedReadingPositions(workspaceKey).filter(([id]) => id !== noteId);
+      localStorage.setItem(
+        readingPositionKey,
+        JSON.stringify({
+          workspace: workspaceKey,
+          positions: [[noteId, position], ...positions.slice(0, 31)],
+        }),
+      );
+    } catch {
+      // The current session can still restore the position.
+    }
   }
   function returnToLibrary() {
     if (!canNavigate()) return;
@@ -427,6 +480,8 @@ function App() {
     setSidebar(false);
   }
   function resetNavigation() {
+    readingPositions.current.clear();
+    setMode('a');
     setSelectedNote('');
     setView('paper');
     setPageIndex(0);
@@ -462,6 +517,12 @@ function App() {
   useBackHandler(w.ready, navigateBack, 0);
   const isDrawerTop = useBackHandler(compactNavigation && sidebar, () => setSidebar(false), 90);
   useEffect(() => {
+    const media = matchMedia(inlineComparisonQuery);
+    const change = () => setInlineComparison(media.matches);
+    media.addEventListener('change', change);
+    return () => media.removeEventListener('change', change);
+  }, []);
+  useEffect(() => {
     const media = matchMedia('(max-width: 760px)');
     const change = () => {
       setCompactNavigation(media.matches);
@@ -490,6 +551,29 @@ function App() {
       if (window.glossaNavigateBack === back) delete window.glossaNavigateBack;
     };
   }, []);
+  useEffect(() => {
+    if (!w.ready || !note || restoredPosition.current === workspaceKey) return;
+    restoredPosition.current = workspaceKey;
+    const position = savedReadingPosition(workspaceKey, note.id);
+    if (view !== 'paper' || !position) return;
+    setPageIndex(Math.min(position.page, note.pages.length - 1));
+    setMode(position.mode);
+    const frame = requestAnimationFrame(() => window.scrollTo(0, position.y));
+    return () => cancelAnimationFrame(frame);
+  }, [w.ready, workspaceKey, note?.id]);
+  useEffect(() => {
+    if (!hasOpenNote) return;
+    const save = () => rememberPosition(note.id);
+    const saveWhenHidden = () => {
+      if (document.visibilityState === 'hidden') save();
+    };
+    document.addEventListener('visibilitychange', saveWhenHidden);
+    window.addEventListener('pagehide', save);
+    return () => {
+      document.removeEventListener('visibilitychange', saveWhenHidden);
+      window.removeEventListener('pagehide', save);
+    };
+  }, [hasOpenNote, note?.id, workspaceKey, pageIndex, mode]);
   useEffect(() => {
     if (!w.ready || !e || !selectedNote || note) return;
     resetNavigation();
@@ -535,12 +619,12 @@ function App() {
       </button>
     ) : editable ? (
       <button className="button primary" onClick={() => newNote()}>
-        一张新纸
+        新建笔记
         <Plus size={16} />
       </button>
     ) : (
       <button className="button primary" onClick={() => projectInput.current?.click()}>
-        导入笔记
+        导入工程
         <FileInput size={16} />
       </button>
     );
@@ -562,9 +646,12 @@ function App() {
   }, [notice]);
   function openNote(n: Note) {
     if (!canNavigate()) return false;
+    const position = readingPositions.current.get(n.id) ?? savedReadingPosition(workspaceKey, n.id);
     setSelectedNote(n.id);
-    setPageIndex(0);
+    setPageIndex(Math.min(position?.page ?? 0, n.pages.length - 1));
     setView('paper');
+    setMode(position?.mode ?? 'a');
+    requestAnimationFrame(() => window.scrollTo(0, position?.y ?? 0));
     setSelected([]);
     setHighlighted([]);
     setActiveBlock('');
@@ -601,10 +688,16 @@ function App() {
       setHighlighted([hit.objectId]);
     }
   }
-  function newNote(spec: PaperSpec = {}) {
-    if (!canNavigate()) return;
-    w.transact((engine) => {
-      const id = engine.createNote('未命名笔记', spec);
+  function newNote() {
+    if (!editable || !canNavigate()) return;
+    const folderId = folderFilter;
+    let id = '';
+    const created = w.transact((engine) => {
+      id = engine.createNote();
+      if (folderId && engine.state.folders.some((folder) => folder.id === folderId))
+        engine.manageNote(id, { folderId });
+    });
+    if (created) {
       setSelectedNote(id);
       setPageIndex(0);
       setView('paper');
@@ -613,15 +706,201 @@ function App() {
       setSelected([]);
       setHighlighted([]);
       setActiveBlock('');
-      setFolderFilter(null);
       setSearch('');
       setSearchHit(null);
       setSidebar(false);
+      window.scrollTo(0, 0);
+    }
+  }
+  function showMode(next: typeof mode) {
+    if (writing.current) {
+      setNotice('请先抬笔，当前笔迹会保留');
+      return;
+    }
+    if (next !== mode) {
+      setMode(next);
+      window.scrollTo(0, 0);
+    }
+  }
+  function goToPage(index: number) {
+    if (writing.current) return;
+    setPageIndex(index);
+    setSelected([]);
+    setHighlighted([]);
+    setSearchHit(null);
+    window.scrollTo(0, 0);
+  }
+  function chooseTool(next: Tool) {
+    if (writing.current) return;
+    setTool(next);
+    if (next !== 'select') setSelected([]);
+  }
+  function usePen() {
+    if (writing.current) return;
+    if (tool !== 'pen') {
+      chooseTool('pen');
+      return;
+    }
+    setModal({
+      title: '钢笔设置',
+      content: (
+        <FormModal
+          button="应用"
+          onSubmit={(data) => {
+            chooseInkColor(String(data.get('ink')));
+            setPenWidth(Number(data.get('width')));
+            setModal(null);
+          }}
+        >
+          <label>
+            墨色
+            <select name="ink" defaultValue={color}>
+              {!quickInkColors.some(([, value]) => value === color) && (
+                <option value={color}>当前墨色</option>
+              )}
+              {quickInkColors.map(([name, value]) => (
+                <option key={value} value={value}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            笔宽
+            <select name="width" defaultValue={penWidth}>
+              <option value={1.2}>细 · 1.2</option>
+              <option value={2.4}>中 · 2.4</option>
+              <option value={4.5}>粗 · 4.5</option>
+            </select>
+          </label>
+          <button type="button" className="button" onClick={selectInkColor}>
+            自定义墨色 <Palette size={17} />
+          </button>
+        </FormModal>
+      ),
     });
   }
-  function jump(ids: string[]) {
-    if (!note) return;
-    const index = note.pages.findIndex((p) => p.objects.some((o) => ids.includes(o.id)));
+  function insertOptions() {
+    if (writing.current) return;
+    setModal({
+      title: '插入到原稿',
+      content: (
+        <div className="dialog-stack">
+          <button
+            className="button"
+            onClick={() => {
+              chooseTool('text');
+              setModal(null);
+              setNotice('在纸上点选文字位置');
+            }}
+          >
+            文字 <Type size={18} />
+          </button>
+          <button
+            className="button"
+            onClick={() => {
+              chooseTool('formula');
+              setModal(null);
+              setNotice('在纸上点选公式位置');
+            }}
+          >
+            公式 <FunctionIcon size={18} />
+          </button>
+          <button
+            className="button"
+            onClick={() => {
+              setModal(null);
+              imageInput.current?.click();
+            }}
+          >
+            插入图片 <ImagePlus size={18} />
+          </button>
+          <button
+            className="button"
+            onClick={() => {
+              setModal(null);
+              void openSource();
+            }}
+          >
+            导入原生文件 <FileInput size={18} />
+          </button>
+        </div>
+      ),
+    });
+  }
+  function selectionOptions() {
+    if (writing.current) return;
+    setModal({
+      title: '所选内容',
+      content: (
+        <div className="dialog-stack">
+          <button className="button" onClick={createBlock}>
+            建立知识块 <GitBranch size={18} />
+          </button>
+          <button
+            className="button"
+            onClick={() => {
+              tidySelected();
+              setModal(null);
+            }}
+          >
+            拉直线条 <Highlighter size={18} />
+          </button>
+          <button className="button" onClick={() => proof(selected)}>
+            校对选中内容 <ScanLine size={18} />
+          </button>
+          <button className="button" onClick={learnHandwriting}>
+            学习选中字形 <PenLine size={18} />
+          </button>
+          <button className="button danger" onClick={deleteSelected}>
+            删除选中内容 <Trash2 size={18} />
+          </button>
+        </div>
+      ),
+    });
+  }
+  async function prepareProjectImport(file: File) {
+    if (writing.current || importingProject.current) return;
+    try {
+      const text = await file.text();
+      NotebookEngine.importProject(text);
+      if (writing.current || importingProject.current) return;
+      async function load() {
+        if (writing.current || importingProject.current) return;
+        importingProject.current = true;
+        try {
+          await w.importProject(text);
+          resetNavigation();
+          setModal(null);
+          setNotice('工程已导入');
+        } catch (error) {
+          w.setError(`导入失败：${String(error)}`);
+        } finally {
+          importingProject.current = false;
+        }
+      }
+      if (!w.getEngine()?.project.operations.length && !w.syncConfig && !w.pendingDrafts.length) {
+        await load();
+        return;
+      }
+      setModal({
+        title: '用此工程替换当前工作区',
+        content: (
+          <div className="dialog-stack">
+            <p>原工作区会保存在本机恢复副本中。导入「{file.name}」后，当前同步连接将断开。</p>
+            <button className="button primary" onClick={() => void load()}>
+              替换并导入 <FileInput size={16} />
+            </button>
+          </div>
+        ),
+      });
+    } catch (error) {
+      w.setError(`工程包未通过校验：${String(error)}`);
+    }
+  }
+  function jump(ids: string[], fullPage = false) {
+    if (!note || writing.current) return;
+    const index = note.pages.findIndex((p) => visibleObjects(p).some((o) => ids.includes(o.id)));
     if (index < 0) {
       setNotice('尚无可靠对应，请先校对');
       return;
@@ -629,7 +908,11 @@ function App() {
     setPageIndex(index);
     setSearchHit(null);
     setHighlighted(ids);
-    setMode(mode === 'b' ? 'split' : mode);
+    setMode(fullPage || inlineComparison ? 'a' : mode === 'b' ? 'split' : mode);
+    requestAnimationFrame(() => {
+      const region = document.querySelector('.paper-region');
+      if (region instanceof HTMLElement) window.scrollTo(0, 0);
+    });
     setView('paper');
     setModal(null);
   }
@@ -968,11 +1251,12 @@ function App() {
     });
   }
   function paperDialog() {
+    if (writing.current) return;
     setModal({
-      title: '新纸张',
+      title: '添加一页',
       content: (
         <FormModal
-          button="添加纸张"
+          button="添加一页"
           onSubmit={(data) => {
             const spec: PaperSpec = {
               size: String(data.get('size')) as 'A4',
@@ -1031,10 +1315,10 @@ function App() {
     });
   }
   function manage() {
-    if (!note) return;
+    if (!note || writing.current) return;
     const before = { title: note.title, folderId: note.folderId, tags: [...note.tags] };
     setModal({
-      title: '笔记归档',
+      title: '笔记信息',
       content: (
         <FormModal
           onSubmit={(data) => {
@@ -2079,7 +2363,7 @@ function App() {
               projectInput.current?.click();
             }}
           >
-            导入工程包
+            导入工程
             <FileInput size={17} />
           </button>
           <button
@@ -2323,10 +2607,59 @@ function App() {
       editable
       onChange={w.transact}
       onJump={jump}
+      inlineSources={compareInline}
+      onOpenPaper={() => showMode('a')}
       onProof={editable ? proof : () => setNotice('来源对应待平板校对')}
       activeBlockId={activeBlock}
       searchHit={searchHit?.noteId === note.id ? searchHit : null}
       onReview={reviewBlock}
+    />
+  );
+  const paperSheet = note && page && (
+    <Paper
+      key={`${note.id}:${page.id}`}
+      note={note}
+      page={page}
+      tool={tool}
+      color={color}
+      width={penWidth}
+      layer={layer}
+      editable={editable}
+      stylus={tabletStylus}
+      inputBlocked={!!modal || showBlocks || showRecovery || (sidebar && compactNavigation)}
+      selected={selected}
+      highlighted={highlighted}
+      searchObject={
+        searchHit?.objectId ? { id: searchHit.objectId, location: searchHit.location } : undefined
+      }
+      onSelect={setSelected}
+      onStroke={(points) => {
+        writing.current = false;
+        w.stroke(note.id, page.id, points, {
+          color,
+          width: penWidth,
+          layerId: layer,
+        });
+      }}
+      onDraft={(points) => {
+        writing.current = !!points;
+        w.checkpoint(
+          points
+            ? {
+                noteId: note.id,
+                pageId: page.id,
+                points,
+                color,
+                width: penWidth,
+                layerId: layer,
+              }
+            : null,
+        );
+      }}
+      onErase={erase}
+      onMove={moveObjects}
+      onInsert={addText}
+      onContext={counterpart}
     />
   );
   if (!w.ready)
@@ -2408,8 +2741,7 @@ function App() {
         {editable && (
           <button className="new-paper" onClick={() => newNote()}>
             <Plus size={18} />
-            <span>一张新纸</span>
-            <span className="shortcut">＋</span>
+            <span>新建笔记</span>
           </button>
         )}
         <nav aria-label="笔记与整理">
@@ -2546,63 +2878,41 @@ function App() {
         />
       )}
       <main className="main" ref={mainElement}>
-        <header className="topbar">
-          <button
-            className="icon-button"
-            title="导航"
-            aria-label="导航"
-            aria-controls="app-sidebar"
-            aria-expanded={sidebar}
-            onClick={() => {
-              if (writing.current) {
-                setNotice('请先抬笔，当前笔迹会保留');
-                return;
-              }
-              setSidebar(!sidebar);
-            }}
-          >
-            <Menu size={18} />
-          </button>
-          <div className="breadcrumb" aria-label="当前位置">
-            {view === 'paper' && note ? (
-              <IconButton title="返回笔记列表" onClick={returnToLibrary}>
-                <ArrowLeft size={18} />
-              </IconButton>
-            ) : (
-              <ViewIcon size={15} />
-            )}
-            {view === 'paper' && note ? (
+        <header className={`topbar${hasOpenNote ? ' note-topbar' : ''}`}>
+          <div className="topbar-context">
+            <button
+              className="icon-button"
+              title="导航"
+              aria-label="导航"
+              aria-controls="app-sidebar"
+              aria-expanded={sidebar}
+              onClick={() => {
+                if (writing.current) {
+                  setNotice('请先抬笔，当前笔迹会保留');
+                  return;
+                }
+                setSidebar(!sidebar);
+              }}
+            >
+              <Menu size={18} />
+            </button>
+            {hasOpenNote ? (
               <>
-                <button className="breadcrumb-link" onClick={showLibrary}>
-                  所有笔记
-                </button>
-                {folderName && (
-                  <span className="breadcrumb-folder">
-                    <ChevronRight size={13} />
-                    <button
-                      className="breadcrumb-link"
-                      onClick={() => {
-                        setFolderFilter(note.folderId!);
-                        setView('library');
-                      }}
-                    >
-                      {folderName}
-                    </button>
-                  </span>
-                )}
-                <ChevronRight size={13} />
-                <span title={note.title}>{note.title}</span>
+                <IconButton title="返回笔记列表" onClick={returnToLibrary}>
+                  <ArrowLeft size={18} />
+                </IconButton>
+                <h1 title={note.title}>
+                  <SearchMark
+                    text={note.title}
+                    location={searchHit?.kind === 'title' ? searchHit.location : undefined}
+                  />
+                </h1>
               </>
             ) : (
-              <>
-                <span>{viewTitle}</span>
-                {view === 'library' && folderName && (
-                  <>
-                    <ChevronRight size={13} />
-                    <span>{folderName}</span>
-                  </>
-                )}
-              </>
+              <div className="breadcrumb" aria-label="当前位置">
+                <ViewIcon size={15} />
+                <span>{view === 'library' && folderName ? folderName : viewTitle}</span>
+              </div>
             )}
           </div>
           <div className="topbar-right">
@@ -2622,27 +2932,44 @@ function App() {
                 {w.saveState}
               </span>
             )}
-            <span className="device-label">
-              {window.QuietPaperNative
-                ? w.role === 'tablet'
-                  ? 'ANDROID 平板'
-                  : 'ANDROID 手机'
-                : import.meta.env.DEV
-                  ? `开发${w.role === 'tablet' ? '平板' : w.role === 'phone' ? '手机' : 'MAC'}工作台`
-                  : 'MAC 阅读端'}
-            </span>
-            <IconButton
-              title="搜索笔记"
-              onClick={() => {
-                if (!canNavigate()) return;
-                setView('library');
-                setSidebar(false);
-                requestAnimationFrame(() => searchInput.current?.focus());
-              }}
-            >
-              <Search size={18} />
-            </IconButton>
+            {hasOpenNote ? (
+              <IconButton title="笔记信息" onClick={manage}>
+                <Info size={19} />
+              </IconButton>
+            ) : (
+              <IconButton
+                title="搜索笔记"
+                onClick={() => {
+                  if (!canNavigate()) return;
+                  setView('library');
+                  setSidebar(false);
+                  requestAnimationFrame(() => searchInput.current?.focus());
+                }}
+              >
+                <Search size={18} />
+              </IconButton>
+            )}
           </div>
+          {hasOpenNote && (
+            <div className="representation-switch" role="group" aria-label="阅读方式">
+              {(
+                [
+                  ['a', '原稿'],
+                  ['b', '整理'],
+                  ['split', '对照'],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  className={mode === value ? 'active' : ''}
+                  aria-pressed={mode === value}
+                  onClick={() => showMode(value)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
         </header>
         {w.error && (
           <div className="error-banner" role="alert">
@@ -2662,345 +2989,183 @@ function App() {
         )}
         {view === 'paper' && note && page ? (
           <>
-            <div className="note-heading">
-              <div>
-                <h1 onDoubleClick={manage}>
-                  <SearchMark
-                    text={note.title}
-                    location={searchHit?.kind === 'title' ? searchHit.location : undefined}
-                  />
-                </h1>
-                <div className="note-meta">
-                  <span>{date(note.modifiedAt)}</span>
-                  <span className="meta-divider" />
-                  {note.tags.map((t) => (
-                    <span className="tag" key={t}>
-                      {t}
-                    </span>
-                  ))}
-                  <button className="text-button" onClick={manage}>
-                    归档
-                    <ChevronDown size={13} />
+            <div className="note-controls">
+              {mode !== 'b' && !compareInline && (
+                <div className="page-nav" role="group" aria-label="纸张导航">
+                  <button
+                    disabled={pageIndex === 0}
+                    aria-label="上一页"
+                    onClick={() => {
+                      goToPage(pageIndex - 1);
+                    }}
+                  >
+                    <ChevronLeft size={16} />
                   </button>
+                  {note.pages.map((p, i) => (
+                    <button
+                      className={i === pageIndex ? 'active' : ''}
+                      aria-current={i === pageIndex ? 'page' : undefined}
+                      aria-label={`第 ${i + 1} 页`}
+                      key={p.id}
+                      onClick={() => {
+                        goToPage(i);
+                      }}
+                    >
+                      {String(i + 1).padStart(2, '0')}
+                    </button>
+                  ))}
+                  <button
+                    disabled={pageIndex >= note.pages.length - 1}
+                    aria-label="下一页"
+                    onClick={() => {
+                      goToPage(pageIndex + 1);
+                    }}
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                  {editable && (
+                    <button onClick={paperDialog} aria-label="添加一页" title="添加一页">
+                      <Plus size={16} />
+                    </button>
+                  )}
                 </div>
-              </div>
-              <div className="heading-actions">
+              )}
+              <div className="note-actions">
+                {editable && mode !== 'b' && !compareInline && (
+                  <IconButton
+                    title="图层"
+                    onClick={() =>
+                      setModal({
+                        title: '图层',
+                        content: (
+                          <div className="dialog-stack">
+                            {[
+                              ...new Set([
+                                'ink',
+                                'notes',
+                                ...page.objects
+                                  .filter((o) => !o.deleted)
+                                  .map((o) => o.layerId)
+                                  .filter((id) => !id.startsWith('revision:')),
+                              ]),
+                            ].map((id) => (
+                              <button
+                                className={`layer-row ${id === layer ? 'active' : ''}`}
+                                key={id}
+                                onClick={() => {
+                                  setLayer(id);
+                                  setModal(null);
+                                }}
+                              >
+                                <Layers size={16} />
+                                {id === 'ink' ? '原始笔迹' : id === 'notes' ? '补充笔记' : id}
+                                {id === layer && <Check size={15} />}
+                              </button>
+                            ))}
+                            <button className="button" onClick={revisions}>
+                              独立修订层
+                              <History size={15} />
+                            </button>
+                          </div>
+                        ),
+                      })
+                    }
+                  >
+                    <Layers size={16} />
+                  </IconButton>
+                )}
                 {editable && (
                   <IconButton title="知识块与关联" onClick={() => setShowBlocks(true)}>
-                    <GitBranch size={20} />
+                    <GitBranch size={19} />
                   </IconButton>
                 )}
                 <IconButton title="修订与历史" onClick={revisions}>
-                  <History size={20} />
-                </IconButton>
-                <IconButton title="笔记管理" onClick={manage}>
-                  <MoreHorizontal size={22} />
+                  <History size={19} />
                 </IconButton>
               </div>
-            </div>
-            <div className="workspace-bar">
-              <div className="representation-switch" role="group" aria-label="阅读方式">
-                <button
-                  className={mode === 'a' ? 'active' : ''}
-                  aria-pressed={mode === 'a'}
-                  onClick={() => setMode('a')}
-                >
-                  原稿
-                </button>
-                <button
-                  className={mode === 'b' ? 'active' : ''}
-                  aria-pressed={mode === 'b'}
-                  onClick={() => setMode('b')}
-                >
-                  整理
-                </button>
-                <button
-                  className={mode === 'split' ? 'active' : ''}
-                  aria-pressed={mode === 'split'}
-                  onClick={() => setMode('split')}
-                >
-                  <ArrowLeftRight size={14} />
-                  对照
-                </button>
-              </div>
-              <div className="paper-spec">
-                <span>{page.size}</span>
-                <span>{page.orientation === 'portrait' ? '纵向' : '横向'}</span>
-                <IconButton
-                  title="图层"
-                  onClick={() =>
-                    setModal({
-                      title: '图层',
-                      content: (
-                        <div className="dialog-stack">
-                          {[
-                            ...new Set([
-                              'ink',
-                              'notes',
-                              ...page.objects
-                                .filter((o) => !o.deleted)
-                                .map((o) => o.layerId)
-                                .filter((id) => !id.startsWith('revision:')),
-                            ]),
-                          ].map((id) => (
-                            <button
-                              className={`layer-row ${id === layer ? 'active' : ''}`}
-                              key={id}
-                              onClick={() => {
-                                setLayer(id);
-                                setModal(null);
-                              }}
-                            >
-                              <Layers size={16} />
-                              {id === 'ink' ? '原始笔迹' : id === 'notes' ? '补充笔记' : id}
-                              {id === layer && <Check size={15} />}
-                            </button>
-                          ))}
-                          <button className="button" onClick={revisions}>
-                            独立修订层
-                            <History size={15} />
-                          </button>
-                        </div>
-                      ),
-                    })
-                  }
-                >
-                  <Layers size={16} />
-                </IconButton>
-                {editable && (
-                  <IconButton title="添加纸张" onClick={paperDialog}>
-                    <Plus size={18} />
+              {editable && mode !== 'b' && !compareInline && (
+                <div className="writing-dock" role="group" aria-label="书写工具">
+                  <IconButton title="钢笔" active={tool === 'pen'} onClick={usePen}>
+                    <PenLine size={19} />
                   </IconButton>
-                )}
-              </div>
+                  <IconButton
+                    title="局部橡皮"
+                    active={tool === 'eraser'}
+                    onClick={() => chooseTool('eraser')}
+                  >
+                    <Eraser size={19} />
+                  </IconButton>
+                  <IconButton
+                    title="框选与移动"
+                    active={tool === 'select'}
+                    onClick={() => chooseTool('select')}
+                  >
+                    <SquareDashedMousePointer size={19} />
+                  </IconButton>
+                  <IconButton
+                    title="撤销上一步"
+                    disabled={!w.canUndoPaper(note.id)}
+                    onClick={() => {
+                      if (writing.current) return;
+                      const undonePage = w.undoPaper(note.id);
+                      if (!undonePage) return;
+                      const index = note.pages.findIndex(
+                        (candidate) => candidate.id === undonePage,
+                      );
+                      if (index >= 0) goToPage(index);
+                      setSelected([]);
+                      setHighlighted([]);
+                      setNotice('已撤销上一步');
+                    }}
+                  >
+                    <Undo2 size={19} />
+                  </IconButton>
+                  <button
+                    className={`insert-control${tool === 'text' || tool === 'formula' ? ' active' : ''}`}
+                    onClick={insertOptions}
+                  >
+                    <Plus size={17} />
+                    插入
+                  </button>
+                  {selected.length > 0 && (
+                    <button className="insert-control" onClick={selectionOptions}>
+                      所选内容
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
-            <div className={`workspace workspace-${mode}`}>
-              {mode !== 'b' && (
-                <section className="paper-region">
-                  <div className="paper-overline">
-                    {mode === 'split' && <span>原稿</span>}
-                    <span>
-                      {String(pageIndex + 1).padStart(2, '0')} —{' '}
-                      {String(note.pages.length).padStart(2, '0')}
-                    </span>
-                  </div>
-                  <div className="paper-frame">
-                    <Paper
-                      key={`${note.id}:${page.id}`}
-                      note={note}
-                      page={page}
-                      tool={tool}
-                      color={color}
-                      width={penWidth}
-                      layer={layer}
-                      editable={editable}
-                      stylus={tabletStylus}
-                      inputBlocked={
-                        !!modal || showBlocks || showRecovery || (sidebar && compactNavigation)
-                      }
-                      selected={selected}
-                      highlighted={highlighted}
-                      searchObject={
-                        searchHit?.objectId
-                          ? { id: searchHit.objectId, location: searchHit.location }
-                          : undefined
-                      }
-                      onSelect={setSelected}
-                      onStroke={(points) => {
-                        writing.current = false;
-                        w.stroke(note.id, page.id, points, {
-                          color,
-                          width: penWidth,
-                          layerId: layer,
-                        });
-                      }}
-                      onDraft={(points) => {
-                        writing.current = !!points;
-                        w.checkpoint(
-                          points
-                            ? {
-                                noteId: note.id,
-                                pageId: page.id,
-                                points,
-                                color,
-                                width: penWidth,
-                                layerId: layer,
-                              }
-                            : null,
-                        );
-                      }}
-                      onErase={erase}
-                      onMove={moveObjects}
-                      onInsert={addText}
-                      onContext={counterpart}
-                    />
-                  </div>
-                  <div className="page-nav" role="group" aria-label="纸张导航">
-                    <button
-                      disabled={pageIndex === 0}
-                      aria-label="上一页"
-                      onClick={() => {
-                        setPageIndex((i) => i - 1);
-                        setSelected([]);
-                      }}
-                    >
-                      <ChevronLeft size={16} />
-                    </button>
-                    {note.pages.map((p, i) => (
-                      <button
-                        className={i === pageIndex ? 'active' : ''}
-                        aria-current={i === pageIndex ? 'page' : undefined}
-                        aria-label={`第 ${i + 1} 页`}
-                        key={p.id}
-                        onClick={() => {
-                          setPageIndex(i);
-                          setSelected([]);
-                        }}
-                      >
-                        {String(i + 1).padStart(2, '0')}
-                      </button>
-                    ))}
-                    <button
-                      disabled={pageIndex >= note.pages.length - 1}
-                      aria-label="下一页"
-                      onClick={() => {
-                        setPageIndex((i) => i + 1);
-                        setSelected([]);
-                      }}
-                    >
-                      <ChevronRight size={16} />
-                    </button>
-                    {editable && (
-                      <button onClick={paperDialog} aria-label="新纸张">
-                        <Plus size={16} />
-                      </button>
-                    )}
-                  </div>
+            <div
+              className={`workspace workspace-${mode}${compareInline ? ' workspace-inline' : ''}`}
+            >
+              {mode !== 'b' && !compareInline && (
+                <section className="paper-region" aria-label="原稿">
+                  {editable ? (
+                    <div className="paper-frame">{paperSheet}</div>
+                  ) : (
+                    <ReadingPaper key={page.id}>{paperSheet}</ReadingPaper>
+                  )}
                 </section>
               )}
               {mode !== 'a' && (
-                <aside className="structure-region">
-                  <div className="structure-heading">
-                    {mode === 'split' && <span>整理</span>}
-                    <span>{note.blocks.length} 个知识块</span>
-                  </div>
+                <aside className="structure-region" aria-label="整理稿">
                   {structure}
                 </aside>
               )}
             </div>
-            {editable && mode !== 'b' && (
-              <div className="writing-dock">
-                <IconButton
-                  title="撤销上一步"
-                  disabled={!w.canUndoPaper(note.id)}
-                  onClick={() => {
-                    const undonePage = w.undoPaper(note.id);
-                    if (!undonePage) return;
-                    const index = note.pages.findIndex((candidate) => candidate.id === undonePage);
-                    if (index >= 0) setPageIndex(index);
-                    setSelected([]);
-                    setHighlighted([]);
-                    setNotice('已撤销上一步');
-                  }}
-                >
-                  <Undo2 size={19} />
-                </IconButton>
-                <span className="dock-divider" />
-                <div className="dock-tools">
-                  {(
-                    [
-                      { key: 'pen', label: '钢笔', icon: PenLine },
-                      { key: 'eraser', label: '局部橡皮', icon: Eraser },
-                      { key: 'select', label: '框选与移动', icon: SquareDashedMousePointer },
-                      { key: 'text', label: '文字', icon: Type },
-                      { key: 'formula', label: '公式', icon: FunctionIcon },
-                    ] as const
-                  ).map((t) => (
-                    <IconButton
-                      key={t.key}
-                      title={t.label}
-                      active={tool === t.key}
-                      onClick={() => {
-                        setTool(t.key);
-                        if (t.key !== 'select') setSelected([]);
-                      }}
-                    >
-                      <t.icon size={19} />
-                    </IconButton>
-                  ))}
-                </div>
-                <span className="dock-divider" />
-                <div className="ink-colors">
-                  {quickInkColors.map(([name, value]) => (
-                    <button
-                      key={value}
-                      style={{ background: value }}
-                      aria-label={`墨色 ${value}`}
-                      aria-pressed={color === value}
-                      title={name}
-                      className={color === value ? 'active' : ''}
-                      onClick={() => chooseInkColor(value)}
-                    />
-                  ))}
-                </div>
-                <IconButton title="选择笔迹颜色" onClick={selectInkColor}>
-                  <Palette size={19} />
-                </IconButton>
-                <button
-                  className="pen-width"
-                  title="笔宽"
-                  onClick={() => setPenWidth((v) => (v === 2.4 ? 4.5 : v === 4.5 ? 1.2 : 2.4))}
-                >
-                  <span style={{ height: Math.max(2, penWidth) }} />
-                </button>
-                <span className="dock-divider" />
-                <IconButton title="插入图片" onClick={() => imageInput.current?.click()}>
-                  <ImagePlus size={19} />
-                </IconButton>
-                <IconButton title="导入原生文件" onClick={openSource}>
-                  <FileInput size={19} />
-                </IconButton>
-                {selected.length > 0 && (
-                  <>
-                    <span className="dock-divider" />
-                    <IconButton title="建立知识块" onClick={createBlock}>
-                      <GitBranch size={19} />
-                    </IconButton>
-                    <IconButton title="拉直线条" onClick={tidySelected}>
-                      <Highlighter size={18} />
-                    </IconButton>
-                    <IconButton title="校对选中内容" onClick={() => proof(selected)}>
-                      <ScanLine size={19} />
-                    </IconButton>
-                    <IconButton title="学习选中字形" onClick={learnHandwriting}>
-                      <PenLine size={19} />
-                    </IconButton>
-                    <IconButton title="删除选中内容" onClick={deleteSelected}>
-                      <Trash2 size={18} />
-                    </IconButton>
-                  </>
-                )}
-              </div>
-            )}
           </>
         ) : view === 'paper' ? (
           <div className={`empty hero ${editable ? 'kind-create' : 'kind-reader'}`}>
             <div className="empty-paper" aria-hidden="true" />
-            <h1>{editable ? '从一张纸开始' : '把笔记带在身边'}</h1>
-            <p className="empty-copy">
-              {editable
-                ? '落笔即可记录，整理与温故留待稍后。'
-                : '导入已有笔记，阅读原稿，也让文字与公式继续生长。'}
-            </p>
+            <h1>{editable ? '从一张纸开始' : '还没有笔记'}</h1>
+            {!editable && <p className="empty-copy">导入 .glossa 工程，阅读原稿和整理稿。</p>}
             <div className="empty-actions">{entryAction()}</div>
-            {!editable && <p className="empty-note">新笔记，从 Android 平板开始。</p>}
           </div>
         ) : null}
         {view === 'library' && (
           <div className="content-page library">
             <div className="section-heading">
               <div>
-                <div className="eyebrow">THE THINGS WE KEEP</div>
                 <h1>
                   {folderFilter
                     ? e?.state.folders.find((f) => f.id === folderFilter)?.name
@@ -3054,41 +3219,30 @@ function App() {
                     </div>
                   </button>
                 ))}
-                {editable && visibleNotes.length > 0 && (
-                  <button className="note-card new-note-card" onClick={() => newNote()}>
-                    <Plus size={30} />
-                    <span>一张新纸</span>
-                  </button>
-                )}
               </div>
             )}
             {!search.trim() && !visibleNotes.length && (
               <div className="empty library-empty">
-                {notes.length ? (
-                  <Search size={34} />
+                {folderFilter ? (
+                  <Folder size={32} />
                 ) : (
                   <div className="empty-paper" aria-hidden="true" />
                 )}
-                <h2>
-                  {folderFilter
-                    ? '这个文件夹，留给下一篇笔记'
-                    : editable
-                      ? '记下第一笔'
-                      : '让已有笔记，回到眼前'}
-                </h2>
-                <p className="empty-copy">
-                  {notes.length
-                    ? '试试其他文字、公式或标签，也可以回看全部笔记。'
-                    : editable
-                      ? '无需先建知识块，打开一张纸就能开始。'
-                      : '导入笔记后，即可阅读原稿、修订已有内容与温故。'}
-                </p>
+                <h2>{folderFilter ? '这个文件夹还没有笔记' : '还没有笔记'}</h2>
+                {folderFilter && !editable && (
+                  <p className="empty-copy">可在笔记信息中把已有笔记移到这里。</p>
+                )}
                 <div className="empty-actions">
-                  {notes.length ? (
-                    <button className="button" onClick={showLibrary}>
-                      查看所有笔记
-                      <ArrowRight size={16} />
-                    </button>
+                  {folderFilter ? (
+                    editable ? (
+                      <button className="button primary" onClick={newNote}>
+                        在{folderName}中新建笔记 <Plus size={16} />
+                      </button>
+                    ) : (
+                      <button className="button" onClick={showLibrary}>
+                        查看所有笔记 <ArrowRight size={16} />
+                      </button>
+                    )
                   ) : (
                     entryAction()
                   )}
@@ -3717,41 +3871,10 @@ function App() {
         ref={projectInput}
         type="file"
         accept=".glossa,.quietpaper,.json"
-        onChange={async (ev) => {
+        onChange={(ev) => {
           const file = ev.target.files?.[0];
-          if (file) {
-            try {
-              const text = await file.text();
-              NotebookEngine.importProject(text);
-              setModal({
-                title: '恢复此工程？',
-                content: (
-                  <div className="dialog-stack">
-                    <p>当前工程会保留本地恢复副本，再打开 {file.name}。</p>
-                    <button
-                      className="button primary"
-                      onClick={() => {
-                        void w
-                          .importProject(text)
-                          .then(() => {
-                            resetNavigation();
-                            setModal(null);
-                            setNotice('工程恢复完成');
-                          })
-                          .catch((err) => w.setError(String(err)));
-                      }}
-                    >
-                      确认恢复
-                      <FileInput size={16} />
-                    </button>
-                  </div>
-                ),
-              });
-            } catch (err) {
-              w.setError('工程包未通过校验：' + String(err));
-            }
-          }
           ev.target.value = '';
+          if (file) void prepareProjectImport(file);
         }}
       />
       {showRecovery && (
@@ -3806,6 +3929,7 @@ function pointsBounds(points: Point[]): Bounds {
 function FunctionIcon({ size = 20 }: { size?: number }) {
   return (
     <span
+      aria-hidden="true"
       style={{
         fontFamily: 'Georgia,serif',
         fontStyle: 'italic',

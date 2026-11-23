@@ -1,15 +1,15 @@
 # 笺注 · Glossa
 
-本地优先的固定纸张笔记系统，当前版本为 **0.1.4 工程验证版**。界面以暖纸、深墨和灰紫为主，支持炭黑主题，默认进入原稿纸张。
+本地优先的固定纸张笔记系统，当前版本为 **0.1.5 工程验证版**。界面以暖纸、深墨和灰紫为主，支持炭黑主题，默认进入原稿纸张。
 
 这不是全部需求的最终完成版。当前交付包含可操作的客户端、Android 原生工程、Mac 自托管同步服务、可恢复数据内核和自动验收。**支持端侧文字识别和基于已确认字形的矢量仿手写修订；缺字时保留印刷文字。** Office、Keynote、Numbers 未实现，不能把文本往返或 PDF 截图算作这些格式的兼容。
 
 ## 下载
 
-- Android 0.1.4 包含 S Pen 交互、快捷撤销、自定义墨色、向量搜索、外部模型自动选择及炭黑主题。平板与手机共用调试签名 APK，按设备自动区分权限。[GitHub 工程预发布](https://github.com/insightlacyrina/Glossa/releases/tag/v0.1.4)
-- Apple Silicon Mac 的上一版安装包使用本地 ad-hoc 签名。[GitHub 0.1.3 工程预发布](https://github.com/insightlacyrina/Glossa/releases/tag/v0.1.3)
+- Android 0.1.5 支持手机原稿缩放与平移、竖屏段落对照，以及更紧凑的平板书写界面。平板与手机共用调试签名 APK，按设备自动区分权限。[GitHub 工程预发布](https://github.com/insightlacyrina/Glossa/releases/tag/v0.1.5)
+- Apple Silicon Mac 0.1.5 精简笔记库并统一工程导入流程。安装包使用本地 ad-hoc 签名。[GitHub 工程预发布](https://github.com/insightlacyrina/Glossa/releases/tag/v0.1.5)
 
-同步含 0.1.4 快捷撤销记录的工程前，请先将相连的客户端更新到 0.1.4。
+同步含快捷撤销记录的工程前，请先将相连的客户端更新到 0.1.4 或更新版本。
 
 ## 启动
 

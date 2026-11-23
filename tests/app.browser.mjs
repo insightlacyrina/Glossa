@@ -146,10 +146,10 @@ try {
     'PASS blank paper accepts pen input before creating a knowledge block; pressure/tilt samples survive durable save and reload',
   );
   if (process.env.QP_TEST_DEBUG)
-    console.log('CURRENT NOTE', await page.locator('.note-heading h1').innerText());
+    console.log('CURRENT NOTE', await page.locator('.note-topbar h1').innerText());
 
-  await page.getByRole('button', { name: '归档', exact: true }).click();
-  let dialog = page.getByRole('dialog', { name: '笔记归档' });
+  await page.getByRole('button', { name: '笔记信息', exact: true }).click();
+  let dialog = page.getByRole('dialog', { name: '笔记信息' });
   await dialog.getByLabel('标题', { exact: true }).fill(title);
   await dialog.getByLabel('标签', { exact: true }).fill('验收标签，离线');
   if (process.env.QP_TEST_DEBUG) console.log('DIALOG', await dialog.innerText());
@@ -162,6 +162,7 @@ try {
   );
 
   const original = '自然记录 x+x，完整保留过程。';
+  await page.getByRole('button', { name: '插入', exact: true }).click();
   await page.getByRole('button', { name: '文字', exact: true }).click();
   await page.locator('.paper-sheet').click({ position: { x: 140, y: 240 } });
   dialog = page.getByRole('dialog', { name: '写入文字' });
@@ -259,12 +260,12 @@ try {
   console.log('PASS revision merge presents irreversible consequence and retains ordinary ink');
 
   await represent(page, 'a');
-  await page.getByRole('button', { name: '添加纸张', exact: true }).click();
-  dialog = page.getByRole('dialog', { name: '新纸张' });
+  await page.getByRole('button', { name: '添加一页', exact: true }).click();
+  dialog = page.getByRole('dialog', { name: '添加一页' });
   await dialog.locator('select[name="size"]').selectOption('B5');
   await dialog.locator('select[name="orientation"]').selectOption('landscape');
   await dialog.locator('select[name="template"]').selectOption('grid');
-  await dialog.getByRole('button', { name: '添加纸张', exact: true }).click();
+  await dialog.getByRole('button', { name: '添加一页', exact: true }).click();
   await until(
     async () => (await currentNote(noteId)).pages.length === 2,
     'manual fixed paper addition failed',
@@ -290,6 +291,7 @@ try {
   await page.mouse.down();
   await page.mouse.move(box.x + box.width * 0.4, box.y + box.height * 0.35, { steps: 4 });
   await page.mouse.up();
+  await page.getByRole('button', { name: '所选内容', exact: true }).click();
   await page.getByRole('button', { name: '校对选中内容', exact: true }).click();
   dialog = page.getByRole('dialog', { name: '校对原始记录' });
   await dialog.getByRole('textbox', { name: '校对转录内容' }).fill('纸面图形的原意');
@@ -358,7 +360,7 @@ try {
     await client.locator('.paper-sheet').waitFor();
     assert.equal(await client.locator('.new-paper').count(), 0);
     assert.equal(await client.locator('.writing-dock').count(), 0);
-    assert.equal(await client.getByRole('button', { name: '添加纸张', exact: true }).count(), 0);
+    assert.equal(await client.getByRole('button', { name: '添加一页', exact: true }).count(), 0);
     assert.equal(await client.getByRole('button', { name: '建立知识块', exact: true }).count(), 0);
     const beforeClient = await snapshot(client);
     await represent(client, 'b');

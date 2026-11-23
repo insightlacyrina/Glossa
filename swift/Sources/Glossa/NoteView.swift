@@ -100,15 +100,13 @@ struct NoteView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     if mode == "split" { Eyebrow(text: "整理") }
-                    Text(note.title).font(.title2.weight(.semibold))
                     if note.blocks.isEmpty {
                         Text("这份原稿还没有整理成知识块。\n在平板中创建对应结构后，它会随工程同步到这里。")
                             .font(.system(size: 13)).foregroundStyle(Palette.muted).lineSpacing(5).padding(.top, 8)
                     }
-                    ForEach(Array(note.blocks.enumerated()), id: \.element.id) { index, block in
+                    ForEach(note.blocks) { block in
                         VStack(alignment: .leading, spacing: 14) {
                             HStack(alignment: .firstTextBaseline) {
-                                Text(String(format: "%02d", index + 1)).font(.system(size: 11, design: .monospaced)).foregroundStyle(Palette.muted)
                                 Text(block.title).font(.headline)
                                 Spacer()
                                 Button { store.reviewBlock(block.id) } label: { Image(systemName: "sun.max") }.buttonStyle(.plain).help("温习知识块")

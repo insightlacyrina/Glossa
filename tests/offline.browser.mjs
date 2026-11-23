@@ -67,7 +67,7 @@ try {
     while (reg.installing || reg.waiting) await new Promise((r) => setTimeout(r, 100));
   }, example);
   await page.reload();
-  await page.locator('.note-heading h1').filter({ hasText: '变化，与积累' }).waitFor();
+  await page.locator('.note-topbar h1').filter({ hasText: '变化，与积累' }).waitFor();
   await page.locator('.representation-switch').first().getByRole('button').nth(1).click();
   const segment = page
     .locator('.structure-segment')
@@ -82,7 +82,7 @@ try {
   // Installation must cache every build asset on first use, before any offline reload.
   await context.setOffline(true);
   await page.reload();
-  await page.locator('.note-heading h1').filter({ hasText: '变化，与积累' }).waitFor();
+  await page.locator('.note-topbar h1').filter({ hasText: '变化，与积累' }).waitFor();
   await page.locator('.representation-switch').first().getByRole('button').nth(1).click();
   await page
     .locator('.structure-prose')

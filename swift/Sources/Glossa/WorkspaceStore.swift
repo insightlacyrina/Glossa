@@ -184,8 +184,12 @@ import GlossaCore
                                     UTType(filenameExtension: "quietpaper") ?? .data]
         panel.allowsMultipleSelection = false
         if panel.runModal() == .OK, let url = panel.url {
-            if !notes.isEmpty { pendingImport = url } else { importProject(url) }
+            prepareImport(url)
         }
+    }
+    func prepareImport(_ url: URL) {
+        if operationCount > 0 || !notes.isEmpty || !syncSettings.url.isEmpty { pendingImport = url }
+        else { importProject(url) }
     }
     func importProject(_ url: URL) {
         guard let disk else { errorMessage = "当前资料库被另一进程占用，无法导入。"; return }
@@ -220,7 +224,7 @@ import GlossaCore
         }
     }
     func startInitialImport() {
-        if let url = initialImportURL { initialImportURL = nil; importProject(url) }
+        if let url = initialImportURL { initialImportURL = nil; prepareImport(url) }
     }
     func cancelImport() {
         importRequestID = nil; importing = false; status = "已取消读取；当前工程保留"

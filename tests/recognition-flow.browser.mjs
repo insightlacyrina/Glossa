@@ -121,6 +121,7 @@ try {
     { steps: 5 },
   );
   await page.mouse.up();
+  await page.getByRole('button', { name: '所选内容', exact: true }).click();
   await page.getByRole('button', { name: '学习选中字形', exact: true }).click();
   dialog = page.getByRole('dialog', { name: '学习选中字形' });
   await dialog.getByRole('textbox', { name: '字形对应字符' }).fill('X');

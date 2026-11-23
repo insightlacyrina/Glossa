@@ -139,8 +139,8 @@ try {
 
   await page.locator('.new-paper').click();
   await page.locator('.paper-sheet').waitFor();
-  await page.getByRole('button', { name: '笔记管理', exact: true }).click();
-  const manage = page.getByRole('dialog', { name: '笔记归档' });
+  await page.getByRole('button', { name: '笔记信息', exact: true }).click();
+  const manage = page.getByRole('dialog', { name: '笔记信息' });
   await manage.getByLabel('标题', { exact: true }).fill(title);
   await manage.getByRole('button', { name: '保存', exact: true }).click();
   ownId = (await snapshot()).notes.find((n) => n.title === title).id;
@@ -182,6 +182,7 @@ try {
   await cdp.detach();
   pass('back-during-synthetic-pen-keeps-page-and-samples');
 
+  await page.getByRole('button', { name: '插入', exact: true }).click();
   await page.getByRole('button', { name: '导入原生文件', exact: true }).click();
   await until(() => resumed('documentsui'), 'DocumentsUI absent');
   back();
@@ -197,6 +198,8 @@ try {
   await until(() => !resumed('local.quietpaper'), 'Root Back did not leave Activity');
   await device.close();
   device = undefined;
+  // Root Back can leave the old WebView target alive briefly in the same process.
+  adb('shell', 'am force-stop local.quietpaper');
   adb('shell', 'am start -n local.quietpaper/.MainActivity');
   await connect();
   assert.ok(

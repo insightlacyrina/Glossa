@@ -56,15 +56,18 @@ try {
       .join('');
     const current = `<path d="${strokeOutline(points, 5)}" fill="#39353b" fill-rule="nonzero"/>`;
     async function pixels(content) {
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="110" height="110">${content}</svg>`,
+      // Sample the contours in paper coordinates with subpixel resolution.
+      // At 1×, antialiasing each legacy cap independently biases the edge comparison.
+      const size = 110 * 8;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 110 110">${content}</svg>`,
         img = new Image();
       img.src = 'data:image/svg+xml;base64,' + btoa(svg);
       await img.decode();
       const canvas = document.createElement('canvas');
-      canvas.width = canvas.height = 110;
+      canvas.width = canvas.height = size;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0);
-      return ctx.getImageData(0, 0, 110, 110).data;
+      return ctx.getImageData(0, 0, size, size).data;
     }
     const a = await pixels(old),
       b = await pixels(current);

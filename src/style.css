@@ -2653,12 +2653,6 @@ nav {
   font-size: 12px !important;
   color: var(--theme-secondary, #806c79);
 }
-.app-shell.platform-android .structure-segment-tools {
-  opacity: 1;
-}
-.app-shell.platform-android .structure-segment-meta {
-  flex-wrap: wrap;
-}
 .app-shell.platform-android .structure-context-menu {
   top: 48px;
   max-width: 100%;
@@ -2856,5 +2850,204 @@ nav {
     animation: none !important;
     transition: none !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* Notebook controls share the space above the sheet, leaving the artwork unobstructed. */
+.topbar-context {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+.topbar-context > .icon-button[aria-label='导航'] {
+  display: none;
+}
+.note-topbar h1 {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font:
+    500 21px / 1.35 'Songti SC',
+    'Noto Serif CJK SC',
+    Georgia,
+    serif;
+  color: var(--ink);
+}
+.topbar.note-topbar {
+  padding-inline: clamp(12px, 2.4vw, 32px);
+  min-height: 60px;
+  height: auto;
+  gap: 8px;
+}
+.note-topbar .topbar-right {
+  order: 1;
+  margin-left: 4px;
+  gap: 4px;
+}
+.note-actions,
+.note-controls,
+.reading-zoom {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.note-controls {
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 1480px;
+  padding: 3px clamp(12px, 2.4vw, 32px);
+  margin-inline: auto;
+}
+.note-controls:has(.writing-dock) {
+  position: sticky;
+  z-index: 10;
+  top: 0;
+  background: var(--theme-background, #edeae4);
+}
+.note-controls .note-actions {
+  margin-left: auto;
+}
+.app-shell .note-controls .page-nav {
+  justify-content: flex-start;
+  margin: 0;
+  flex-wrap: nowrap;
+  max-width: 100%;
+  overflow: auto;
+  scrollbar-width: thin;
+}
+.note-controls .page-nav button {
+  flex-shrink: 0;
+}
+.app-shell .note-controls .writing-dock {
+  position: static;
+  transform: none;
+  max-width: none;
+  overflow: visible;
+  order: -1;
+  gap: 2px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.writing-dock .insert-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 34px;
+  padding-inline: 8px;
+  color: var(--theme-accent);
+  border-radius: 5px;
+  white-space: nowrap;
+}
+.writing-dock .insert-control:hover,
+.writing-dock .insert-control.active,
+.reading-zoom button:hover:not(:disabled) {
+  background: var(--theme-selected);
+}
+.app-shell[data-view='paper'] .workspace {
+  padding: 8px clamp(12px, 2.4vw, 32px) 0;
+}
+.app-shell[data-view='paper'] .workspace-split:not(.workspace-inline) {
+  flex-direction: row;
+}
+.app-shell[data-view='paper'] .workspace-split:not(.workspace-inline) .structure-region {
+  flex: 0 0 39%;
+}
+.app-shell[data-view='paper'] .workspace-split:not(.workspace-inline) .paper-region {
+  flex: 1;
+}
+.workspace-inline .structure-region {
+  width: 100%;
+  max-width: 750px;
+  margin-inline: auto;
+  flex: 1 1 auto;
+}
+.workspace-inline .structure-view {
+  padding: clamp(16px, 4vw, 32px);
+}
+.workspace-inline .structure-prose {
+  font-size: 16px;
+}
+.reading-zoom {
+  justify-content: flex-end;
+  padding-bottom: 4px;
+  font-variant-numeric: tabular-nums;
+  color: var(--theme-muted);
+}
+.reading-zoom button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 34px;
+  min-height: 34px;
+  padding-inline: 5px;
+  border-radius: 5px;
+  color: var(--theme-accent);
+}
+.reading-zoom button:disabled {
+  opacity: 0.5;
+}
+.reading-zoom > span {
+  min-width: 3.2em;
+  text-align: center;
+  font-size: 12px;
+}
+.reading-viewport[data-zoomed='true'] {
+  max-height: 65dvh;
+  overflow: auto;
+  overscroll-behavior: contain;
+  overflow-anchor: none;
+}
+.reading-viewport,
+.reading-viewport .paper-sheet {
+  touch-action: pan-x pan-y;
+}
+.reading-viewport .paper-sheet {
+  cursor: zoom-in;
+}
+.reading-viewport[data-zoomed='true'] .paper-sheet {
+  cursor: zoom-out;
+}
+@media (max-width: 760px) {
+  .topbar-context > .icon-button[aria-label='导航'] {
+    display: inline-flex;
+  }
+  .topbar.note-topbar {
+    flex-wrap: wrap;
+    column-gap: 4px;
+    row-gap: 0;
+  }
+  .note-topbar .topbar-context {
+    gap: 0;
+  }
+  .note-topbar .topbar-right {
+    order: 0;
+    margin-left: 0;
+  }
+  .note-topbar h1 {
+    font-size: 18px;
+  }
+  .note-topbar .representation-switch {
+    width: 100%;
+  }
+  .note-topbar .representation-switch > button {
+    flex: 1;
+  }
+}
+@media (max-width: 365px) {
+  .note-topbar .save-status[data-state='saved'] {
+    font-size: 0;
+  }
+  .note-topbar .save-status[data-state='saved'] > span {
+    width: 6px;
+    height: 6px;
   }
 }

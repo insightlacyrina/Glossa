@@ -54,10 +54,10 @@ struct ContentView: View {
         .alert("操作未完成", isPresented: Binding(get: { store.errorMessage != nil }, set: { if !$0 { store.errorMessage = nil } })) {
             Button("知道了") { store.errorMessage = nil }
         } message: { Text(store.errorMessage ?? "") }
-        .confirmationDialog("导入工程将替换当前工作区", isPresented: Binding(get: { store.pendingImport != nil }, set: { if !$0 { store.pendingImport = nil } })) {
-            Button("保存当前恢复副本并导入") { if let url = store.pendingImport { store.importProject(url) } }
+        .confirmationDialog("用此工程替换当前工作区", isPresented: Binding(get: { store.pendingImport != nil }, set: { if !$0 { store.pendingImport = nil } })) {
+            Button("替换并导入") { if let url = store.pendingImport { store.importProject(url) } }
             Button("取消", role: .cancel) { store.pendingImport = nil }
-        } message: { Text("当前完整工程会保留在本机恢复列表中；同步连接将断开。") }
+        } message: { Text("原工作区会保存在本机恢复副本中。导入后，当前同步连接将断开。") }
         .alert("新建文件夹", isPresented: $newFolder) {
             TextField("文件夹名称", text: $folderName)
             Button("创建") { if !folderName.trimmingCharacters(in: .whitespaces).isEmpty { _ = store.action("createFolder", ["name": folderName]) }; folderName = "" }
@@ -88,13 +88,15 @@ struct ContentView: View {
                 VStack(spacing: 3) {
                     ForEach(store.snapshot?.folders ?? []) { folder in nav("folder:" + folder.id, folder.name, "folder") }
                     if store.snapshot?.folders.isEmpty != false {
-                        Text("导入笔记后，在这里归档。 ").font(.caption).foregroundStyle(Palette.muted).padding(.horizontal, 24).padding(.top, 6)
+                        Text("导入工程后，可以在这里归档。 ").font(.caption).foregroundStyle(Palette.muted).padding(.horizontal, 24).padding(.top, 6)
                     }
                 }
             }
             Spacer(minLength: 20)
             VStack(alignment: .leading, spacing: 0) {
-                sidebarAction("导入工程", symbol: "square.and.arrow.down") { store.chooseImport() }.accessibilityIdentifier("import-project")
+                if !store.notes.isEmpty {
+                    sidebarAction("导入工程", symbol: "square.and.arrow.down") { store.chooseImport() }.accessibilityIdentifier("import-project")
+                }
                 sidebarAction("导出完整工程", symbol: "square.and.arrow.up") { store.exportProject() }
                 sidebarAction("恢复副本", symbol: "clock.arrow.circlepath") { store.refreshRecoveries(); store.showRecovery = true }
             }.padding(.bottom, 16)
@@ -169,25 +171,15 @@ struct ContentView: View {
                 VStack(spacing: 20) {
                     Spacer()
                     PaperMotif().frame(width: 210, height: 195).accessibilityHidden(true)
-                    Eyebrow(text: "YOUR THOUGHTS, WITH YOU")
-                    Text("把笔记带在身边").font(.custom("Songti SC", size: 30)).tracking(1)
-                    Text("从平板带来一份工程，在 Mac 上细读、修订与温习。\n每一处修改，都与原稿相连。")
-                        .font(.body).lineSpacing(5).multilineTextAlignment(.center).foregroundStyle(Palette.muted)
-                    Button { store.chooseImport() } label: { Label("导入笔记", systemImage: "square.and.arrow.down") }.buttonStyle(PrimaryButton())
-                    Text("支持 .glossa 与旧版 .quietpaper 工程").font(.caption).foregroundStyle(Palette.muted)
+                    Text("还没有笔记").font(.custom("Songti SC", size: 30)).tracking(1)
+                    Text("导入 .glossa 或旧版 .quietpaper 工程。").font(.body).foregroundStyle(Palette.muted)
+                    Button { store.chooseImport() } label: { Label("导入工程", systemImage: "square.and.arrow.down") }
+                        .buttonStyle(PrimaryButton()).accessibilityIdentifier("import-project")
                     Spacer()
-                    Text("原稿留在纸上，思考继续生长。").font(.custom("Songti SC", size: 13)).foregroundStyle(Palette.muted).padding(.bottom, 35)
                 }
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 20) {
-                        Eyebrow(text: "A PLACE FOR YOUR THOUGHTS")
-                        HStack(alignment: .firstTextBaseline) {
-                            Text(folderTitle).font(.custom("Songti SC", size: 28))
-                            Text("\(store.filteredNotes.count)").font(.system(size: 13, design: .monospaced)).foregroundStyle(Palette.muted)
-                            Spacer()
-                            Button { store.chooseImport() } label: { Label("导入笔记", systemImage: "square.and.arrow.down") }.buttonStyle(QuietButton())
-                        }
                         if store.filteredNotes.isEmpty {
                             EmptyState(symbol: "magnifyingglass",
                                 title: store.search.isEmpty ? "这里还没有笔记" : "没有找到匹配的笔记",

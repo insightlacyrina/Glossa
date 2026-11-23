@@ -323,8 +323,8 @@ export async function verifyProjectPackage({ page, adb, raw, openNote, noteId, o
 
     // Change the owned test note using its normal UI, proving import restores the
     // exported earlier version while retaining the later current as a recovery.
-    await page.getByRole('button', { name: '归档', exact: true }).click();
-    const archive = page.getByRole('dialog', { name: '笔记归档', exact: true });
+    await page.getByRole('button', { name: '笔记信息', exact: true }).click();
+    const archive = page.getByRole('dialog', { name: '笔记信息', exact: true });
     const changedTitle = `${beforeNote.title} / after-package-export`;
     await archive.getByLabel('标题', { exact: true }).fill(changedTitle);
     await archive.getByRole('button', { name: '保存', exact: true }).click();
@@ -341,13 +341,13 @@ export async function verifyProjectPackage({ page, adb, raw, openNote, noteId, o
     await exportDialog();
     await page
       .getByRole('dialog', { name: '导出与恢复', exact: true })
-      .getByRole('button', { name: '导入工程包', exact: true })
+      .getByRole('button', { name: '导入工程', exact: true })
       .click();
     await chooseExportedFile(displayName);
-    const confirmation = page.getByRole('dialog', { name: '恢复此工程？', exact: true });
+    const confirmation = page.getByRole('dialog', { name: '用此工程替换当前工作区', exact: true });
     await confirmation.waitFor();
     assert.ok((await confirmation.innerText()).includes(displayName));
-    await confirmation.getByRole('button', { name: '确认恢复', exact: true }).click();
+    await confirmation.getByRole('button', { name: '替换并导入', exact: true }).click();
     const restored = await until(async () => {
       const value = await raw();
       return (

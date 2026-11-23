@@ -17,6 +17,7 @@ const scripts = [
   'workspace',
   'source',
   'block-manager',
+  'paper-first',
   'ink',
   'app',
   'export',

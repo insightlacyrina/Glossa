@@ -76,8 +76,7 @@ try {
     mimeType: 'application/json',
     buffer: await readFile('examples/变化与积累.glossa'),
   });
-  await page.getByRole('button', { name: '确认恢复', exact: true }).click();
-  await page.locator('.note-heading h1').filter({ hasText: '变化，与积累' }).waitFor();
+  await page.locator('.note-topbar h1').filter({ hasText: '变化，与积累' }).waitFor();
   await page.getByText('已存于本机', { exact: true }).waitFor();
   await page.screenshot({ path: 'docs/workspace-desktop.png', fullPage: true });
   await page.getByRole('button', { name: '导出与恢复', exact: true }).click();
@@ -110,7 +109,7 @@ try {
   });
   await context.setOffline(true);
   await page.reload();
-  await page.locator('.note-heading h1').filter({ hasText: '变化，与积累' }).waitFor();
+  await page.locator('.note-topbar h1').filter({ hasText: '变化，与积累' }).waitFor();
   assert.equal(await page.title(), '笺注 · Glossa');
   assert.deepEqual(errors, []);
   console.log(

@@ -173,7 +173,15 @@ export const ObjectView = memo(function ObjectView({
     </foreignObject>
   );
 });
-export function PaperPreview({ page, objectIds }: { page: Page; objectIds?: string[] }) {
+export function PaperPreview({
+  page,
+  objectIds,
+  minimumScale,
+}: {
+  page: Page;
+  objectIds?: string[];
+  minimumScale?: number;
+}) {
   const obs = visibleObjects(page).filter((o) => !objectIds || objectIds.includes(o.id));
   const box =
     obs.length && objectIds
@@ -195,6 +203,7 @@ export function PaperPreview({ page, objectIds }: { page: Page; objectIds?: stri
       className="paper-preview"
       viewBox={`${box.x} ${box.y} ${box.width} ${box.height}`}
       aria-label="原始对象预览"
+      style={minimumScale ? { minWidth: box.width * minimumScale } : undefined}
     >
       <rect {...box} fill="var(--paper, #fbf9f2)" />
       {obs.map((o) => (
@@ -228,7 +237,7 @@ export function Paper(props: Props) {
     };
   }
 
-  function hitAt(p: Point) {
+  function hitAt(p: Pick<Point, 'x' | 'y'>) {
     for (let i = objects.length - 1; i >= 0; i--) {
       const object = objects[i];
       const { x, y, width, height } = object.bounds;
@@ -480,7 +489,7 @@ export function Paper(props: Props) {
     if (inputBlocked) return;
     const rect = svg.current!.getBoundingClientRect();
     const p = point(e, rect);
-    if (e.pointerType === 'touch' && window.QuietPaperNative) {
+    if (e.pointerType === 'touch' && (window.QuietPaperNative || !editable)) {
       const alreadyTouching = touch.current !== null;
       clearTouch();
       if (active.current || penNearby.current !== null || alreadyTouching || !e.isPrimary) return;
@@ -502,7 +511,7 @@ export function Paper(props: Props) {
       }
       return;
     }
-    if (active.current) return;
+    if (active.current || !editable) return;
     if (stylus && e.pointerType === 'pen') {
       hoverAt(e);
       if (!(e.buttons & PEN_CONTACT) && e.button !== 5) return;
@@ -624,7 +633,17 @@ export function Paper(props: Props) {
         }
         if (barrelHover.current === e.pointerId && !active.current) barrelHover.current = null;
       }}
-      onContextMenu={(e) => e.preventDefault()}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        if (editable || inputBlocked || (e.nativeEvent as PointerEvent).pointerType === 'touch')
+          return;
+        const rect = svg.current!.getBoundingClientRect();
+        const hit = hitAt({
+          x: ((e.clientX - rect.left) * page.width) / rect.width,
+          y: ((e.clientY - rect.top) * page.height) / rect.height,
+        });
+        if (hit) props.onContext(hit);
+      }}
       aria-label={`原稿纸张 ${props.note.pages.indexOf(page) + 1}`}
       role="img"
     >

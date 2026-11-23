@@ -10,9 +10,7 @@ import AppKit
                 .frame(minWidth: 960, minHeight: 640)
                 .preferredColorScheme(appearance == "system" ? nil : appearance == "dark" ? .dark : .light)
                 .task { store.startInitialImport(); await store.autoSync() }
-                .onOpenURL { url in
-                    if store.notes.isEmpty { store.importProject(url) } else { store.pendingImport = url }
-                }
+                .onOpenURL { store.prepareImport($0) }
                 .onReceive(NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didWakeNotification)) { _ in
                     store.refreshProjection()
                     Task { await store.synchronize() }
