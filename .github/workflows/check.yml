@@ -12,9 +12,11 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
-      - run: npx playwright install --with-deps chromium
-      - name: Use the installed browser
-        run: node --input-type=module -e "import {chromium} from '@playwright/test'; import {appendFileSync} from 'node:fs'; appendFileSync(process.env.GITHUB_ENV, 'CHROMIUM_PATH='+chromium.executablePath()+'\n');"
+      - name: Use the runner's Chrome
+        run: |
+          chrome=$(command -v google-chrome)
+          "$chrome" --version
+          printf 'CHROMIUM_PATH=%s\n' "$chrome" >> "$GITHUB_ENV"
       - run: npm run test:browser
       - run: npm run test:offline
       - uses: actions/setup-java@v4
