@@ -2,7 +2,7 @@ name: Verify notebook and Android package
 on: [push, pull_request, workflow_dispatch]
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -27,8 +27,10 @@ jobs:
           javac -d "$RUNNER_TEMP/quiet-paper-jvm" android/app/src/main/java/local/quietpaper/ExportStore.java android/app/src/main/java/local/quietpaper/SourceWritePolicy.java android/tools/ExportStoreTest.java android/tools/SourceWritePolicyTest.java
           java -cp "$RUNNER_TEMP/quiet-paper-jvm" local.quietpaper.ExportStoreTest
           java -cp "$RUNNER_TEMP/quiet-paper-jvm" local.quietpaper.SourceWritePolicyTest
-      - uses: android-actions/setup-android@v3
-      - run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Check the runner's Android SDK
+        run: |
+          test -f "$ANDROID_HOME/platforms/android-35/android.jar"
+          test -x "$ANDROID_HOME/build-tools/35.0.0/aapt2"
       - run: ./android/gradlew -p android :app:assembleDebug :app:assembleDebugAndroidTest
       - run: python3 android/tools/verify-apk.py
       - uses: actions/upload-artifact@v4
