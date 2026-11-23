@@ -357,6 +357,7 @@ try {
     const client = await context.newPage();
     if (device === 'phone') await client.setViewportSize({ width: 390, height: 844 });
     await client.goto(`${base}/?device=${device}`);
+    await represent(client, 'a');
     await client.locator('.paper-sheet').waitFor();
     assert.equal(await client.locator('.new-paper').count(), 0);
     assert.equal(await client.locator('.writing-dock').count(), 0);

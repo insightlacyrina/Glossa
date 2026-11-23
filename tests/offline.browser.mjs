@@ -40,7 +40,7 @@ try {
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('requestfailed', (r) => failed.push({ url: r.url(), reason: r.failure()?.errorText }));
   await page.goto(`http://127.0.0.1:${port}`);
-  await page.getByRole('heading', { name: '把笔记带在身边' }).waitFor();
+  await page.getByRole('heading', { name: '还没有笔记' }).waitFor();
   assert.equal(
     await page.locator('.new-paper').count(),
     0,
